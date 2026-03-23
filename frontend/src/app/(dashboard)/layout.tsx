@@ -3,10 +3,13 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { getMyPages } from '@/lib/api/pages'
 import { Sidebar } from '@/components/layout/Sidebar'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user)
+  const pages = useAuthStore((s) => s.pages)
+  const setPages = useAuthStore((s) => s.setPages)
   const router = useRouter()
 
   useEffect(() => {
@@ -14,6 +17,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.replace('/login')
     }
   }, [user, router])
+
+  useEffect(() => {
+    if (user?.userType === 'Management' && pages.length === 0) {
+      getMyPages().then((res) => {
+        if (res.isSuccess && res.value) {
+          setPages(res.value)
+        }
+      })
+    }
+  }, [user, pages.length, setPages])
 
   if (user?.userType !== 'Management') return null
 
