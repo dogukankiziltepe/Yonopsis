@@ -5,6 +5,7 @@ import { ApiResult } from '@/types/api'
 export interface GetBlocksParams {
   page?: number
   pageSize?: number
+  search?: string
   startsWith?: string
   sortBy?: string
   sortDesc?: boolean

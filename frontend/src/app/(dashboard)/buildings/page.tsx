@@ -13,6 +13,7 @@ import {
   Building2,
   AlertCircle,
   FileSpreadsheet,
+  Search,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -47,6 +48,7 @@ export default function BuildingsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [search, setSearch] = useState('')
   const [alphaFilter, setAlphaFilter] = useState('Tümü')
   const [sortKey, setSortKey] = useState<SortKey>('name')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
@@ -76,7 +78,8 @@ export default function BuildingsPage() {
       .getAll({
         page,
         pageSize: PAGE_SIZE,
-        startsWith: alphaFilter === 'Tümü' ? undefined : alphaFilter,
+        search: search.trim() || undefined,
+        startsWith: search.trim() ? undefined : (alphaFilter === 'Tümü' ? undefined : alphaFilter),
         sortBy: sortKey,
         sortDesc: sortDir === 'desc',
       })
@@ -92,14 +95,21 @@ export default function BuildingsPage() {
       })
       .catch(() => setError('Bloklar yüklenemedi.'))
       .finally(() => setLoading(false))
-  }, [page, alphaFilter, sortKey, sortDir])
+  }, [page, search, alphaFilter, sortKey, sortDir])
 
   useEffect(() => {
     load()
   }, [load])
 
+  const handleSearch = (value: string) => {
+    setSearch(value)
+    if (value.trim()) setAlphaFilter('Tümü')
+    setPage(1)
+  }
+
   const handleAlphaFilter = (letter: string) => {
     setAlphaFilter(letter)
+    setSearch('')
     setPage(1)
   }
 
@@ -281,6 +291,30 @@ export default function BuildingsPage() {
         <button className="px-4 py-2 text-sm font-medium border-b-2 border-primary text-primary -mb-px">
           Hepsi
         </button>
+      </div>
+
+      {/* Search */}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="relative max-w-sm flex-1">
+          <Search className="h-4 w-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Blok kodu, adı, ada..."
+            value={search}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="pl-8 h-8 text-sm"
+          />
+          {search && (
+            <button
+              onClick={() => handleSearch('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        {search && (
+          <span className="text-xs text-muted-foreground">{totalCount} sonuç</span>
+        )}
       </div>
 
       {/* Alphabetic filter */}
