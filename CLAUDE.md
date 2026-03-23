@@ -226,6 +226,66 @@ dotnet ef migrations add <Ad> --project ./src/SiteYonetimi.Infrastructure --star
 
 ---
 
+## Listeleme Sayfaları — Pagination & Filter Standardı
+
+Tüm listeleme sayfaları (mevcut ve yeni) aşağıdaki pattern'i kullanır:
+
+### Client-side pagination (backend pagination yoksa)
+- `PAGE_SIZE = 20` sabiti kullan
+- Tüm veriyi fetch et, `useMemo` ile filtrele → `filtered`
+- `paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)`
+- `<Pagination>` bileşenini kullan: `components/ui/pagination.tsx`
+
+### Server-side pagination (backend destekliyorsa)
+- `blocksApi.getAll({ page, pageSize, sortBy, sortDesc, ... })` örneğini takip et
+- Backend `PaginatedResult<T>` döner (`items`, `totalCount`, `page`, `pageSize`)
+
+### Filter pattern (client-side)
+```tsx
+const filtered = useMemo(() => {
+  let result = items
+  if (search.trim()) {
+    const q = search.toLowerCase()
+    result = result.filter(item => /* ilgili alanlar */.toLowerCase().includes(q))
+  }
+  // Enum/dropdown filtreler
+  if (someFilter !== 'all') result = result.filter(item => ...)
+  // Sort
+  result = [...result].sort((a, b) => {
+    const va = String(a[sortKey] ?? '')
+    const vb = String(b[sortKey] ?? '')
+    return sortDir === 'asc' ? va.localeCompare(vb, 'tr') : vb.localeCompare(va, 'tr')
+  })
+  return result
+}, [items, search, someFilter, sortKey, sortDir])
+```
+
+### Sort pattern
+```tsx
+type SortKey = 'field1' | 'field2'
+type SortDir = 'asc' | 'desc'
+const handleSort = (key: SortKey) => {
+  if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+  else { setSortKey(key); setSortDir('asc') }
+  setPage(1)
+}
+// Sütun başlığında: onClick={()=>handleSort('field1')} + <SortIndicator>
+```
+
+### Filter değiştiğinde page'i sıfırla
+```tsx
+const handleSearch = (value: string) => { setSearch(value); setPage(1) }
+```
+
+### Mevcut sayfalar
+| Sayfa | Pagination | Filter |
+|---|---|---|
+| `/buildings` | Server-side (blocksApi) | Alfabetik + sort |
+| `/units` | Client-side | Text search + sort |
+| `/admin/sites` | Client-side | Text search + status + dbMode + sort |
+
+---
+
 ## Ortam Değişkenleri
 
 `frontend/.env.local`:

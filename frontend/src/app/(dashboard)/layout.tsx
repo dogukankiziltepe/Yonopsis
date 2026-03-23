@@ -20,10 +20,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (user?.userType === 'Management' && pages.length === 0) {
-      getMyPages().then((res) => {
-        if (res.isSuccess && res.value) {
-          setPages(res.value)
-        }
+      getMyPages().then((data) => {
+        if (data.length > 0) setPages(data)
       })
     }
   }, [user, pages.length, setPages])

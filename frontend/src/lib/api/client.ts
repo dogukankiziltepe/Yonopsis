@@ -72,9 +72,9 @@ siteApi.interceptors.response.use(
 
       // Refresh sonrası pages listesini güncelle
       import('@/lib/api/pages').then(({ getMyPages }) => {
-        getMyPages().then((res) => {
-          if (res.isSuccess && res.value) {
-            useAuthStore.getState().setPages(res.value)
+        getMyPages().then((pages) => {
+          if (pages.length > 0) {
+            useAuthStore.getState().setPages(pages)
           }
         })
       })
