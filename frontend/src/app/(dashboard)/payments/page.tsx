@@ -38,6 +38,7 @@ export default function PaymentsPage() {
   const [formDueDate, setFormDueDate] = useState('')
   const [formDescription, setFormDescription] = useState('')
   const [saving, setSaving] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
 
   const [bulkBuildingId, setBulkBuildingId] = useState('')
   const [bulkAmount, setBulkAmount] = useState('')
@@ -156,6 +157,17 @@ export default function PaymentsPage() {
       setItems(updated)
       setSelected({ ...selected, status })
     } catch { showError('Durum güncellenemedi.') }
+  }
+
+  const handleCheckout = async () => {
+    if (!selected) return
+    setCheckoutLoading(true)
+    try {
+      const successUrl = window.location.href
+      const cancelUrl = window.location.href
+      const res = await paymentsApi.createCheckout(selected.id, successUrl, cancelUrl)
+      window.location.href = res.data.checkoutUrl
+    } catch { showError('Ödeme oturumu oluşturulamadı.') } finally { setCheckoutLoading(false) }
   }
 
   const handleDelete = async (id: string) => {
@@ -353,6 +365,18 @@ export default function PaymentsPage() {
                     </div>
                   )}
                 </div>
+
+                {selected.status !== 1 && (
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={handleCheckout}
+                    disabled={checkoutLoading}
+                  >
+                    <CreditCard className="h-4 w-4 mr-1" />
+                    {checkoutLoading ? 'Yönlendiriliyor...' : 'Online Öde'}
+                  </Button>
+                )}
 
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground">DURUM DEĞİŞTİR</p>

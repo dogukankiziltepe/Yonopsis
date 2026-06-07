@@ -34,3 +34,5 @@ public record PaymentSummaryDto(
     PaymentStatus Status,
     string? Description,
     DateTime CreatedAt);
+
+public record CreateCheckoutSessionDto(string SuccessUrl, string CancelUrl);

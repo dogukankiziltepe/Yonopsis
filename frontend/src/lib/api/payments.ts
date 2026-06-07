@@ -35,4 +35,7 @@ export const paymentsApi = {
 
   delete: (id: string) =>
     siteApi.delete(`/api/payments/${id}`),
+
+  createCheckout: (id: string, successUrl: string, cancelUrl: string) =>
+    siteApi.post<{ checkoutUrl: string }>(`/api/online-payments/${id}/checkout`, { successUrl, cancelUrl }),
 }
