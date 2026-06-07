@@ -14,6 +14,7 @@ import {
   PaymentStatusLabel,
   PaymentStatusColor,
   CreatePaymentDto,
+  BulkCreatePaymentsDto,
 } from '@/types/payment'
 
 const PAGE_SIZE = 20
@@ -28,7 +29,7 @@ export default function PaymentsPage() {
   const [searchDebounced, setSearchDebounced] = useState('')
 
   const [panelOpen, setPanelOpen] = useState(false)
-  const [panelMode, setPanelMode] = useState<'view' | 'create'>('view')
+  const [panelMode, setPanelMode] = useState<'view' | 'create' | 'bulk'>('view')
   const [selected, setSelected] = useState<PaymentSummaryDto | null>(null)
   const [panelIndex, setPanelIndex] = useState(0)
 
@@ -37,6 +38,11 @@ export default function PaymentsPage() {
   const [formDueDate, setFormDueDate] = useState('')
   const [formDescription, setFormDescription] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const [bulkBuildingId, setBulkBuildingId] = useState('')
+  const [bulkAmount, setBulkAmount] = useState('')
+  const [bulkDueDate, setBulkDueDate] = useState('')
+  const [bulkDescription, setBulkDescription] = useState('')
 
   useEffect(() => {
     const t = setTimeout(() => setSearchDebounced(search), 300)
@@ -75,6 +81,43 @@ export default function PaymentsPage() {
     setFormDescription('')
     setPanelMode('create')
     setPanelOpen(true)
+  }
+
+  const openBulk = () => {
+    setSelected(null)
+    setBulkBuildingId('')
+    setBulkAmount('')
+    setBulkDueDate(new Date().toISOString().split('T')[0])
+    setBulkDescription('')
+    setPanelMode('bulk')
+    setPanelOpen(true)
+  }
+
+  const handleBulkCreate = async () => {
+    const amount = parseFloat(bulkAmount)
+    if (!bulkAmount || isNaN(amount) || amount <= 0) { showError('Geçerli bir tutar giriniz.'); return }
+    if (!bulkDueDate) { showError('Vade tarihi zorunludur.'); return }
+    setSaving(true)
+    try {
+      const dto: BulkCreatePaymentsDto = {
+        buildingId: bulkBuildingId.trim() || undefined,
+        amount,
+        dueDate: new Date(bulkDueDate).toISOString(),
+        description: bulkDescription || undefined,
+      }
+      const res = await paymentsApi.bulkCreate(dto)
+      showSuccess(res.data.message)
+      setPanelOpen(false)
+      load()
+    } catch {} finally { setSaving(false) }
+  }
+
+  const handleMarkOverdue = async () => {
+    try {
+      const res = await paymentsApi.markOverdue()
+      showSuccess(res.data.message)
+      load()
+    } catch { showError('Gecikmiş aidatlar güncellenemedi.') }
   }
 
   const handleCreate = async () => {
@@ -138,10 +181,18 @@ export default function PaymentsPage() {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">Aidatlar</h1>
-        <Button size="sm" onClick={openCreate}>
-          <Plus className="h-4 w-4 mr-1" />
-          Yeni Aidat
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={handleMarkOverdue}>
+            Gecikmiş İşaretle
+          </Button>
+          <Button size="sm" variant="outline" onClick={openBulk}>
+            Toplu Oluştur
+          </Button>
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="h-4 w-4 mr-1" />
+            Yeni Aidat
+          </Button>
+        </div>
       </div>
 
       <div className="mb-3">
@@ -202,7 +253,7 @@ export default function PaymentsPage() {
         <div className="fixed right-0 top-0 h-screen w-[480px] bg-background border-l shadow-2xl flex flex-col z-50">
           <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
             <div className="flex items-center gap-2">
-              {panelMode === 'view' && (
+              {panelMode === 'view' && items.length > 0 && (
                 <>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigatePanel(-1)} disabled={panelIndex === 0}>
                     <ChevronLeft className="h-4 w-4" />
@@ -214,7 +265,7 @@ export default function PaymentsPage() {
                 </>
               )}
               <h2 className="text-sm font-semibold ml-1">
-                {panelMode === 'create' ? 'Yeni Aidat' : `Daire ${selected?.unitDoorNumber ?? ''} — Aidat`}
+                {panelMode === 'create' ? 'Yeni Aidat' : panelMode === 'bulk' ? 'Toplu Aidat Oluştur' : `Daire ${selected?.unitDoorNumber ?? ''} — Aidat`}
               </h2>
             </div>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPanelOpen(false)}>
@@ -223,7 +274,30 @@ export default function PaymentsPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {panelMode === 'create' ? (
+            {panelMode === 'bulk' ? (
+              <>
+                <p className="text-xs text-muted-foreground">Sitedeki tüm aktif daireler için aylık aidat kaydı oluşturur. Aynı aya ait mevcut kayıtlar atlanır.</p>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Bina ID <span className="text-xs text-muted-foreground">(boş bırakılırsa tüm binalar)</span></Label>
+                  <Input value={bulkBuildingId} onChange={(e) => setBulkBuildingId(e.target.value)} placeholder="Bina UUID (opsiyonel)" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Tutar (₺) <span className="text-destructive">*</span></Label>
+                  <Input type="number" value={bulkAmount} onChange={(e) => setBulkAmount(e.target.value)} placeholder="0.00" min="0" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Vade Tarihi <span className="text-destructive">*</span></Label>
+                  <Input type="date" value={bulkDueDate} onChange={(e) => setBulkDueDate(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Açıklama</Label>
+                  <Input value={bulkDescription} onChange={(e) => setBulkDescription(e.target.value)} placeholder="Örn: Temmuz 2026 aidatı" />
+                </div>
+                <Button size="sm" className="w-full" onClick={handleBulkCreate} disabled={saving}>
+                  {saving ? 'Oluşturuluyor...' : 'Toplu Oluştur'}
+                </Button>
+              </>
+            ) : panelMode === 'create' ? (
               <>
                 <div className="space-y-1">
                   <Label className="text-xs font-medium">Daire ID <span className="text-destructive">*</span></Label>

@@ -25,6 +25,13 @@ export interface PaymentSummaryDto {
   createdAt: string
 }
 
+export interface BulkCreatePaymentsDto {
+  buildingId?: string
+  amount: number
+  dueDate: string
+  description?: string
+}
+
 export interface CreatePaymentDto {
   unitId: string
   amount: number

@@ -2,6 +2,12 @@ using SiteYonetimi.Shared.Enums;
 
 namespace SiteYonetimi.SiteManagement.Payments.DTOs;
 
+public record BulkCreatePaymentsDto(
+    Guid? BuildingId,
+    decimal Amount,
+    DateTime DueDate,
+    string? Description);
+
 public record CreatePaymentDto(
     Guid UnitId,
     decimal Amount,

@@ -48,6 +48,22 @@ public class PaymentsController : BaseController
         return Handle(await Mediator.Send(new UpdatePaymentStatusCommand(id, CurrentSiteId, dto)));
     }
 
+    [HttpPost("bulk")]
+    public async Task<IActionResult> BulkCreate([FromBody] BulkCreatePaymentsDto dto)
+    {
+        var result = await Mediator.Send(new BulkCreatePaymentsCommand(CurrentSiteId, dto));
+        if (!result.IsSuccess) return BadRequest(new { message = result.Error });
+        return Ok(new { count = result.Data, message = $"{result.Data} aidat kaydı oluşturuldu." });
+    }
+
+    [HttpPost("mark-overdue")]
+    public async Task<IActionResult> MarkOverdue()
+    {
+        var result = await Mediator.Send(new MarkOverduePaymentsCommand(CurrentSiteId));
+        if (!result.IsSuccess) return BadRequest(new { message = result.Error });
+        return Ok(new { count = result.Data, message = $"{result.Data} kayıt gecikmiş olarak işaretlendi." });
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {

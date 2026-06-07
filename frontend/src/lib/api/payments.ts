@@ -2,6 +2,7 @@ import { siteApi } from './client'
 import {
   PaymentSummaryDto,
   CreatePaymentDto,
+  BulkCreatePaymentsDto,
   UpdatePaymentDto,
   UpdatePaymentStatusDto,
 } from '@/types/payment'
@@ -19,6 +20,12 @@ export const paymentsApi = {
 
   create: (data: CreatePaymentDto) =>
     siteApi.post<{ id: string }>('/api/payments', data),
+
+  bulkCreate: (data: BulkCreatePaymentsDto) =>
+    siteApi.post<{ count: number; message: string }>('/api/payments/bulk', data),
+
+  markOverdue: () =>
+    siteApi.post<{ count: number; message: string }>('/api/payments/mark-overdue'),
 
   update: (id: string, data: UpdatePaymentDto) =>
     siteApi.put(`/api/payments/${id}`, data),

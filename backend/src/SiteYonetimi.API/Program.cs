@@ -9,6 +9,7 @@ using NLog;
 using NLog.Web;
 using SiteYonetimi.API.Filters;
 using SiteYonetimi.API.Middleware;
+using SiteYonetimi.API.Services;
 using SiteYonetimi.Auth;
 using SiteYonetimi.Infrastructure.Data;
 using SiteYonetimi.Infrastructure.Seed;
@@ -100,6 +101,7 @@ try
     builder.Services.AddAuthorization();
     builder.Services.AddScoped<IPermissionService, PermissionService>();
     builder.Services.AddScoped<IEmailService, SendGridEmailService>();
+    builder.Services.AddHostedService<OverduePaymentsBackgroundService>();
     builder.Services.AddControllers(options =>
     {
         options.Filters.Add<PermissionFilter>();
