@@ -29,3 +29,26 @@ public enum UserSiteStatus
     Approved = 1,
     Rejected = 2
 }
+
+public enum UnitStatus
+{
+    Bos = 0,
+    Dolu = 1,
+    Kiralik = 2
+}
+
+public enum UnitDirection
+{
+    Kuzey = 0,
+    Guney = 1,
+    Dogu = 2,
+    Bati = 3,
+    Bilinmiyor = 4
+}
+
+public enum Gender
+{
+    Male = 0,
+    Female = 1,
+    Other = 2
+}

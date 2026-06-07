@@ -30,6 +30,7 @@ public class MasterDbContext : DbContext
             e.Property(x => x.Email).HasMaxLength(256).IsRequired();
             e.Property(x => x.FirstName).HasMaxLength(100).IsRequired();
             e.Property(x => x.LastName).HasMaxLength(100).IsRequired();
+            e.Property(x => x.NationalId).HasMaxLength(20);
             e.HasQueryFilter(x => !x.IsDeleted);
         });
 

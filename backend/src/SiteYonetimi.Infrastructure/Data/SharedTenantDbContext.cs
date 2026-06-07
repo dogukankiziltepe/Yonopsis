@@ -34,6 +34,16 @@ public class SharedTenantDbContext : DbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.SiteId).IsRequired();
             e.Property(x => x.BuildingId).IsRequired();
+            e.Property(x => x.DoorNumber).HasMaxLength(20).IsRequired();
+            e.Property(x => x.Code).HasMaxLength(20);
+            e.Property(x => x.Floor).HasMaxLength(50);
+            e.Property(x => x.GrossArea).HasPrecision(18, 2);
+            e.Property(x => x.NetArea).HasPrecision(18, 2);
+            e.Property(x => x.LandShare).HasPrecision(18, 2);
+            e.Property(x => x.MonthlyFee).HasPrecision(18, 2);
+            e.Property(x => x.Internet).HasMaxLength(100);
+            e.Property(x => x.Description).HasMaxLength(500);
+            e.HasOne(x => x.UnitType).WithMany().HasForeignKey(x => x.UnitTypeId).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
             e.HasQueryFilter(x => !x.IsDeleted);
         });
 
