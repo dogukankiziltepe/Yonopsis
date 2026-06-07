@@ -16,4 +16,22 @@ export const unitsApi = {
 
   delete: (id: string) =>
     siteApi.delete(`/api/units/${id}`),
+
+  getMyUnitsAsOwner: () =>
+    siteApi.get<UnitSummary[]>('/api/my-unit/as-owner'),
+
+  getMyUnitAsTenant: () =>
+    siteApi.get<UnitDetail | null>('/api/my-unit/as-tenant'),
+
+  assignOwner: (id: string, userId: string) =>
+    siteApi.patch(`/api/units/${id}/assign-owner`, { userId }),
+
+  assignTenant: (id: string, userId: string) =>
+    siteApi.patch(`/api/units/${id}/assign-tenant`, { userId }),
+
+  unassignOwner: (id: string) =>
+    siteApi.patch(`/api/units/${id}/unassign-owner`),
+
+  unassignTenant: (id: string) =>
+    siteApi.patch(`/api/units/${id}/unassign-tenant`),
 }
