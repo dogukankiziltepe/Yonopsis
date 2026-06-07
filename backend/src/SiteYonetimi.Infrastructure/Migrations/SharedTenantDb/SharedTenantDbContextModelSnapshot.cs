@@ -244,6 +244,51 @@ namespace SiteYonetimi.Infrastructure.Migrations.SharedTenantDb
                     b.Navigation("Request");
                 });
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.UploadedFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("StoredFileName")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
+                    b.Property<Guid>("UploadedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId");
+
+                    b.ToTable("UploadedFiles");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Building", b =>
                 {
                     b.Navigation("Units");

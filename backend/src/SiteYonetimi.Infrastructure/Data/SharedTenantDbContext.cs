@@ -20,6 +20,7 @@ public class SharedTenantDbContext : DbContext
     public DbSet<AccessCard> AccessCards => Set<AccessCard>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<UploadedFile> UploadedFiles => Set<UploadedFile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -121,6 +122,18 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.SiteId).IsRequired();
             e.Property(x => x.Title).HasMaxLength(200).IsRequired();
             e.Property(x => x.Content).HasMaxLength(5000).IsRequired();
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<UploadedFile>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.UploadedByUserId).IsRequired();
+            e.Property(x => x.OriginalFileName).HasMaxLength(260).IsRequired();
+            e.Property(x => x.StoredFileName).HasMaxLength(260).IsRequired();
+            e.Property(x => x.ContentType).HasMaxLength(100).IsRequired();
+            e.Property(x => x.FileSize).IsRequired();
             e.HasQueryFilter(x => !x.IsDeleted);
         });
     }

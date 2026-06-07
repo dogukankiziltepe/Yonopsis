@@ -79,6 +79,8 @@ try
     });
 
     builder.Services.AddMemoryCache();
+    builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+    builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o => o.MultipartBodyLengthLimit = 10 * 1024 * 1024);
     builder.Services.AddRateLimiter(options =>
     {
         options.AddFixedWindowLimiter("login", opt =>
