@@ -100,6 +100,10 @@ try
         };
     });
 
+    builder.Services.AddHealthChecks()
+        .AddSqlServer(builder.Configuration.GetConnectionString("MasterDb")!, name: "master-db")
+        .AddSqlServer(builder.Configuration.GetConnectionString("SharedTenantDb")!, name: "shared-db");
+
     builder.Services.AddAuthorization();
     builder.Services.AddScoped<IPermissionService, PermissionService>();
     builder.Services.AddScoped<IEmailService, SendGridEmailService>();
@@ -153,6 +157,7 @@ try
     app.UseMiddleware<MustChangePasswordMiddleware>();
     app.UseMiddleware<SubscriptionMiddleware>();
     app.MapControllers();
+    app.MapHealthChecks("/health");
 
     using (var scope = app.Services.CreateScope())
     {
