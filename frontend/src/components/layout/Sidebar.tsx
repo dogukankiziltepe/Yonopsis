@@ -14,6 +14,12 @@ import {
   Bell,
   ChevronRight,
   LucideIcon,
+  HelpCircle,
+  Car,
+  Key,
+  Shield,
+  Layers,
+  UserCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { useAuthStore } from '@/lib/store/auth.store'
@@ -30,8 +36,14 @@ const iconMap: Record<string, LucideIcon> = {
   dashboard: LayoutDashboard,
   settings: Settings,
   file: FileText,
+  'credit-card': CreditCard,
   credit: CreditCard,
   bell: Bell,
+  'help-circle': HelpCircle,
+  car: Car,
+  key: Key,
+  shield: Shield,
+  layers: Layers,
 }
 
 function PageIcon({ name }: { name?: string }) {
@@ -119,7 +131,10 @@ export function Sidebar() {
 
       {/* User */}
       <div className="border-t p-3">
-        <div className="flex items-center gap-3 px-2 py-1.5 mb-1">
+        <Link
+          href="/profile"
+          className="flex items-center gap-3 px-2 py-1.5 mb-1 rounded-md hover:bg-sidebar-accent/50 transition-colors"
+        >
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium shrink-0">
             {user?.firstName?.[0]?.toUpperCase() ?? '?'}
           </div>
@@ -129,7 +144,8 @@ export function Sidebar() {
             </p>
             <p className="text-xs text-sidebar-foreground/50 truncate">{user?.email}</p>
           </div>
-        </div>
+          <UserCircle className="h-4 w-4 text-sidebar-foreground/40 shrink-0" />
+        </Link>
         <Button
           variant="ghost"
           size="sm"

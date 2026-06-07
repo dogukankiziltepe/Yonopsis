@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using SiteYonetimi.Auth.Commands;
 using SiteYonetimi.Auth.DTOs;
+using SiteYonetimi.Auth.Queries;
 
 namespace SiteYonetimi.API.Controllers;
 
@@ -51,6 +52,16 @@ public class AuthController : BaseController
         email = CurrentUserEmail,
         userType = CurrentUserType
     });
+
+    [HttpGet("profile")]
+    [Authorize]
+    public async Task<IActionResult> GetProfile()
+        => Handle(await Mediator.Send(new GetProfileQuery(CurrentUserId)));
+
+    [HttpPut("profile")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
+        => Handle(await Mediator.Send(new UpdateProfileCommand(CurrentUserId, dto)));
 
     [HttpPost("change-password")]
     [Authorize]
