@@ -61,7 +61,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { user, pages, clearTokens } = useAuthStore()
-  console.log(pages,"pages");
+
   const handleLogout = async () => {
     try { await authApi.logout() } catch {}
     clearTokens()
@@ -97,7 +97,7 @@ export function Sidebar() {
               : pathname.startsWith(page.route)
 
             const pageChildren = children
-              .filter((c) => c.parentId === page.name)
+              .filter((c) => c.parentId === page.id)
               .sort((a, b) => a.order - b.order)
 
             return (

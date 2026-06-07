@@ -101,6 +101,7 @@ public class GetUserPagesQueryHandler : IRequestHandler<GetUserPagesQuery, Resul
 
             result.Add(new PageDto
             {
+                Id = page.Id,
                 Name = page.Name,
                 Label = page.Label,
                 Icon = page.Icon,
