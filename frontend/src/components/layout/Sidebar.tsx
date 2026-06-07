@@ -20,6 +20,7 @@ import {
   Shield,
   Layers,
   UserCircle,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { useAuthStore } from '@/lib/store/auth.store'
@@ -69,7 +70,12 @@ function NavItem({ page, active }: { page: PageDto; active: boolean }) {
   )
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean
+  onMobileClose?: () => void
+}
+
+export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, pages, clearTokens } = useAuthStore()
@@ -89,9 +95,26 @@ export function Sidebar() {
   const children = pages.filter((p) => !!p.parentId)
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r bg-sidebar">
-      <div className="flex h-14 items-center border-b px-4">
+    <>
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onMobileClose}
+        />
+      )}
+    <aside className={cn(
+      "flex h-screen w-64 flex-col border-r bg-sidebar",
+      "fixed md:static inset-y-0 left-0 z-50 transition-transform duration-200",
+      mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+    )}>
+      <div className="flex h-14 items-center justify-between border-b px-4">
         <span className="font-semibold text-sidebar-foreground">Site Yönetimi</span>
+        <button
+          className="md:hidden p-1 rounded text-sidebar-foreground/60 hover:text-sidebar-foreground"
+          onClick={onMobileClose}
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
@@ -157,5 +180,6 @@ export function Sidebar() {
         </Button>
       </div>
     </aside>
+    </>
   )
 }

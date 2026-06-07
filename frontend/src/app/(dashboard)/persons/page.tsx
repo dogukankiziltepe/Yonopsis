@@ -167,7 +167,7 @@ export default function PersonsPage() {
         />
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-hidden overflow-x-auto">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -356,7 +356,7 @@ export default function PersonsPage() {
                       <UserCheck className="h-4 w-4 text-muted-foreground" />
                       <h3 className="text-sm font-semibold">Bağlı Daireler</h3>
                     </div>
-                    <div className="border rounded-lg overflow-hidden">
+                    <div className="border rounded-lg overflow-hidden overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
                           <tr className="border-b bg-muted/50">
