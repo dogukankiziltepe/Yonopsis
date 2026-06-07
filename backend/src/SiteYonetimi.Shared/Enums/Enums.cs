@@ -52,3 +52,17 @@ public enum Gender
     Female = 1,
     Other = 2
 }
+
+public enum SupportRequestStatus
+{
+    Open = 0,
+    InProgress = 1,
+    Resolved = 2
+}
+
+public enum PaymentStatus
+{
+    Pending = 0,
+    Paid = 1,
+    Overdue = 2
+}

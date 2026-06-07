@@ -14,6 +14,10 @@ public class SharedTenantDbContext : DbContext
     public DbSet<Building> Buildings => Set<Building>();
     public DbSet<Unit> Units => Set<Unit>();
     public DbSet<UnitType> UnitTypes => Set<UnitType>();
+    public DbSet<SupportRequest> SupportRequests => Set<SupportRequest>();
+    public DbSet<Vehicle> Vehicles => Set<Vehicle>();
+    public DbSet<AccessCard> AccessCards => Set<AccessCard>();
+    public DbSet<Payment> Payments => Set<Payment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,6 +57,49 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.SiteId).IsRequired();
             e.Property(x => x.Name).HasMaxLength(100).IsRequired();
             e.Property(x => x.IsActive).HasDefaultValue(true);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<SupportRequest>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.UserId).IsRequired();
+            e.Property(x => x.Subject).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Description).HasMaxLength(2000);
+            e.HasOne(x => x.Unit).WithMany().HasForeignKey(x => x.UnitId).OnDelete(DeleteBehavior.Restrict);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<Vehicle>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.UserId).IsRequired();
+            e.Property(x => x.Plate).HasMaxLength(20).IsRequired();
+            e.Property(x => x.Brand).HasMaxLength(50);
+            e.Property(x => x.Model).HasMaxLength(50);
+            e.Property(x => x.Color).HasMaxLength(30);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<AccessCard>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.UserId).IsRequired();
+            e.Property(x => x.CardNumber).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Notes).HasMaxLength(500);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<Payment>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.Amount).HasPrecision(18, 2).IsRequired();
+            e.Property(x => x.Description).HasMaxLength(500);
+            e.HasOne(x => x.Unit).WithMany().HasForeignKey(x => x.UnitId).OnDelete(DeleteBehavior.Restrict);
             e.HasQueryFilter(x => !x.IsDeleted);
         });
     }

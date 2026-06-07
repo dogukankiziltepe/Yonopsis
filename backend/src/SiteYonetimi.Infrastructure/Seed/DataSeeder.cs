@@ -83,7 +83,11 @@ public static class DataSeeder
             new { Name = "Daireler",    Label = "Daireler",     Route = "/units",       Icon = (string?)"home",     Order = 2 },
             new { Name = "Kisiler",     Label = "Kişiler",      Route = "/persons",     Icon = (string?)"users",    Order = 3 },
             new { Name = "DaireTipleri", Label = "Daire Tipleri", Route = "/unit-types", Icon = (string?)"layers", Order = 4 },
-            new { Name = "RoleTipleri", Label = "Rol Tipleri",  Route = "/role-types",  Icon = (string?)"shield",   Order = 5 },
+            new { Name = "RoleTipleri",     Label = "Rol Tipleri",      Route = "/role-types",       Icon = (string?)"shield",      Order = 5  },
+            new { Name = "DestekTalepleri", Label = "Destek Talepleri", Route = "/support-requests", Icon = (string?)"help-circle", Order = 6  },
+            new { Name = "Aidatlar",        Label = "Aidatlar",         Route = "/payments",         Icon = (string?)"credit-card", Order = 7  },
+            new { Name = "Araclar",         Label = "Araçlar",          Route = "/vehicles",         Icon = (string?)"car",         Order = 8  },
+            new { Name = "GirisKartlari",   Label = "Giriş Kartları",   Route = "/access-cards",     Icon = (string?)"key",         Order = 9  },
         };
 
         foreach (var pageData in pagesToSeed)
