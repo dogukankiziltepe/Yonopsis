@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { showError, showPermissionError, showNetworkError } from '@/lib/toast'
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5241'
 
@@ -15,6 +16,23 @@ loginApi.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
+
+loginApi.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    if (!error.response) {
+      showNetworkError()
+      return Promise.reject(error)
+    }
+    const status = error.response?.status
+    if (status === 403) showPermissionError()
+    else if (status !== 400 && status !== 401 && status !== 422) {
+      const msg = error.response?.data?.message
+      showError(msg)
+    }
+    return Promise.reject(error)
+  }
+)
 
 // Attach site token to requests
 siteApi.interceptors.request.use((config) => {
@@ -37,7 +55,23 @@ siteApi.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    if (error.response?.status !== 401 || originalRequest._retry) {
+    if (!error.response) {
+      showNetworkError()
+      return Promise.reject(error)
+    }
+
+    const status = error.response?.status
+
+    if (status === 403) {
+      showPermissionError()
+      return Promise.reject(error)
+    }
+
+    if (status !== 401 || originalRequest._retry) {
+      if (status !== 400 && status !== 422) {
+        const msg = error.response?.data?.message
+        showError(msg)
+      }
       return Promise.reject(error)
     }
 
@@ -80,12 +114,12 @@ siteApi.interceptors.response.use(
       })
 
       return siteApi(originalRequest)
-    } catch (refreshError) {
+    } catch {
       useAuthStore.getState().clearTokens()
       if (typeof window !== 'undefined') {
         window.location.href = '/login'
       }
-      return Promise.reject(refreshError)
+      return Promise.reject(error)
     } finally {
       isRefreshing = false
     }
