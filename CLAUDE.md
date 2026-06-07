@@ -4,8 +4,7 @@
 
 - Her özellik, değişiklik veya düzeltme için yeni branch açılır. Doğrudan `main` üzerinde çalışılmaz.
 - **PR'ı asla merge etme.** `git merge` ve `gh pr merge` kullanılmaz. Merge işlemi kullanıcı tarafından yapılır.
-- Her görev tamamlandıktan sonra `backendclaude.md` güncellenmelidir.
-- Her görev tamamlandıktan sonra ilgili Notion maddesinin Status'ü "Frontend In Progress" olarak güncellenir.
+- Her görev tamamlandıktan sonra ilgili ClickUp görevinin Status'ü güncellenir.
 
 ```bash
 git checkout -b feature/<özellik-adı>
@@ -20,7 +19,16 @@ git checkout -b refactor/<konu>
 ```
 /Yonopsis
 ├── frontend/          # Next.js 16 uygulaması
-└── backendclaude.md   # Backend mimari dokümantasyonu (backend kodu ayrı repoda)
+└── backend/           # .NET 8 Modular Monolith API
+    ├── src/
+    │   ├── SiteYonetimi.API
+    │   ├── SiteYonetimi.Infrastructure
+    │   ├── SiteYonetimi.Shared
+    │   └── Modules/
+    │       ├── SiteYonetimi.Auth
+    │       ├── SiteYonetimi.Tenancy
+    │       └── SiteYonetimi.SiteManagement
+    └── CLAUDE.md      # Backend detaylı dokümantasyonu
 ```
 
 Backend: .NET 8 Modular Monolith — `http://localhost:5241` / `https://localhost:7032`
@@ -170,7 +178,7 @@ interface UserClaims {
 
 ---
 
-## Backend Özeti (Detay: backendclaude.md)
+## Backend (Detay: `backend/CLAUDE.md`)
 
 ### Mimari
 - **Modular Monolith**, CQRS (MediatR), FluentValidation, Result\<T\>, soft delete
@@ -178,16 +186,16 @@ interface UserClaims {
 ### Veritabanları
 | DB | İçerik |
 |---|---|
-| MasterDB | Users, Sites, UserSites, RoleTypes, RefreshTokens, Subscription |
-| SharedDB | DbMode=Shared sitelerin Buildings & Units (SiteId ile ayrım) |
+| MasterDB | Users, Sites, UserSites, RoleTypes, Pages, RolePermissions, RefreshTokens, Modules, SubscriptionPlans, SiteSubscriptions |
+| SharedDB | DbMode=Shared sitelerin Buildings, Units, UnitTypes (SiteId ile ayrım) |
 | DedicatedDB | DbMode=Dedicated siteler için ayrı fiziksel DB |
 
 ### Modüller
 ```
-src/Modules/
+backend/src/Modules/
 ├── SiteYonetimi.Auth           # Login, Token, Refresh, ChangePassword
-├── SiteYonetimi.Tenancy        # Site, UserSite, RoleType yönetimi
-└── SiteYonetimi.SiteManagement # Site CRUD (SuperAdmin)
+├── SiteYonetimi.Tenancy        # Pages, UserSite, RoleType yönetimi
+└── SiteYonetimi.SiteManagement # Site, Building, UnitType CRUD
 ```
 
 ### Request Pipeline
@@ -205,9 +213,11 @@ ValidationExceptionMiddleware → RateLimiter → Authentication → Authorizati
 ### Seed Data
 - SuperAdmin: `gktg@mail.com` / `Sifre1234`
 - Planlar: Temel (499₺), Standart (999₺), Premium (1999₺)
+- Modüller & Sayfalar: Temel modülü + Binalar, Daireler sayfaları
 
 ### Backend Çalıştırma
 ```bash
+cd backend
 dotnet restore && dotnet build
 dotnet run --project ./src/SiteYonetimi.API
 # Swagger: http://localhost:5241/swagger
@@ -215,6 +225,7 @@ dotnet run --project ./src/SiteYonetimi.API
 
 ### Migration
 ```bash
+cd backend
 # MasterDb
 dotnet ef migrations add <Ad> --project ./src/SiteYonetimi.Infrastructure --startup-project ./src/SiteYonetimi.API --context MasterDbContext
 
