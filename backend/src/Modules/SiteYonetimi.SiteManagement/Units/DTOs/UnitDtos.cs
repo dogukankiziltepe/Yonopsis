@@ -76,3 +76,5 @@ public record UnitDetailDto(
     string? Description,
     DateTime CreatedAt,
     DateTime UpdatedAt);
+
+public record AssignUserDto(Guid UserId);

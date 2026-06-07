@@ -41,4 +41,28 @@ public class UnitsController : BaseController
     {
         return Handle(await Mediator.Send(new DeleteUnitCommand(id)));
     }
+
+    [HttpPatch("{id:guid}/assign-owner")]
+    public async Task<IActionResult> AssignOwner(Guid id, [FromBody] AssignUserDto dto)
+    {
+        return Handle(await Mediator.Send(new AssignOwnerToUnitCommand(id, dto.UserId)));
+    }
+
+    [HttpPatch("{id:guid}/assign-tenant")]
+    public async Task<IActionResult> AssignTenant(Guid id, [FromBody] AssignUserDto dto)
+    {
+        return Handle(await Mediator.Send(new AssignTenantToUnitCommand(id, dto.UserId)));
+    }
+
+    [HttpPatch("{id:guid}/unassign-owner")]
+    public async Task<IActionResult> UnassignOwner(Guid id)
+    {
+        return Handle(await Mediator.Send(new UnassignOwnerFromUnitCommand(id)));
+    }
+
+    [HttpPatch("{id:guid}/unassign-tenant")]
+    public async Task<IActionResult> UnassignTenant(Guid id)
+    {
+        return Handle(await Mediator.Send(new UnassignTenantFromUnitCommand(id)));
+    }
 }
