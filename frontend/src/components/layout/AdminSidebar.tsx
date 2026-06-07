@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Building2, LogOut } from 'lucide-react'
+import { Building2, LogOut, Package } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { authApi } from '@/lib/api/auth'
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 
 const navItems = [
   { href: '/admin/sites', label: 'Siteler', icon: Building2 },
+  { href: '/admin/plans', label: 'Planlar', icon: Package },
 ]
 
 export function AdminSidebar() {
