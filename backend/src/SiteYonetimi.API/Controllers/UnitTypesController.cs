@@ -7,7 +7,7 @@ using SiteYonetimi.SiteManagement.UnitTypes.Queries;
 namespace SiteYonetimi.API.Controllers;
 
 [Route("api/unit-types")]
-[RequirePage("Daire Tipleri")]
+[RequirePage("DaireTipleri")]
 public class UnitTypesController : BaseController
 {
     [HttpGet]

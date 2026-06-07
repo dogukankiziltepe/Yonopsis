@@ -18,6 +18,7 @@ public class SharedTenantDbContext : DbContext
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<AccessCard> AccessCards => Set<AccessCard>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -100,6 +101,15 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.Amount).HasPrecision(18, 2).IsRequired();
             e.Property(x => x.Description).HasMaxLength(500);
             e.HasOne(x => x.Unit).WithMany().HasForeignKey(x => x.UnitId).OnDelete(DeleteBehavior.Restrict);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<Announcement>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Content).HasMaxLength(5000).IsRequired();
             e.HasQueryFilter(x => !x.IsDeleted);
         });
     }
