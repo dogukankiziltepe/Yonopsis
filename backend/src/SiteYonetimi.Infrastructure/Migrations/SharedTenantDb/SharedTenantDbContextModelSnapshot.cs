@@ -176,6 +176,45 @@ namespace SiteYonetimi.Infrastructure.Migrations.SharedTenantDb
                     b.ToTable("UnitTypes");
                 });
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SupportRequestComment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AuthorName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestId");
+
+                    b.ToTable("SupportRequestComments");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Unit", b =>
                 {
                     b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.Building", "Building")
@@ -194,9 +233,25 @@ namespace SiteYonetimi.Infrastructure.Migrations.SharedTenantDb
                     b.Navigation("UnitType");
                 });
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SupportRequestComment", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.SupportRequest", "Request")
+                        .WithMany("Comments")
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Request");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Building", b =>
                 {
                     b.Navigation("Units");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SupportRequest", b =>
+                {
+                    b.Navigation("Comments");
                 });
 #pragma warning restore 612, 618
         }

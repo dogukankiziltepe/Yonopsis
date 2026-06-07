@@ -1,16 +1,18 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { Plus, X, HelpCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { Plus, X, HelpCircle, ChevronLeft, ChevronRight, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PaginationControls } from '@/components/ui/pagination-controls'
 import { supportRequestsApi } from '@/lib/api/supportRequests'
 import { showSuccess, showError } from '@/lib/toast'
+import { useAuthStore } from '@/lib/store/auth.store'
 import {
   SupportRequestSummaryDto,
   SupportRequestDetailDto,
+  SupportRequestCommentDto,
   SupportRequestStatus,
   SupportRequestStatusLabel,
   SupportRequestStatusColor,
@@ -39,6 +41,14 @@ export default function SupportRequestsPage() {
   const [formDescription, setFormDescription] = useState('')
   const [saving, setSaving] = useState(false)
 
+  const [comments, setComments] = useState<SupportRequestCommentDto[]>([])
+  const [commentsLoading, setCommentsLoading] = useState(false)
+  const [commentText, setCommentText] = useState('')
+  const [commentSending, setCommentSending] = useState(false)
+  const commentsEndRef = useRef<HTMLDivElement>(null)
+
+  const { user } = useAuthStore()
+
   useEffect(() => {
     const t = setTimeout(() => setSearchDebounced(search), 300)
     return () => clearTimeout(t)
@@ -64,17 +74,41 @@ export default function SupportRequestsPage() {
     setPage(1)
   }
 
+  const loadComments = (id: string) => {
+    setCommentsLoading(true)
+    supportRequestsApi.getComments(id)
+      .then((res) => {
+        setComments(res.data ?? [])
+        setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+      })
+      .catch(() => {})
+      .finally(() => setCommentsLoading(false))
+  }
+
   const openView = (item: SupportRequestSummaryDto, index: number) => {
     setPanelMode('view')
     setSelected(item)
     setPanelIndex(index)
     setDetail(null)
+    setComments([])
+    setCommentText('')
     setPanelOpen(true)
     setDetailLoading(true)
     supportRequestsApi.getById(item.id)
       .then((res) => setDetail(res.data))
       .catch(() => {})
       .finally(() => setDetailLoading(false))
+    loadComments(item.id)
+  }
+
+  const handleAddComment = async () => {
+    if (!commentText.trim() || !selected) return
+    setCommentSending(true)
+    try {
+      await supportRequestsApi.addComment(selected.id, commentText.trim())
+      setCommentText('')
+      loadComments(selected.id)
+    } catch { showError('Yorum gönderilemedi.') } finally { setCommentSending(false) }
   }
 
   const openCreate = () => {
@@ -271,6 +305,50 @@ export default function SupportRequestsPage() {
                     <p>{detail.description}</p>
                   </div>
                 )}
+
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">YORUMLAR</p>
+                  <div className="border rounded-md flex flex-col" style={{ minHeight: 180, maxHeight: 320 }}>
+                    <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                      {commentsLoading ? (
+                        <p className="text-xs text-muted-foreground text-center py-4">Yükleniyor...</p>
+                      ) : comments.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-4">Henüz yorum yok.</p>
+                      ) : (
+                        comments.map((c) => {
+                          const isMine = c.userId === user?.userId
+                          return (
+                            <div key={c.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${isMine ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                                {!isMine && c.authorName && (
+                                  <p className="text-xs font-medium mb-0.5 opacity-70">{c.authorName}</p>
+                                )}
+                                <p className="leading-snug">{c.content}</p>
+                                <p className={`text-xs mt-1 ${isMine ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+                                  {new Date(c.createdAt).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}
+                                </p>
+                              </div>
+                            </div>
+                          )
+                        })
+                      )}
+                      <div ref={commentsEndRef} />
+                    </div>
+                    <div className="border-t p-2 flex gap-2">
+                      <textarea
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAddComment() } }}
+                        placeholder="Yorum yazın... (Enter gönderir)"
+                        rows={2}
+                        className="flex-1 text-sm bg-background border rounded-md px-2 py-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                      <Button size="icon" className="h-9 w-9 shrink-0 self-end" onClick={handleAddComment} disabled={commentSending || !commentText.trim()}>
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground">DURUM DEĞİŞTİR</p>

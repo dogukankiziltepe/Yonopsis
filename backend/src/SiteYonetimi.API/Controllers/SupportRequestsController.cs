@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using SiteYonetimi.API.Filters;
 using SiteYonetimi.SiteManagement.SupportRequests.Commands;
@@ -40,6 +41,25 @@ public class SupportRequestsController : BaseController
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateSupportRequestStatusDto dto)
     {
         return Handle(await Mediator.Send(new UpdateSupportRequestStatusCommand(id, CurrentSiteId, dto)));
+    }
+
+    [HttpGet("{id:guid}/comments")]
+    public async Task<IActionResult> GetComments(Guid id)
+    {
+        return Handle(await Mediator.Send(new GetSupportRequestCommentsQuery(id, CurrentSiteId)));
+    }
+
+    [HttpPost("{id:guid}/comments")]
+    public async Task<IActionResult> AddComment(Guid id, [FromBody] AddSupportRequestCommentDto dto)
+    {
+        var firstName = User.FindFirstValue(ClaimTypes.GivenName) ?? "";
+        var lastName = User.FindFirstValue(ClaimTypes.Surname) ?? "";
+        var authorName = $"{firstName} {lastName}".Trim();
+        if (string.IsNullOrEmpty(authorName)) authorName = CurrentUserEmail;
+
+        var result = await Mediator.Send(new AddSupportRequestCommentCommand(id, CurrentSiteId, CurrentUserId, authorName, dto.Content));
+        if (!result.IsSuccess) return BadRequest(new { message = result.Error });
+        return Created(string.Empty, new { id = result.Data });
     }
 
     [HttpDelete("{id:guid}")]

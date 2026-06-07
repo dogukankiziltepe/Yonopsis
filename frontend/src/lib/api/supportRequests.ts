@@ -2,6 +2,7 @@ import { siteApi } from './client'
 import {
   SupportRequestSummaryDto,
   SupportRequestDetailDto,
+  SupportRequestCommentDto,
   CreateSupportRequestDto,
   UpdateSupportRequestDto,
   UpdateSupportRequestStatusDto,
@@ -23,6 +24,12 @@ export const supportRequestsApi = {
 
   updateStatus: (id: string, data: UpdateSupportRequestStatusDto) =>
     siteApi.patch(`/api/support-requests/${id}/status`, data),
+
+  getComments: (id: string) =>
+    siteApi.get<SupportRequestCommentDto[]>(`/api/support-requests/${id}/comments`),
+
+  addComment: (id: string, content: string) =>
+    siteApi.post<{ id: string }>(`/api/support-requests/${id}/comments`, { content }),
 
   delete: (id: string) =>
     siteApi.delete(`/api/support-requests/${id}`),

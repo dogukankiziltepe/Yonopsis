@@ -17,4 +17,5 @@ public class SupportRequest
     public DateTime? UpdatedAt { get; set; }
 
     public Unit Unit { get; set; } = null!;
+    public ICollection<SupportRequestComment> Comments { get; set; } = [];
 }

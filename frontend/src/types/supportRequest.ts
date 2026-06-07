@@ -29,6 +29,14 @@ export interface SupportRequestDetailDto extends SupportRequestSummaryDto {
   updatedAt?: string
 }
 
+export interface SupportRequestCommentDto {
+  id: string
+  userId: string
+  authorName?: string
+  content: string
+  createdAt: string
+}
+
 export interface CreateSupportRequestDto {
   unitId: string
   subject: string

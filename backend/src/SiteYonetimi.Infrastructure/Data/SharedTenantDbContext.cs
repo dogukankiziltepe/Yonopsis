@@ -15,6 +15,7 @@ public class SharedTenantDbContext : DbContext
     public DbSet<Unit> Units => Set<Unit>();
     public DbSet<UnitType> UnitTypes => Set<UnitType>();
     public DbSet<SupportRequest> SupportRequests => Set<SupportRequest>();
+    public DbSet<SupportRequestComment> SupportRequestComments => Set<SupportRequestComment>();
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<AccessCard> AccessCards => Set<AccessCard>();
     public DbSet<Payment> Payments => Set<Payment>();
@@ -69,6 +70,16 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.Subject).HasMaxLength(200).IsRequired();
             e.Property(x => x.Description).HasMaxLength(2000);
             e.HasOne(x => x.Unit).WithMany().HasForeignKey(x => x.UnitId).OnDelete(DeleteBehavior.Restrict);
+            e.HasMany(x => x.Comments).WithOne(x => x.Request).HasForeignKey(x => x.RequestId).OnDelete(DeleteBehavior.Cascade);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<SupportRequestComment>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.Content).HasMaxLength(2000).IsRequired();
+            e.Property(x => x.AuthorName).HasMaxLength(100);
             e.HasQueryFilter(x => !x.IsDeleted);
         });
 

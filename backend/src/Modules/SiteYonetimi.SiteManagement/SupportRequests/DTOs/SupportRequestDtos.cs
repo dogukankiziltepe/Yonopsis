@@ -2,6 +2,15 @@ using SiteYonetimi.Shared.Enums;
 
 namespace SiteYonetimi.SiteManagement.SupportRequests.DTOs;
 
+public record AddSupportRequestCommentDto(string Content);
+
+public record SupportRequestCommentDto(
+    Guid Id,
+    Guid UserId,
+    string? AuthorName,
+    string Content,
+    DateTime CreatedAt);
+
 public record CreateSupportRequestDto(
     Guid UnitId,
     string Subject,
