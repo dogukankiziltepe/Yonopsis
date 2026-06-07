@@ -34,8 +34,10 @@ export default function SiteSelectionPage() {
       setSiteToken(res.data.accessToken, { siteId: res.data.siteId, siteName: res.data.siteName, userType: res.data.userType, roleTypeId: res.data.roleTypeId, roleName: res.data.roleName })
 
       const pagesRes = await getMyPages()
-      if (pagesRes.isSuccess && pagesRes.value) {
-        setPages(pagesRes.value)
+      console.log(pagesRes,"res")
+      if (pagesRes && pagesRes.length > 0) {
+        console.log("set")
+        setPages(pagesRes)
       }
 
       const redirectMap: Record<string, string> = {

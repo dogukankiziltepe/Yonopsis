@@ -61,7 +61,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { user, pages, clearTokens } = useAuthStore()
-
+  console.log(pages,"pages");
   const handleLogout = async () => {
     try { await authApi.logout() } catch {}
     clearTokens()
