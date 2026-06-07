@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -90,6 +91,12 @@ export default function LoginPage() {
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? 'Giriş yapılıyor...' : 'Giriş Yap'}
           </Button>
+
+          <div className="text-center">
+            <Link href="/forgot-password" className="text-sm text-muted-foreground hover:underline">
+              Şifremi unuttum
+            </Link>
+          </div>
         </form>
       </CardContent>
     </Card>

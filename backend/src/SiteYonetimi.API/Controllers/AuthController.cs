@@ -67,4 +67,15 @@ public class AuthController : BaseController
     [Authorize]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         => Handle(await Mediator.Send(new ChangePasswordCommand(CurrentUserId, request.CurrentPassword, request.NewPassword)));
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        await Mediator.Send(new ForgotPasswordCommand(request.Email));
+        return Ok(new { message = "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi." });
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        => Handle(await Mediator.Send(new ResetPasswordCommand(request.Token, request.NewPassword)));
 }

@@ -18,6 +18,7 @@ public class MasterDbContext : DbContext
     public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
     public DbSet<SubscriptionPlanModule> SubscriptionPlanModules => Set<SubscriptionPlanModule>();
     public DbSet<SiteSubscription> SiteSubscriptions => Set<SiteSubscription>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -133,6 +134,14 @@ public class MasterDbContext : DbContext
             e.HasKey(x => x.Id);
             e.HasOne(x => x.Site).WithMany(x => x.SiteSubscriptions).HasForeignKey(x => x.SiteId);
             e.HasOne(x => x.SubscriptionPlan).WithMany(x => x.SiteSubscriptions).HasForeignKey(x => x.SubscriptionPlanId);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<PasswordResetToken>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Token).HasMaxLength(100).IsRequired();
+            e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId);
             e.HasQueryFilter(x => !x.IsDeleted);
         });
     }
