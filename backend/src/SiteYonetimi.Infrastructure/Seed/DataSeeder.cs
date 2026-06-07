@@ -79,8 +79,11 @@ public static class DataSeeder
         // Seed pages
         var pagesToSeed = new[]
         {
-            new { Name = "Binalar",  Label = "Binalar",  Route = "/buildings", Icon = (string?)"building", Order = 1 },
-            new { Name = "Daireler", Label = "Daireler", Route = "/units",      Icon = (string?)"home",     Order = 2 },
+            new { Name = "Binalar",     Label = "Binalar",      Route = "/buildings",  Icon = (string?)"building", Order = 1 },
+            new { Name = "Daireler",    Label = "Daireler",     Route = "/units",       Icon = (string?)"home",     Order = 2 },
+            new { Name = "Kisiler",     Label = "Kişiler",      Route = "/persons",     Icon = (string?)"users",    Order = 3 },
+            new { Name = "DaireTipleri", Label = "Daire Tipleri", Route = "/unit-types", Icon = (string?)"layers", Order = 4 },
+            new { Name = "RoleTipleri", Label = "Rol Tipleri",  Route = "/role-types",  Icon = (string?)"shield",   Order = 5 },
         };
 
         foreach (var pageData in pagesToSeed)

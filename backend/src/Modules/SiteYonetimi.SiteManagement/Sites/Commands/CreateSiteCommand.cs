@@ -87,6 +87,21 @@ public class CreateSiteCommandHandler : IRequestHandler<CreateSiteCommand, Resul
 
         _db.UserSites.Add(userSite);
 
+        // Auto-create Temel plan subscription for new sites
+        var temelPlan = await _db.SubscriptionPlans
+            .FirstOrDefaultAsync(sp => sp.Name == "Temel" && sp.IsActive, cancellationToken);
+        if (temelPlan != null)
+        {
+            _db.SiteSubscriptions.Add(new SiteSubscription
+            {
+                SiteId = site.Id,
+                SubscriptionPlanId = temelPlan.Id,
+                StartDate = DateTime.UtcNow,
+                EndDate = DateTime.UtcNow.AddYears(10),
+                IsActive = true
+            });
+        }
+
         if (dto.DbMode == DbMode.Dedicated)
         {
             var masterConnStr = _configuration.GetConnectionString("MasterDb")!;
