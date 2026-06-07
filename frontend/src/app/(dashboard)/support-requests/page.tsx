@@ -5,7 +5,7 @@ import { Plus, X, HelpCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 import { supportRequestsApi } from '@/lib/api/supportRequests'
 import { showSuccess, showError } from '@/lib/toast'
 import {
@@ -16,10 +16,16 @@ import {
   SupportRequestStatusColor,
 } from '@/types/supportRequest'
 
+const PAGE_SIZE = 20
+
 export default function SupportRequestsPage() {
   const [items, setItems] = useState<SupportRequestSummaryDto[]>([])
-  const [loading, setLoading] = useState(true)
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
+  const [searchDebounced, setSearchDebounced] = useState('')
+  const [loading, setLoading] = useState(true)
 
   const [panelOpen, setPanelOpen] = useState(false)
   const [panelMode, setPanelMode] = useState<'view' | 'create'>('view')
@@ -33,23 +39,30 @@ export default function SupportRequestsPage() {
   const [formDescription, setFormDescription] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const filtered = items.filter((r) => {
-    const q = search.toLowerCase()
-    return (
-      r.subject.toLowerCase().includes(q) ||
-      (r.unitDoorNumber ?? '').toLowerCase().includes(q)
-    )
-  })
+  useEffect(() => {
+    const t = setTimeout(() => setSearchDebounced(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
 
-  const load = useCallback(() => {
+  const load = useCallback((p = page) => {
     setLoading(true)
-    supportRequestsApi.getAll()
-      .then((res) => setItems(res.data ?? []))
+    supportRequestsApi.getAll(p, PAGE_SIZE, searchDebounced || undefined)
+      .then((res) => {
+        const d = res.data
+        setItems(d.items ?? [])
+        setTotalCount(d.totalCount ?? 0)
+        setTotalPages(d.totalPages ?? 0)
+      })
       .catch(() => showError('Destek talepleri yüklenemedi.'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [page, searchDebounced])
 
   useEffect(() => { load() }, [load])
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val)
+    setPage(1)
+  }
 
   const openView = (item: SupportRequestSummaryDto, index: number) => {
     setPanelMode('view')
@@ -90,8 +103,7 @@ export default function SupportRequestsPage() {
     try {
       await supportRequestsApi.updateStatus(selected.id, { status })
       showSuccess('Durum güncellendi.')
-      const updated = items.map(i => i.id === selected.id ? { ...i, status } : i)
-      setItems(updated)
+      setItems(prev => prev.map(i => i.id === selected.id ? { ...i, status } : i))
       if (detail) setDetail({ ...detail, status })
       setSelected({ ...selected, status })
     } catch { showError('Durum güncellenemedi.') }
@@ -109,8 +121,8 @@ export default function SupportRequestsPage() {
 
   const navigatePanel = (dir: -1 | 1) => {
     const next = panelIndex + dir
-    if (next < 0 || next >= filtered.length) return
-    openView(filtered[next], next)
+    if (next < 0 || next >= items.length) return
+    openView(items[next], next)
   }
 
   return (
@@ -124,11 +136,10 @@ export default function SupportRequestsPage() {
       </div>
 
       <div className="mb-3">
-        <Input
-          placeholder="Konu veya daire ara..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-xs"
+        <PaginationControls
+          page={page} pageSize={PAGE_SIZE} totalCount={totalCount} totalPages={totalPages}
+          search={search} onPageChange={setPage} onSearchChange={handleSearchChange}
+          searchPlaceholder="Konu ara..."
         />
       </div>
 
@@ -145,7 +156,7 @@ export default function SupportRequestsPage() {
           <tbody>
             {loading ? (
               <tr><td colSpan={4} className="text-center py-12 text-muted-foreground">Yükleniyor...</td></tr>
-            ) : filtered.length === 0 ? (
+            ) : items.length === 0 ? (
               <tr><td colSpan={4}>
                 <div className="flex flex-col items-center py-12">
                   <HelpCircle className="h-10 w-10 text-muted-foreground/50 mb-3" />
@@ -153,7 +164,7 @@ export default function SupportRequestsPage() {
                 </div>
               </td></tr>
             ) : (
-              filtered.map((item, i) => (
+              items.map((item, i) => (
                 <tr
                   key={item.id}
                   onClick={() => openView(item, i)}
@@ -187,8 +198,8 @@ export default function SupportRequestsPage() {
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigatePanel(-1)} disabled={panelIndex === 0}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-xs text-muted-foreground">{panelIndex + 1} / {filtered.length}</span>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigatePanel(1)} disabled={panelIndex >= filtered.length - 1}>
+                  <span className="text-xs text-muted-foreground">{panelIndex + 1} / {items.length}</span>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigatePanel(1)} disabled={panelIndex >= items.length - 1}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </>

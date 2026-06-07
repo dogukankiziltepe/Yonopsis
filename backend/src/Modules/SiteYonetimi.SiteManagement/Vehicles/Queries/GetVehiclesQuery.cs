@@ -6,26 +6,42 @@ using SiteYonetimi.SiteManagement.Vehicles.DTOs;
 
 namespace SiteYonetimi.SiteManagement.Vehicles.Queries;
 
-public record GetVehiclesBySiteQuery(Guid SiteId) : IRequest<Result<List<VehicleSummaryDto>>>;
+public record GetVehiclesBySiteQuery(Guid SiteId, int Page = 1, int PageSize = 20, string? SearchTerm = null)
+    : IRequest<Result<PaginatedResult<VehicleSummaryDto>>>;
 public record GetVehiclesByUserQuery(Guid UserId, Guid SiteId) : IRequest<Result<List<VehicleSummaryDto>>>;
 public record GetVehicleByIdQuery(Guid Id, Guid SiteId) : IRequest<Result<VehicleSummaryDto>>;
 
-public class GetVehiclesBySiteQueryHandler : IRequestHandler<GetVehiclesBySiteQuery, Result<List<VehicleSummaryDto>>>
+public class GetVehiclesBySiteQueryHandler : IRequestHandler<GetVehiclesBySiteQuery, Result<PaginatedResult<VehicleSummaryDto>>>
 {
     private readonly SharedTenantDbContext _db;
     public GetVehiclesBySiteQueryHandler(SharedTenantDbContext db) => _db = db;
 
-    public async Task<Result<List<VehicleSummaryDto>>> Handle(GetVehiclesBySiteQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PaginatedResult<VehicleSummaryDto>>> Handle(GetVehiclesBySiteQuery request, CancellationToken cancellationToken)
     {
-        var items = await _db.Vehicles
-            .Where(x => x.SiteId == request.SiteId)
+        var query = _db.Vehicles.Where(x => x.SiteId == request.SiteId);
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var term = request.SearchTerm.ToLower();
+            query = query.Where(x =>
+                x.Plate.ToLower().Contains(term) ||
+                (x.Brand != null && x.Brand.ToLower().Contains(term)) ||
+                (x.Model != null && x.Model.ToLower().Contains(term)));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
             .OrderBy(x => x.Plate)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(x => new VehicleSummaryDto(
                 x.Id, x.SiteId, x.UserId, x.Plate,
                 x.Brand, x.Model, x.Color, x.Year, x.IsActive, x.CreatedAt))
             .ToListAsync(cancellationToken);
 
-        return Result<List<VehicleSummaryDto>>.Success(items);
+        return Result<PaginatedResult<VehicleSummaryDto>>.Success(
+            PaginatedResult<VehicleSummaryDto>.Create(items, totalCount, request.Page, request.PageSize));
     }
 }
 

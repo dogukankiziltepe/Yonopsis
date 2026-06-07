@@ -5,10 +5,11 @@ import {
   CreateAnnouncementDto,
   UpdateAnnouncementDto,
 } from '@/types/announcement'
+import { PaginatedResult } from '@/types/api'
 
 export const announcementsApi = {
-  getAll: () =>
-    siteApi.get<AnnouncementSummaryDto[]>('/api/announcements'),
+  getAll: (page = 1, pageSize = 20, search?: string) =>
+    siteApi.get<PaginatedResult<AnnouncementSummaryDto>>('/api/announcements', { params: { page, pageSize, search } }),
 
   getById: (id: string) =>
     siteApi.get<AnnouncementDetailDto>(`/api/announcements/${id}`),

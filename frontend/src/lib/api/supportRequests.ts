@@ -6,10 +6,11 @@ import {
   UpdateSupportRequestDto,
   UpdateSupportRequestStatusDto,
 } from '@/types/supportRequest'
+import { PaginatedResult } from '@/types/api'
 
 export const supportRequestsApi = {
-  getAll: () =>
-    siteApi.get<SupportRequestSummaryDto[]>('/api/support-requests'),
+  getAll: (page = 1, pageSize = 20, search?: string) =>
+    siteApi.get<PaginatedResult<SupportRequestSummaryDto>>('/api/support-requests', { params: { page, pageSize, search } }),
 
   getById: (id: string) =>
     siteApi.get<SupportRequestDetailDto>(`/api/support-requests/${id}`),

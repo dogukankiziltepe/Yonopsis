@@ -6,14 +6,21 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 import { accessCardsApi } from '@/lib/api/accessCards'
 import { showSuccess, showError } from '@/lib/toast'
 import { AccessCardSummaryDto, CreateAccessCardDto } from '@/types/accessCard'
 
+const PAGE_SIZE = 20
+
 export default function AccessCardsPage() {
   const [items, setItems] = useState<AccessCardSummaryDto[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [searchDebounced, setSearchDebounced] = useState('')
 
   const [panelOpen, setPanelOpen] = useState(false)
   const [panelMode, setPanelMode] = useState<'view' | 'create'>('view')
@@ -27,20 +34,27 @@ export default function AccessCardsPage() {
   const [formNotes, setFormNotes] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const filtered = items.filter((c) => {
-    const q = search.toLowerCase()
-    return c.cardNumber.toLowerCase().includes(q)
-  })
+  useEffect(() => {
+    const t = setTimeout(() => setSearchDebounced(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   const load = useCallback(() => {
     setLoading(true)
-    accessCardsApi.getAll()
-      .then((res) => setItems(res.data ?? []))
+    accessCardsApi.getAll(page, PAGE_SIZE, searchDebounced || undefined)
+      .then((res) => {
+        const d = res.data
+        setItems(d.items ?? [])
+        setTotalCount(d.totalCount ?? 0)
+        setTotalPages(d.totalPages ?? 0)
+      })
       .catch(() => showError('Giriş kartları yüklenemedi.'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [page, searchDebounced])
 
   useEffect(() => { load() }, [load])
+
+  const handleSearchChange = (val: string) => { setSearch(val); setPage(1) }
 
   const openView = (item: AccessCardSummaryDto, index: number) => {
     setPanelMode('view')
@@ -92,8 +106,8 @@ export default function AccessCardsPage() {
 
   const navigatePanel = (dir: -1 | 1) => {
     const next = panelIndex + dir
-    if (next < 0 || next >= filtered.length) return
-    openView(filtered[next], next)
+    if (next < 0 || next >= items.length) return
+    openView(items[next], next)
   }
 
   return (
@@ -107,11 +121,10 @@ export default function AccessCardsPage() {
       </div>
 
       <div className="mb-3">
-        <Input
-          placeholder="Kart numarası ara..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-xs"
+        <PaginationControls
+          page={page} pageSize={PAGE_SIZE} totalCount={totalCount} totalPages={totalPages}
+          search={search} onPageChange={setPage} onSearchChange={handleSearchChange}
+          searchPlaceholder="Kart numarası ara..."
         />
       </div>
 
@@ -128,7 +141,7 @@ export default function AccessCardsPage() {
           <tbody>
             {loading ? (
               <tr><td colSpan={4} className="text-center py-12 text-muted-foreground">Yükleniyor...</td></tr>
-            ) : filtered.length === 0 ? (
+            ) : items.length === 0 ? (
               <tr><td colSpan={4}>
                 <div className="flex flex-col items-center py-12">
                   <Key className="h-10 w-10 text-muted-foreground/50 mb-3" />
@@ -136,7 +149,7 @@ export default function AccessCardsPage() {
                 </div>
               </td></tr>
             ) : (
-              filtered.map((item, i) => (
+              items.map((item, i) => (
                 <tr
                   key={item.id}
                   onClick={() => openView(item, i)}
@@ -172,8 +185,8 @@ export default function AccessCardsPage() {
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigatePanel(-1)} disabled={panelIndex === 0}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-xs text-muted-foreground">{panelIndex + 1} / {filtered.length}</span>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigatePanel(1)} disabled={panelIndex >= filtered.length - 1}>
+                  <span className="text-xs text-muted-foreground">{panelIndex + 1} / {items.length}</span>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigatePanel(1)} disabled={panelIndex >= items.length - 1}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </>

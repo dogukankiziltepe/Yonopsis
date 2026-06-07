@@ -5,10 +5,11 @@ import {
   UpdatePaymentDto,
   UpdatePaymentStatusDto,
 } from '@/types/payment'
+import { PaginatedResult } from '@/types/api'
 
 export const paymentsApi = {
-  getAll: () =>
-    siteApi.get<PaymentSummaryDto[]>('/api/payments'),
+  getAll: (page = 1, pageSize = 20, search?: string) =>
+    siteApi.get<PaginatedResult<PaymentSummaryDto>>('/api/payments', { params: { page, pageSize, search } }),
 
   getById: (id: string) =>
     siteApi.get<PaymentSummaryDto>(`/api/payments/${id}`),

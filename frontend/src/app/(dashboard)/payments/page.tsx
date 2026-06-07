@@ -5,6 +5,7 @@ import { Plus, X, CreditCard, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 import { paymentsApi } from '@/lib/api/payments'
 import { showSuccess, showError } from '@/lib/toast'
 import {
@@ -15,10 +16,16 @@ import {
   CreatePaymentDto,
 } from '@/types/payment'
 
+const PAGE_SIZE = 20
+
 export default function PaymentsPage() {
   const [items, setItems] = useState<PaymentSummaryDto[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [searchDebounced, setSearchDebounced] = useState('')
 
   const [panelOpen, setPanelOpen] = useState(false)
   const [panelMode, setPanelMode] = useState<'view' | 'create'>('view')
@@ -31,23 +38,27 @@ export default function PaymentsPage() {
   const [formDescription, setFormDescription] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const filtered = items.filter((r) => {
-    const q = search.toLowerCase()
-    return (
-      (r.unitDoorNumber ?? '').toLowerCase().includes(q) ||
-      (r.description ?? '').toLowerCase().includes(q)
-    )
-  })
+  useEffect(() => {
+    const t = setTimeout(() => setSearchDebounced(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   const load = useCallback(() => {
     setLoading(true)
-    paymentsApi.getAll()
-      .then((res) => setItems(res.data ?? []))
+    paymentsApi.getAll(page, PAGE_SIZE, searchDebounced || undefined)
+      .then((res) => {
+        const d = res.data
+        setItems(d.items ?? [])
+        setTotalCount(d.totalCount ?? 0)
+        setTotalPages(d.totalPages ?? 0)
+      })
       .catch(() => showError('Aidatlar yüklenemedi.'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [page, searchDebounced])
 
   useEffect(() => { load() }, [load])
+
+  const handleSearchChange = (val: string) => { setSearch(val); setPage(1) }
 
   const openView = (item: PaymentSummaryDto, index: number) => {
     setPanelMode('view')
@@ -116,8 +127,8 @@ export default function PaymentsPage() {
 
   const navigatePanel = (dir: -1 | 1) => {
     const next = panelIndex + dir
-    if (next < 0 || next >= filtered.length) return
-    openView(filtered[next], next)
+    if (next < 0 || next >= items.length) return
+    openView(items[next], next)
   }
 
   const formatCurrency = (amount: number) =>
@@ -134,11 +145,10 @@ export default function PaymentsPage() {
       </div>
 
       <div className="mb-3">
-        <Input
-          placeholder="Daire veya açıklama ara..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-xs"
+        <PaginationControls
+          page={page} pageSize={PAGE_SIZE} totalCount={totalCount} totalPages={totalPages}
+          search={search} onPageChange={setPage} onSearchChange={handleSearchChange}
+          searchPlaceholder="Daire veya açıklama ara..."
         />
       </div>
 
@@ -155,7 +165,7 @@ export default function PaymentsPage() {
           <tbody>
             {loading ? (
               <tr><td colSpan={4} className="text-center py-12 text-muted-foreground">Yükleniyor...</td></tr>
-            ) : filtered.length === 0 ? (
+            ) : items.length === 0 ? (
               <tr><td colSpan={4}>
                 <div className="flex flex-col items-center py-12">
                   <CreditCard className="h-10 w-10 text-muted-foreground/50 mb-3" />
@@ -163,7 +173,7 @@ export default function PaymentsPage() {
                 </div>
               </td></tr>
             ) : (
-              filtered.map((item, i) => (
+              items.map((item, i) => (
                 <tr
                   key={item.id}
                   onClick={() => openView(item, i)}
@@ -197,8 +207,8 @@ export default function PaymentsPage() {
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigatePanel(-1)} disabled={panelIndex === 0}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-xs text-muted-foreground">{panelIndex + 1} / {filtered.length}</span>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigatePanel(1)} disabled={panelIndex >= filtered.length - 1}>
+                  <span className="text-xs text-muted-foreground">{panelIndex + 1} / {items.length}</span>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigatePanel(1)} disabled={panelIndex >= items.length - 1}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </>

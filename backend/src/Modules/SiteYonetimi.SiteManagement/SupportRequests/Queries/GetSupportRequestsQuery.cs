@@ -6,27 +6,41 @@ using SiteYonetimi.SiteManagement.SupportRequests.DTOs;
 
 namespace SiteYonetimi.SiteManagement.SupportRequests.Queries;
 
-public record GetSupportRequestsBySiteQuery(Guid SiteId) : IRequest<Result<List<SupportRequestSummaryDto>>>;
+public record GetSupportRequestsBySiteQuery(Guid SiteId, int Page = 1, int PageSize = 20, string? SearchTerm = null)
+    : IRequest<Result<PaginatedResult<SupportRequestSummaryDto>>>;
 public record GetSupportRequestsByUserQuery(Guid UserId, Guid SiteId) : IRequest<Result<List<SupportRequestSummaryDto>>>;
 public record GetSupportRequestByIdQuery(Guid Id, Guid SiteId) : IRequest<Result<SupportRequestDetailDto>>;
 
-public class GetSupportRequestsBySiteQueryHandler : IRequestHandler<GetSupportRequestsBySiteQuery, Result<List<SupportRequestSummaryDto>>>
+public class GetSupportRequestsBySiteQueryHandler : IRequestHandler<GetSupportRequestsBySiteQuery, Result<PaginatedResult<SupportRequestSummaryDto>>>
 {
     private readonly SharedTenantDbContext _db;
     public GetSupportRequestsBySiteQueryHandler(SharedTenantDbContext db) => _db = db;
 
-    public async Task<Result<List<SupportRequestSummaryDto>>> Handle(GetSupportRequestsBySiteQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PaginatedResult<SupportRequestSummaryDto>>> Handle(GetSupportRequestsBySiteQuery request, CancellationToken cancellationToken)
     {
-        var items = await _db.SupportRequests
-            .Where(x => x.SiteId == request.SiteId)
+        var query = _db.SupportRequests
             .Include(x => x.Unit)
+            .Where(x => x.SiteId == request.SiteId);
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var term = request.SearchTerm.ToLower();
+            query = query.Where(x => x.Subject.ToLower().Contains(term));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
             .OrderByDescending(x => x.CreatedAt)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(x => new SupportRequestSummaryDto(
                 x.Id, x.SiteId, x.UserId, x.UnitId,
                 x.Unit.DoorNumber, x.Subject, x.Status, x.CreatedAt, x.ResolvedAt))
             .ToListAsync(cancellationToken);
 
-        return Result<List<SupportRequestSummaryDto>>.Success(items);
+        return Result<PaginatedResult<SupportRequestSummaryDto>>.Success(
+            PaginatedResult<SupportRequestSummaryDto>.Create(items, totalCount, request.Page, request.PageSize));
     }
 }
 

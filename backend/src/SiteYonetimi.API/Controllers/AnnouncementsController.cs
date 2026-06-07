@@ -11,9 +11,9 @@ namespace SiteYonetimi.API.Controllers;
 public class AnnouncementsController : BaseController
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null)
     {
-        return Handle(await Mediator.Send(new GetAnnouncementsBySiteQuery(CurrentSiteId)));
+        return Handle(await Mediator.Send(new GetAnnouncementsBySiteQuery(CurrentSiteId, page, pageSize, search)));
     }
 
     [HttpGet("{id:guid}")]

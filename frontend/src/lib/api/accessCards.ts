@@ -1,9 +1,10 @@
 import { siteApi } from './client'
 import { AccessCardSummaryDto, CreateAccessCardDto, UpdateAccessCardDto } from '@/types/accessCard'
+import { PaginatedResult } from '@/types/api'
 
 export const accessCardsApi = {
-  getAll: () =>
-    siteApi.get<AccessCardSummaryDto[]>('/api/access-cards'),
+  getAll: (page = 1, pageSize = 20, search?: string) =>
+    siteApi.get<PaginatedResult<AccessCardSummaryDto>>('/api/access-cards', { params: { page, pageSize, search } }),
 
   getById: (id: string) =>
     siteApi.get<AccessCardSummaryDto>(`/api/access-cards/${id}`),

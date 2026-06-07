@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 import { announcementsApi } from '@/lib/api/announcements'
 import { showSuccess, showError } from '@/lib/toast'
 import {
@@ -14,9 +15,16 @@ import {
   CreateAnnouncementDto,
 } from '@/types/announcement'
 
+const PAGE_SIZE = 20
+
 export default function AnnouncementsPage() {
   const [items, setItems] = useState<AnnouncementSummaryDto[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [searchDebounced, setSearchDebounced] = useState('')
 
   const [panelOpen, setPanelOpen] = useState(false)
   const [panelMode, setPanelMode] = useState<'view' | 'create' | 'edit'>('view')
@@ -32,15 +40,27 @@ export default function AnnouncementsPage() {
   const [formExpiryDate, setFormExpiryDate] = useState('')
   const [saving, setSaving] = useState(false)
 
+  useEffect(() => {
+    const t = setTimeout(() => setSearchDebounced(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
+
   const load = useCallback(() => {
     setLoading(true)
-    announcementsApi.getAll()
-      .then((res) => setItems(res.data ?? []))
+    announcementsApi.getAll(page, PAGE_SIZE, searchDebounced || undefined)
+      .then((res) => {
+        const d = res.data
+        setItems(d.items ?? [])
+        setTotalCount(d.totalCount ?? 0)
+        setTotalPages(d.totalPages ?? 0)
+      })
       .catch(() => showError('Duyurular yüklenemedi.'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [page, searchDebounced])
 
   useEffect(() => { load() }, [load])
+
+  const handleSearchChange = (val: string) => { setSearch(val); setPage(1) }
 
   const openView = (item: AnnouncementSummaryDto, index: number) => {
     setPanelMode('view')
@@ -175,6 +195,14 @@ export default function AnnouncementsPage() {
           <Plus className="h-4 w-4 mr-1" />
           Yeni Duyuru
         </Button>
+      </div>
+
+      <div className="mb-3">
+        <PaginationControls
+          page={page} pageSize={PAGE_SIZE} totalCount={totalCount} totalPages={totalPages}
+          search={search} onPageChange={setPage} onSearchChange={handleSearchChange}
+          searchPlaceholder="Başlık ara..."
+        />
       </div>
 
       <div className="border rounded-lg overflow-hidden">

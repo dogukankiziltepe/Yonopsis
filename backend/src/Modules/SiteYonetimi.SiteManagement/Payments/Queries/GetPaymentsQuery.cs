@@ -6,27 +6,43 @@ using SiteYonetimi.SiteManagement.Payments.DTOs;
 
 namespace SiteYonetimi.SiteManagement.Payments.Queries;
 
-public record GetPaymentsBySiteQuery(Guid SiteId) : IRequest<Result<List<PaymentSummaryDto>>>;
+public record GetPaymentsBySiteQuery(Guid SiteId, int Page = 1, int PageSize = 20, string? SearchTerm = null)
+    : IRequest<Result<PaginatedResult<PaymentSummaryDto>>>;
 public record GetPaymentsByUnitQuery(Guid UnitId, Guid SiteId) : IRequest<Result<List<PaymentSummaryDto>>>;
 public record GetPaymentByIdQuery(Guid Id, Guid SiteId) : IRequest<Result<PaymentSummaryDto>>;
 
-public class GetPaymentsBySiteQueryHandler : IRequestHandler<GetPaymentsBySiteQuery, Result<List<PaymentSummaryDto>>>
+public class GetPaymentsBySiteQueryHandler : IRequestHandler<GetPaymentsBySiteQuery, Result<PaginatedResult<PaymentSummaryDto>>>
 {
     private readonly SharedTenantDbContext _db;
     public GetPaymentsBySiteQueryHandler(SharedTenantDbContext db) => _db = db;
 
-    public async Task<Result<List<PaymentSummaryDto>>> Handle(GetPaymentsBySiteQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PaginatedResult<PaymentSummaryDto>>> Handle(GetPaymentsBySiteQuery request, CancellationToken cancellationToken)
     {
-        var items = await _db.Payments
-            .Where(x => x.SiteId == request.SiteId)
+        var query = _db.Payments
             .Include(x => x.Unit)
+            .Where(x => x.SiteId == request.SiteId);
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var term = request.SearchTerm.ToLower();
+            query = query.Where(x =>
+                (x.Description != null && x.Description.ToLower().Contains(term)) ||
+                x.Unit.DoorNumber.ToLower().Contains(term));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
             .OrderByDescending(x => x.DueDate)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(x => new PaymentSummaryDto(
                 x.Id, x.SiteId, x.UnitId, x.Unit.DoorNumber,
                 x.Amount, x.DueDate, x.PaidDate, x.Status, x.Description, x.CreatedAt))
             .ToListAsync(cancellationToken);
 
-        return Result<List<PaymentSummaryDto>>.Success(items);
+        return Result<PaginatedResult<PaymentSummaryDto>>.Success(
+            PaginatedResult<PaymentSummaryDto>.Create(items, totalCount, request.Page, request.PageSize));
     }
 }
 

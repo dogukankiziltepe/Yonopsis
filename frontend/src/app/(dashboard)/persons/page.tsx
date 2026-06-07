@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 import { personsApi } from '@/lib/api/persons'
 import { showSuccess, showError } from '@/lib/toast'
 import {
@@ -20,6 +21,8 @@ import {
 } from '@/types/person'
 import { UnitStatusLabel } from '@/types/unit'
 
+const PAGE_SIZE = 20
+
 const USER_TYPES: { value: UserType; label: string }[] = [
   { value: 2, label: 'Mal Sahibi' },
   { value: 3, label: 'Kiracı' },
@@ -28,8 +31,12 @@ const USER_TYPES: { value: UserType; label: string }[] = [
 
 export default function PersonsPage() {
   const [persons, setPersons] = useState<PersonDto[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [searchDebounced, setSearchDebounced] = useState('')
 
   const [panelOpen, setPanelOpen] = useState(false)
   const [panelMode, setPanelMode] = useState<'view' | 'create'>('view')
@@ -45,27 +52,29 @@ export default function PersonsPage() {
   const [formUserType, setFormUserType] = useState<UserType>(2)
   const [saving, setSaving] = useState(false)
 
-  const filtered = persons.filter((p) => {
-    const q = search.toLowerCase()
-    return (
-      p.firstName.toLowerCase().includes(q) ||
-      p.lastName.toLowerCase().includes(q) ||
-      p.email.toLowerCase().includes(q) ||
-      (p.phoneNumber ?? '').toLowerCase().includes(q)
-    )
-  })
+  useEffect(() => {
+    const t = setTimeout(() => setSearchDebounced(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   const load = useCallback(() => {
     setLoading(true)
-    personsApi.getAll()
-      .then((res) => setPersons(res.data ?? []))
+    personsApi.getAll(page, PAGE_SIZE, searchDebounced || undefined)
+      .then((res) => {
+        const d = res.data
+        setPersons(d.items ?? [])
+        setTotalCount(d.totalCount ?? 0)
+        setTotalPages(d.totalPages ?? 0)
+      })
       .catch(() => showError('Kişiler yüklenemedi.'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [page, searchDebounced])
 
   useEffect(() => {
     load()
   }, [load])
+
+  const handleSearchChange = (val: string) => { setSearch(val); setPage(1) }
 
   const openView = (person: PersonDto, index: number) => {
     setPanelMode('view')
@@ -94,8 +103,8 @@ export default function PersonsPage() {
 
   const navigatePanel = (dir: 'prev' | 'next') => {
     const newIndex = dir === 'prev' ? panelIndex - 1 : panelIndex + 1
-    if (newIndex >= 0 && newIndex < filtered.length) {
-      openView(filtered[newIndex], newIndex)
+    if (newIndex >= 0 && newIndex < persons.length) {
+      openView(persons[newIndex], newIndex)
     }
   }
 
@@ -144,18 +153,18 @@ export default function PersonsPage() {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">Kişiler</h1>
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder="Ara..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-8 w-48"
-          />
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4 mr-1" />
-            Kişi Ekle
-          </Button>
-        </div>
+        <Button size="sm" onClick={openCreate}>
+          <Plus className="h-4 w-4 mr-1" />
+          Kişi Ekle
+        </Button>
+      </div>
+
+      <div className="mb-3">
+        <PaginationControls
+          page={page} pageSize={PAGE_SIZE} totalCount={totalCount} totalPages={totalPages}
+          search={search} onPageChange={setPage} onSearchChange={handleSearchChange}
+          searchPlaceholder="Ad, soyad veya e-posta ara..."
+        />
       </div>
 
       <div className="border rounded-lg overflow-hidden">
@@ -177,7 +186,7 @@ export default function PersonsPage() {
                     Yükleniyor...
                   </td>
                 </tr>
-              ) : filtered.length === 0 ? (
+              ) : persons.length === 0 ? (
                 <tr>
                   <td colSpan={5}>
                     <div className="flex flex-col items-center justify-center py-12">
@@ -189,7 +198,7 @@ export default function PersonsPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((person, index) => (
+                persons.map((person, index) => (
                   <tr
                     key={person.userSiteId}
                     onClick={() => openView(person, index)}
@@ -244,7 +253,7 @@ export default function PersonsPage() {
                   </Button>
                   <Button
                     variant="ghost" size="icon" className="h-7 w-7"
-                    disabled={panelIndex >= filtered.length - 1}
+                    disabled={panelIndex >= persons.length - 1}
                     onClick={() => navigatePanel('next')}
                     title="Sonraki"
                   >

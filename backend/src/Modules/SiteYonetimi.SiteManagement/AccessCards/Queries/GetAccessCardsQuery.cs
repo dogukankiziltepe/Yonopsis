@@ -6,26 +6,41 @@ using SiteYonetimi.SiteManagement.AccessCards.DTOs;
 
 namespace SiteYonetimi.SiteManagement.AccessCards.Queries;
 
-public record GetAccessCardsBySiteQuery(Guid SiteId) : IRequest<Result<List<AccessCardSummaryDto>>>;
+public record GetAccessCardsBySiteQuery(Guid SiteId, int Page = 1, int PageSize = 20, string? SearchTerm = null)
+    : IRequest<Result<PaginatedResult<AccessCardSummaryDto>>>;
 public record GetAccessCardsByUserQuery(Guid UserId, Guid SiteId) : IRequest<Result<List<AccessCardSummaryDto>>>;
 public record GetAccessCardByIdQuery(Guid Id, Guid SiteId) : IRequest<Result<AccessCardSummaryDto>>;
 
-public class GetAccessCardsBySiteQueryHandler : IRequestHandler<GetAccessCardsBySiteQuery, Result<List<AccessCardSummaryDto>>>
+public class GetAccessCardsBySiteQueryHandler : IRequestHandler<GetAccessCardsBySiteQuery, Result<PaginatedResult<AccessCardSummaryDto>>>
 {
     private readonly SharedTenantDbContext _db;
     public GetAccessCardsBySiteQueryHandler(SharedTenantDbContext db) => _db = db;
 
-    public async Task<Result<List<AccessCardSummaryDto>>> Handle(GetAccessCardsBySiteQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PaginatedResult<AccessCardSummaryDto>>> Handle(GetAccessCardsBySiteQuery request, CancellationToken cancellationToken)
     {
-        var items = await _db.AccessCards
-            .Where(x => x.SiteId == request.SiteId)
+        var query = _db.AccessCards.Where(x => x.SiteId == request.SiteId);
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var term = request.SearchTerm.ToLower();
+            query = query.Where(x =>
+                x.CardNumber.ToLower().Contains(term) ||
+                (x.Notes != null && x.Notes.ToLower().Contains(term)));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
             .OrderByDescending(x => x.CreatedAt)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(x => new AccessCardSummaryDto(
                 x.Id, x.SiteId, x.UserId, x.CardNumber,
                 x.IsActive, x.IssueDate, x.ExpiryDate, x.Notes, x.CreatedAt))
             .ToListAsync(cancellationToken);
 
-        return Result<List<AccessCardSummaryDto>>.Success(items);
+        return Result<PaginatedResult<AccessCardSummaryDto>>.Success(
+            PaginatedResult<AccessCardSummaryDto>.Create(items, totalCount, request.Page, request.PageSize));
     }
 }
 
