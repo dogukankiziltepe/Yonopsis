@@ -2,6 +2,7 @@ using SiteYonetimi.Infrastructure.Entities.Shared;
 using SiteYonetimi.SiteManagement.Payments.Commands;
 using SiteYonetimi.SiteManagement.Payments.DTOs;
 using SiteYonetimi.Tests.Helpers;
+using Xunit;
 
 namespace SiteYonetimi.Tests.Payments;
 

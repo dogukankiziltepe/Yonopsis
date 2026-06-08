@@ -81,8 +81,8 @@ export default function BuildingsPage() {
         sortDesc: sortDir === 'desc',
       })
       .then((res) => {
-        const data = res.data.value
-        if (data) {
+        const data = res.data
+        if (data?.items) {
           setBlocks(data.items)
           setTotalCount(data.totalCount)
         } else {

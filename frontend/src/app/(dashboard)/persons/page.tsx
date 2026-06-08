@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { PaginationControls } from '@/components/ui/pagination-controls'
 import { personsApi } from '@/lib/api/persons'
+import { unitsApi } from '@/lib/api/units'
 import { showSuccess, showError } from '@/lib/toast'
 import {
   PersonDto,
@@ -19,7 +20,7 @@ import {
   UserSiteStatus,
   UserSiteStatusLabel,
 } from '@/types/person'
-import { UnitStatusLabel } from '@/types/unit'
+import { UnitSummary, UnitStatusLabel } from '@/types/unit'
 
 const PAGE_SIZE = 20
 
@@ -50,7 +51,12 @@ export default function PersonsPage() {
   const [formLastName, setFormLastName] = useState('')
   const [formPhone, setFormPhone] = useState('')
   const [formUserType, setFormUserType] = useState<UserType>(2)
+  const [formUnitId, setFormUnitId] = useState('')
+  const [units, setUnits] = useState<UnitSummary[]>([])
+  const [unitsLoading, setUnitsLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  const needsUnit = (type: UserType) => type === 2 || type === 3
 
   useEffect(() => {
     const t = setTimeout(() => setSearchDebounced(search), 300)
@@ -89,6 +95,17 @@ export default function PersonsPage() {
       .finally(() => setDetailLoading(false))
   }
 
+  const loadUnits = () => {
+    setUnitsLoading(true)
+    unitsApi.getAll()
+      .then((res) => {
+        const data = res.data
+        setUnits(Array.isArray(data) ? data : (data as any)?.value ?? [])
+      })
+      .catch(() => {})
+      .finally(() => setUnitsLoading(false))
+  }
+
   const openCreate = () => {
     setPanelMode('create')
     setSelected(null)
@@ -98,7 +115,9 @@ export default function PersonsPage() {
     setFormLastName('')
     setFormPhone('')
     setFormUserType(2)
+    setFormUnitId('')
     setPanelOpen(true)
+    loadUnits()
   }
 
   const navigatePanel = (dir: 'prev' | 'next') => {
@@ -113,6 +132,10 @@ export default function PersonsPage() {
       showError('Ad, soyad ve e-posta zorunludur.')
       return
     }
+    if (needsUnit(formUserType) && !formUnitId) {
+      showError('Mal sahibi veya kiracı için daire seçimi zorunludur.')
+      return
+    }
     setSaving(true)
     const dto: InvitePersonDto = {
       email: formEmail.trim(),
@@ -122,7 +145,17 @@ export default function PersonsPage() {
       userType: formUserType,
     }
     try {
-      await personsApi.invite(dto)
+      const res = await personsApi.invite(dto)
+      const createdUserId = (res.data as any)?.id ?? (res.data as any)?.value?.id
+
+      if (formUnitId && createdUserId) {
+        if (formUserType === 2) {
+          await unitsApi.assignOwner(formUnitId, createdUserId)
+        } else if (formUserType === 3) {
+          await unitsApi.assignTenant(formUnitId, createdUserId)
+        }
+      }
+
       showSuccess('Kişi başarıyla eklendi.')
       setPanelOpen(false)
       load()
@@ -295,7 +328,10 @@ export default function PersonsPage() {
                   <Label className="text-xs font-medium">Kullanıcı Tipi <span className="text-destructive">*</span></Label>
                   <select
                     value={formUserType}
-                    onChange={(e) => setFormUserType(Number(e.target.value) as UserType)}
+                    onChange={(e) => {
+                      setFormUserType(Number(e.target.value) as UserType)
+                      setFormUnitId('')
+                    }}
                     className="w-full border rounded-md px-3 py-2 text-sm bg-background"
                   >
                     {USER_TYPES.map((t) => (
@@ -303,6 +339,32 @@ export default function PersonsPage() {
                     ))}
                   </select>
                 </div>
+
+                {needsUnit(formUserType) && (
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium">
+                      Daire <span className="text-destructive">*</span>
+                    </Label>
+                    {unitsLoading ? (
+                      <p className="text-xs text-muted-foreground py-2">Daireler yükleniyor...</p>
+                    ) : (
+                      <select
+                        value={formUnitId}
+                        onChange={(e) => setFormUnitId(e.target.value)}
+                        className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                      >
+                        <option value="">Daire seçin</option>
+                        {units.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.buildingName ? `${u.buildingName} - ` : ''}{u.doorNumber}
+                            {u.floor ? ` (Kat ${u.floor})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                )}
+
                 <Button size="sm" className="w-full" onClick={handleInvite} disabled={saving}>
                   {saving ? 'Ekleniyor...' : 'Ekle'}
                 </Button>

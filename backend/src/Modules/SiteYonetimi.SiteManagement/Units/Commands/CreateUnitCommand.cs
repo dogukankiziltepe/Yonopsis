@@ -20,7 +20,7 @@ public class CreateUnitCommandHandler : IRequestHandler<CreateUnitCommand, Resul
 
     public async Task<Result<Guid>> Handle(CreateUnitCommand request, CancellationToken cancellationToken)
     {
-        var unit = new Unit
+        var unit = new Infrastructure.Entities.Shared.Unit
         {
             SiteId = request.SiteId,
             BuildingId = request.Dto.BuildingId,
