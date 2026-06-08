@@ -9,11 +9,11 @@ using SiteYonetimi.Infrastructure.Data;
 
 #nullable disable
 
-namespace SiteYonetimi.Infrastructure.Migrations
+namespace SiteYonetimi.Infrastructure.Migrations.MasterDb
 {
     [DbContext(typeof(MasterDbContext))]
-    [Migration("20260316101249_AddMustPasswordChange")]
-    partial class AddMustPasswordChange
+    [Migration("20260607201016_fix")]
+    partial class fix
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -79,8 +79,20 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("Icon")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid>("ModuleId")
                         .HasColumnType("uniqueidentifier");
@@ -96,6 +108,11 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.Property<Guid?>("ParentPageId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Route")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -109,6 +126,42 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.HasIndex("ParentPageId");
 
                     b.ToTable("Pages");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.PasswordResetToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PasswordResetTokens");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.RefreshToken", b =>
@@ -409,6 +462,9 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("Gender")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -425,6 +481,10 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.Property<bool>("MustChangePassword")
                         .HasColumnType("bit");
+
+                    b.Property<string>("NationalId")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -503,6 +563,17 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.Navigation("Module");
 
                     b.Navigation("ParentPage");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.PasswordResetToken", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.RefreshToken", b =>

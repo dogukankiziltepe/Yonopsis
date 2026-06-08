@@ -3,6 +3,7 @@ using SiteYonetimi.Auth.Commands;
 using SiteYonetimi.Auth.Services;
 using SiteYonetimi.Infrastructure.Entities;
 using SiteYonetimi.Tests.Helpers;
+using Xunit;
 
 namespace SiteYonetimi.Tests.Auth;
 

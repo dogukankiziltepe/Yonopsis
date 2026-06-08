@@ -88,7 +88,7 @@ public class InvitePersonCommandHandler : IRequestHandler<InvitePersonCommand, R
             catch { /* E-posta gönderilemese de davet başarılı sayılır */ }
         }
 
-        return Result<Guid>.Success(userSite.Id);
+        return Result<Guid>.Success(userSite.UserId);
     }
 }
 
