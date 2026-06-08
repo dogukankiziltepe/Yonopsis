@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { Plus, X, CreditCard, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { Plus, X, CreditCard, ChevronLeft, ChevronRight, Trash2, Download, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -122,7 +122,7 @@ export default function PaymentsPage() {
   const [searchDebounced, setSearchDebounced] = useState('')
 
   const [panelOpen, setPanelOpen] = useState(false)
-  const [panelMode, setPanelMode] = useState<'view' | 'create' | 'bulk'>('view')
+  const [panelMode, setPanelMode] = useState<'view' | 'create' | 'bulk' | 'template' | 'import'>('view')
   const [selected, setSelected] = useState<PaymentSummaryDto | null>(null)
   const [panelIndex, setPanelIndex] = useState(0)
 
@@ -132,6 +132,15 @@ export default function PaymentsPage() {
   const [formDescription, setFormDescription] = useState('')
   const [saving, setSaving] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
+
+  const [tplItemNames, setTplItemNames] = useState<string[]>(['Isınma', 'Sıcak Su', 'Soğuk Su', 'Ortak Alan Giderleri'])
+  const [tplDownloading, setTplDownloading] = useState(false)
+
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importDueDate, setImportDueDate] = useState('')
+  const [importDescription, setImportDescription] = useState('')
+  const [importResult, setImportResult] = useState<{ created: number; skipped: number; errors: string[] } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [bulkBuildingId, setBulkBuildingId] = useState('')
   const [bulkItems, setBulkItems] = useState<PaymentItemDto[]>([])
@@ -280,6 +289,49 @@ export default function PaymentsPage() {
     } catch {}
   }
 
+  const openTemplate = () => {
+    setTplItemNames(['Isınma', 'Sıcak Su', 'Soğuk Su', 'Ortak Alan Giderleri'])
+    setPanelMode('template')
+    setPanelOpen(true)
+  }
+
+  const openImport = () => {
+    setImportFile(null)
+    setImportDueDate(new Date().toISOString().split('T')[0])
+    setImportDescription('')
+    setImportResult(null)
+    setPanelMode('import')
+    setPanelOpen(true)
+  }
+
+  const handleDownloadTemplate = async () => {
+    const names = tplItemNames.filter(n => n.trim())
+    if (names.length === 0) { showError('En az bir kalem adı giriniz.'); return }
+    setTplDownloading(true)
+    try {
+      const res = await paymentsApi.downloadTemplate(names)
+      const url = URL.createObjectURL(new Blob([res.data as BlobPart]))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'aidat_sablonu.xlsx'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch { showError('Şablon indirilemedi.') } finally { setTplDownloading(false) }
+  }
+
+  const handleImport = async () => {
+    if (!importFile) { showError('Lütfen bir dosya seçin.'); return }
+    if (!importDueDate) { showError('Vade tarihi zorunludur.'); return }
+    setSaving(true)
+    setImportResult(null)
+    try {
+      const res = await paymentsApi.importExcel(importFile, new Date(importDueDate).toISOString(), importDescription || undefined)
+      setImportResult({ created: res.data.created, skipped: res.data.skipped, errors: res.data.errors })
+      if (res.data.created > 0) { showSuccess(res.data.message); load() }
+      else showError(res.data.message)
+    } catch {} finally { setSaving(false) }
+  }
+
   const navigatePanel = (dir: -1 | 1) => {
     const next = panelIndex + dir
     if (next < 0 || next >= items.length) return
@@ -296,6 +348,14 @@ export default function PaymentsPage() {
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={handleMarkOverdue}>
             Gecikmiş İşaretle
+          </Button>
+          <Button size="sm" variant="outline" onClick={openTemplate}>
+            <Download className="h-4 w-4 mr-1" />
+            Şablon İndir
+          </Button>
+          <Button size="sm" variant="outline" onClick={openImport}>
+            <Upload className="h-4 w-4 mr-1" />
+            İçe Aktar
           </Button>
           <Button size="sm" variant="outline" onClick={openBulk}>
             Toplu Oluştur
@@ -383,7 +443,11 @@ export default function PaymentsPage() {
                 </>
               )}
               <h2 className="text-sm font-semibold ml-1">
-                {panelMode === 'create' ? 'Yeni Aidat' : panelMode === 'bulk' ? 'Toplu Aidat Oluştur' : `Daire ${selected?.unitDoorNumber ?? ''} — Aidat`}
+                {panelMode === 'create' ? 'Yeni Aidat'
+                  : panelMode === 'bulk' ? 'Toplu Aidat Oluştur'
+                  : panelMode === 'template' ? 'Excel Şablonu İndir'
+                  : panelMode === 'import' ? 'Excel\'den İçe Aktar'
+                  : `Daire ${selected?.unitDoorNumber ?? ''} — Aidat`}
               </h2>
             </div>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPanelOpen(false)}>
@@ -392,7 +456,114 @@ export default function PaymentsPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {panelMode === 'bulk' ? (
+            {panelMode === 'template' ? (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Sitenin blok ve daire listesi şablona doldurularak gelir. Tutarları girdikten sonra "İçe Aktar" ile yükleyin.
+                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-medium">Kalem Başlıkları</Label>
+                    <Button type="button" size="sm" variant="outline" className="h-6 text-xs px-2"
+                      onClick={() => setTplItemNames([...tplItemNames, ''])}>
+                      <Plus className="h-3 w-3 mr-1" /> Ekle
+                    </Button>
+                  </div>
+                  {tplItemNames.map((name, i) => (
+                    <div key={i} className="flex gap-2 items-center">
+                      <Input
+                        className="flex-1 h-8 text-sm"
+                        placeholder={`Kalem ${i + 1}`}
+                        value={name}
+                        onChange={e => {
+                          const next = [...tplItemNames]
+                          next[i] = e.target.value
+                          setTplItemNames(next)
+                        }}
+                      />
+                      <button type="button" onClick={() => setTplItemNames(tplItemNames.filter((_, idx) => idx !== i))}
+                        className="text-muted-foreground hover:text-destructive transition-colors shrink-0">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {SUGGESTED_ITEMS.filter(s => !tplItemNames.includes(s)).map(s => (
+                      <button key={s} type="button"
+                        onClick={() => setTplItemNames([...tplItemNames, s])}
+                        className="text-xs px-2 py-0.5 rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+                        + {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <Button size="sm" className="w-full" onClick={handleDownloadTemplate} disabled={tplDownloading}>
+                  <Download className="h-4 w-4 mr-1" />
+                  {tplDownloading ? 'Hazırlanıyor...' : 'Excel Şablonunu İndir'}
+                </Button>
+              </>
+            ) : panelMode === 'import' ? (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Doldurulmuş Excel şablonunu seçin ve vade tarihini belirtin.
+                </p>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Excel Dosyası <span className="text-destructive">*</span></Label>
+                  <div
+                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {importFile ? (
+                      <div className="flex items-center justify-center gap-2 text-sm">
+                        <span className="font-medium text-primary">{importFile.name}</span>
+                        <button type="button" onClick={e => { e.stopPropagation(); setImportFile(null) }}
+                          className="text-muted-foreground hover:text-destructive">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground">
+                        <Upload className="h-8 w-8 mx-auto mb-1 opacity-40" />
+                        <p className="text-xs">Dosya seçmek için tıklayın</p>
+                        <p className="text-xs opacity-60">.xlsx</p>
+                      </div>
+                    )}
+                  </div>
+                  <input ref={fileInputRef} type="file" accept=".xlsx"
+                    className="hidden"
+                    onChange={e => setImportFile(e.target.files?.[0] ?? null)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Vade Tarihi <span className="text-destructive">*</span></Label>
+                  <Input type="date" value={importDueDate} onChange={e => setImportDueDate(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Açıklama</Label>
+                  <Input value={importDescription} onChange={e => setImportDescription(e.target.value)}
+                    placeholder="Örn: Temmuz 2026 aidatı" />
+                </div>
+                <Button size="sm" className="w-full" onClick={handleImport} disabled={saving}>
+                  <Upload className="h-4 w-4 mr-1" />
+                  {saving ? 'Yükleniyor...' : 'İçe Aktar'}
+                </Button>
+                {importResult && (
+                  <div className="rounded-lg border p-3 space-y-2 text-sm">
+                    <div className="flex gap-4">
+                      <span className="text-green-600 font-medium">✓ {importResult.created} oluşturuldu</span>
+                      <span className="text-muted-foreground">{importResult.skipped} atlandı</span>
+                    </div>
+                    {importResult.errors.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-destructive">Hatalar:</p>
+                        <ul className="text-xs text-destructive space-y-0.5 max-h-32 overflow-y-auto">
+                          {importResult.errors.map((e, i) => <li key={i}>• {e}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : panelMode === 'bulk' ? (
               <>
                 <p className="text-xs text-muted-foreground">Sitedeki tüm aktif daireler için aylık aidat kaydı oluşturur. Aynı aya ait mevcut kayıtlar atlanır.</p>
                 <div className="space-y-1">

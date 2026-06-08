@@ -38,4 +38,23 @@ export const paymentsApi = {
 
   createCheckout: (id: string, successUrl: string, cancelUrl: string) =>
     siteApi.post<{ checkoutUrl: string }>(`/api/online-payments/${id}/checkout`, { successUrl, cancelUrl }),
+
+  downloadTemplate: (items: string[]) =>
+    siteApi.get('/api/payments/template', {
+      params: { items },
+      paramsSerializer: { indexes: null },
+      responseType: 'blob',
+    }),
+
+  importExcel: (file: File, dueDate: string, description?: string) => {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('dueDate', dueDate)
+    if (description) form.append('description', description)
+    return siteApi.post<{ created: number; skipped: number; errors: string[]; message: string }>(
+      '/api/payments/import',
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    )
+  },
 }

@@ -4,6 +4,8 @@ using SiteYonetimi.SiteManagement.Payments.Commands;
 using SiteYonetimi.SiteManagement.Payments.DTOs;
 using SiteYonetimi.SiteManagement.Payments.Queries;
 
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
+
 namespace SiteYonetimi.API.Controllers;
 
 [Route("api/payments")]
@@ -68,5 +70,31 @@ public class PaymentsController : BaseController
     public async Task<IActionResult> Delete(Guid id)
     {
         return Handle(await Mediator.Send(new DeletePaymentCommand(id, CurrentSiteId)));
+    }
+
+    [HttpGet("template")]
+    public async Task<IActionResult> DownloadTemplate([FromQuery] List<string> items)
+    {
+        var result = await Mediator.Send(new GetPaymentTemplateQuery(CurrentSiteId, items));
+        if (!result.IsSuccess) return BadRequest(new { message = result.Error });
+        return File(result.Data!, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "aidat_sablonu.xlsx");
+    }
+
+    [HttpPost("import")]
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    public async Task<IActionResult> Import([FromForm] IFormFile file, [FromForm] DateTime dueDate, [FromForm] string? description)
+    {
+        if (file == null || file.Length == 0) return BadRequest(new { message = "Dosya boş." });
+        using var stream = file.OpenReadStream();
+        var result = await Mediator.Send(new ImportPaymentsCommand(CurrentSiteId, stream, dueDate, description));
+        if (!result.IsSuccess) return BadRequest(new { message = result.Error });
+        var r = result.Data!;
+        return Ok(new
+        {
+            created = r.Created,
+            skipped = r.Skipped,
+            errors = r.Errors,
+            message = $"{r.Created} aidat oluşturuldu, {r.Skipped} satır atlandı."
+        });
     }
 }
