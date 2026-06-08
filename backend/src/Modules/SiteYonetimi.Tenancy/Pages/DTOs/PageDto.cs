@@ -4,6 +4,7 @@ namespace SiteYonetimi.Tenancy.Pages.DTOs;
 
 public class PageDto
 {
+    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Label { get; set; } = string.Empty;
     public string? Icon { get; set; }

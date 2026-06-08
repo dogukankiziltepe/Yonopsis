@@ -1,20 +1,20 @@
 import { siteApi } from './client'
 import { Building, CreateBuildingDto, UpdateBuildingDto } from '@/types/building'
-import { ApiResult } from '@/types/api'
+import { PaginatedResult } from '@/types/api'
 
 export const buildingsApi = {
-  getAll: () =>
-    siteApi.get<ApiResult<Building[]>>('/api/buildings'),
+  getAll: (page = 1, pageSize = 20, search?: string) =>
+    siteApi.get<PaginatedResult<Building>>('/api/buildings', { params: { page, pageSize, search } }),
 
   getById: (id: string) =>
-    siteApi.get<ApiResult<Building>>(`/api/buildings/${id}`),
+    siteApi.get<Building>(`/api/buildings/${id}`),
 
   create: (data: CreateBuildingDto) =>
-    siteApi.post<ApiResult<{ id: string }>>('/api/buildings', data),
+    siteApi.post<{ id: string }>('/api/buildings', data),
 
   update: (id: string, data: UpdateBuildingDto) =>
-    siteApi.put<ApiResult<null>>(`/api/buildings/${id}`, data),
+    siteApi.put(`/api/buildings/${id}`, data),
 
   delete: (id: string) =>
-    siteApi.delete<ApiResult<null>>(`/api/buildings/${id}`),
+    siteApi.delete(`/api/buildings/${id}`),
 }

@@ -29,6 +29,11 @@ export function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Şifre sıfırlama — auth gerektirmez
+  if (pathname.startsWith('/forgot-password') || pathname.startsWith('/reset-password')) {
+    return NextResponse.next()
+  }
+
   // Dashboard and admin routes require site token
   if (pathname === '/' || pathname.startsWith('/buildings') || pathname.startsWith('/units')) {
     if (stage !== 'site') {

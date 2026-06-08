@@ -1,20 +1,37 @@
 import { siteApi } from './client'
-import { Unit, CreateUnitDto, UpdateUnitDto } from '@/types/unit'
-import { ApiResult } from '@/types/api'
+import { UnitSummary, UnitDetail, CreateUnitDto, UpdateUnitDto } from '@/types/unit'
 
 export const unitsApi = {
   getAll: (buildingId?: string) =>
-    siteApi.get<ApiResult<Unit[]>>('/api/units', { params: buildingId ? { buildingId } : undefined }),
+    siteApi.get<UnitSummary[]>('/api/units', { params: buildingId ? { buildingId } : undefined }),
 
   getById: (id: string) =>
-    siteApi.get<ApiResult<Unit>>(`/api/units/${id}`),
+    siteApi.get<UnitDetail>(`/api/units/${id}`),
 
   create: (data: CreateUnitDto) =>
-    siteApi.post<ApiResult<{ id: string }>>('/api/units', data),
+    siteApi.post<{ id: string }>('/api/units', data),
 
   update: (id: string, data: UpdateUnitDto) =>
-    siteApi.put<ApiResult<null>>(`/api/units/${id}`, data),
+    siteApi.put(`/api/units/${id}`, data),
 
   delete: (id: string) =>
-    siteApi.delete<ApiResult<null>>(`/api/units/${id}`),
+    siteApi.delete(`/api/units/${id}`),
+
+  getMyUnitsAsOwner: () =>
+    siteApi.get<UnitSummary[]>('/api/my-unit/as-owner'),
+
+  getMyUnitAsTenant: () =>
+    siteApi.get<UnitDetail | null>('/api/my-unit/as-tenant'),
+
+  assignOwner: (id: string, userId: string) =>
+    siteApi.patch(`/api/units/${id}/assign-owner`, { userId }),
+
+  assignTenant: (id: string, userId: string) =>
+    siteApi.patch(`/api/units/${id}/assign-tenant`, { userId }),
+
+  unassignOwner: (id: string) =>
+    siteApi.patch(`/api/units/${id}/unassign-owner`),
+
+  unassignTenant: (id: string) =>
+    siteApi.patch(`/api/units/${id}/unassign-tenant`),
 }

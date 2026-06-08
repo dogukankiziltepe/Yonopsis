@@ -27,10 +27,18 @@ public class GetUserPagesQueryHandler : IRequestHandler<GetUserPagesQuery, Resul
         if (_cache.TryGetValue(cacheKey, out List<PageDto>? cached) && cached != null)
             return Result<List<PageDto>>.Success(cached);
 
+        // Check if the role is the default admin role (bypass subscription + give FullAccess)
+        bool isDefaultRole = false;
+        if (!request.IsSuperAdmin && request.RoleTypeId.HasValue)
+        {
+            isDefaultRole = await _db.RoleTypes
+                .AnyAsync(rt => rt.Id == request.RoleTypeId.Value && rt.IsDefault, cancellationToken);
+        }
+
         // Get accessible module IDs from active subscription
         List<Guid>? accessibleModuleIds = null;
 
-        if (!request.IsSuperAdmin)
+        if (!request.IsSuperAdmin && !isDefaultRole)
         {
             var subscription = await _db.SiteSubscriptions
                 .Where(s => s.SiteId == request.SiteId && s.IsActive && s.EndDate >= DateTime.UtcNow)
@@ -62,7 +70,7 @@ public class GetUserPagesQueryHandler : IRequestHandler<GetUserPagesQuery, Resul
         // Get permission levels for the role
         Dictionary<Guid, PermissionLevel> permissionMap = new();
 
-        if (!request.IsSuperAdmin && request.RoleTypeId.HasValue)
+        if (!request.IsSuperAdmin && !isDefaultRole && request.RoleTypeId.HasValue)
         {
             var pageIds = pages.Select(p => p.Id).ToList();
             var permissions = await _db.RolePermissions
@@ -78,7 +86,7 @@ public class GetUserPagesQueryHandler : IRequestHandler<GetUserPagesQuery, Resul
         {
             PermissionLevel userPermission;
 
-            if (request.IsSuperAdmin)
+            if (request.IsSuperAdmin || isDefaultRole)
             {
                 userPermission = PermissionLevel.FullAccess;
             }
@@ -96,11 +104,12 @@ public class GetUserPagesQueryHandler : IRequestHandler<GetUserPagesQuery, Resul
                 userPermission = PermissionLevel.Unauthorized;
             }
 
-            if (!request.IsSuperAdmin && userPermission < PermissionLevel.ReadOnly)
+            if (!request.IsSuperAdmin && !isDefaultRole && userPermission < PermissionLevel.ReadOnly)
                 continue;
 
             result.Add(new PageDto
             {
+                Id = page.Id,
                 Name = page.Name,
                 Label = page.Label,
                 Icon = page.Icon,

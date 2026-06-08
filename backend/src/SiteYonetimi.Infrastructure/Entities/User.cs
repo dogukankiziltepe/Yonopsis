@@ -1,4 +1,5 @@
 using SiteYonetimi.Shared.Entities;
+using SiteYonetimi.Shared.Enums;
 
 namespace SiteYonetimi.Infrastructure.Entities;
 
@@ -9,6 +10,8 @@ public class User : BaseEntity
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
+    public string? NationalId { get; set; }
+    public Gender? Gender { get; set; }
     public bool IsActive { get; set; } = true;
     public bool IsSuperAdmin { get; set; } = false;
     public bool MustChangePassword { get; set; } = false;

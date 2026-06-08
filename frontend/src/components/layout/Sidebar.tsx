@@ -14,6 +14,13 @@ import {
   Bell,
   ChevronRight,
   LucideIcon,
+  HelpCircle,
+  Car,
+  Key,
+  Shield,
+  Layers,
+  UserCircle,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { useAuthStore } from '@/lib/store/auth.store'
@@ -30,8 +37,14 @@ const iconMap: Record<string, LucideIcon> = {
   dashboard: LayoutDashboard,
   settings: Settings,
   file: FileText,
+  'credit-card': CreditCard,
   credit: CreditCard,
   bell: Bell,
+  'help-circle': HelpCircle,
+  car: Car,
+  key: Key,
+  shield: Shield,
+  layers: Layers,
 }
 
 function PageIcon({ name }: { name?: string }) {
@@ -57,11 +70,16 @@ function NavItem({ page, active }: { page: PageDto; active: boolean }) {
   )
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean
+  onMobileClose?: () => void
+}
+
+export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, pages, clearTokens } = useAuthStore()
-  console.log(pages,"pages");
+
   const handleLogout = async () => {
     try { await authApi.logout() } catch {}
     clearTokens()
@@ -77,9 +95,26 @@ export function Sidebar() {
   const children = pages.filter((p) => !!p.parentId)
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r bg-sidebar">
-      <div className="flex h-14 items-center border-b px-4">
+    <>
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onMobileClose}
+        />
+      )}
+    <aside className={cn(
+      "flex h-screen w-64 flex-col border-r bg-sidebar",
+      "fixed md:static inset-y-0 left-0 z-50 transition-transform duration-200",
+      mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+    )}>
+      <div className="flex h-14 items-center justify-between border-b px-4">
         <span className="font-semibold text-sidebar-foreground">Site Yönetimi</span>
+        <button
+          className="md:hidden p-1 rounded text-sidebar-foreground/60 hover:text-sidebar-foreground"
+          onClick={onMobileClose}
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
@@ -97,7 +132,7 @@ export function Sidebar() {
               : pathname.startsWith(page.route)
 
             const pageChildren = children
-              .filter((c) => c.parentId === page.name)
+              .filter((c) => c.parentId === page.id)
               .sort((a, b) => a.order - b.order)
 
             return (
@@ -119,7 +154,10 @@ export function Sidebar() {
 
       {/* User */}
       <div className="border-t p-3">
-        <div className="flex items-center gap-3 px-2 py-1.5 mb-1">
+        <Link
+          href="/profile"
+          className="flex items-center gap-3 px-2 py-1.5 mb-1 rounded-md hover:bg-sidebar-accent/50 transition-colors"
+        >
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium shrink-0">
             {user?.firstName?.[0]?.toUpperCase() ?? '?'}
           </div>
@@ -129,7 +167,8 @@ export function Sidebar() {
             </p>
             <p className="text-xs text-sidebar-foreground/50 truncate">{user?.email}</p>
           </div>
-        </div>
+          <UserCircle className="h-4 w-4 text-sidebar-foreground/40 shrink-0" />
+        </Link>
         <Button
           variant="ghost"
           size="sm"
@@ -141,5 +180,6 @@ export function Sidebar() {
         </Button>
       </div>
     </aside>
+    </>
   )
 }

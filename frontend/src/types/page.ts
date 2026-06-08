@@ -1,4 +1,5 @@
 export interface PageDto {
+  id: string
   name: string
   label: string
   icon?: string

@@ -11,9 +11,9 @@ namespace SiteYonetimi.API.Controllers;
 public class BuildingsController : BaseController
 {
     [HttpGet]
-    public async Task<IActionResult> GetBySite()
+    public async Task<IActionResult> GetBySite([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null)
     {
-        return Handle(await Mediator.Send(new GetBuildingsBySiteQuery(CurrentSiteId)));
+        return Handle(await Mediator.Send(new GetBuildingsBySiteQuery(CurrentSiteId, page, pageSize, search)));
     }
 
     [HttpGet("{id:guid}")]

@@ -34,9 +34,7 @@ export default function SiteSelectionPage() {
       setSiteToken(res.data.accessToken, { siteId: res.data.siteId, siteName: res.data.siteName, userType: res.data.userType, roleTypeId: res.data.roleTypeId, roleName: res.data.roleName })
 
       const pagesRes = await getMyPages()
-      console.log(pagesRes,"res")
       if (pagesRes && pagesRes.length > 0) {
-        console.log("set")
         setPages(pagesRes)
       }
 

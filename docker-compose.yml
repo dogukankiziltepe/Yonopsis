@@ -1,0 +1,54 @@
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -No
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5241:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__MasterDb: ${MASTER_DB_CONNECTION}
+      ConnectionStrings__SharedTenantDb: ${SHARED_DB_CONNECTION}
+      Jwt__SecretKey: ${JWT_SECRET_KEY}
+      Jwt__Issuer: SiteYonetimi
+      Jwt__Audience: SiteYonetimi
+      Jwt__AccessTokenExpiryMinutes: "60"
+      SendGrid__ApiKey: ${SENDGRID_API_KEY}
+      Cors__AllowedOrigins__0: ${FRONTEND_URL:-http://localhost:3000}
+      FileStorage__UploadPath: /app/uploads
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      mssql:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${API_URL:-http://localhost:5241}
+    depends_on:
+      - api
+
+volumes:
+  mssql_data:
+  uploads_data:

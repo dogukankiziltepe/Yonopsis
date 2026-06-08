@@ -43,6 +43,15 @@ public class PermissionService : IPermissionService
             return PermissionLevel.ReadOnly;
         }
 
+        var isDefaultRole = await _db.RoleTypes
+            .AnyAsync(rt => rt.Id == userSite.RoleTypeId.Value && rt.IsDefault, ct);
+
+        if (isDefaultRole)
+        {
+            _cache.Set(cacheKey, PermissionLevel.FullAccess, TimeSpan.FromMinutes(1));
+            return PermissionLevel.FullAccess;
+        }
+
         var permission = await _db.RolePermissions
             .Include(rp => rp.Page)
             .FirstOrDefaultAsync(rp =>

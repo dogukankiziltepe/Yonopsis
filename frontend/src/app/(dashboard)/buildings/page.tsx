@@ -307,7 +307,7 @@ export default function BuildingsPage() {
       )}
 
       {/* Table */}
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-hidden overflow-x-auto">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -564,7 +564,7 @@ export default function BuildingsPage() {
                     <FileSpreadsheet className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className="border rounded-lg overflow-hidden">
+                <div className="border rounded-lg overflow-hidden overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b bg-muted/50">

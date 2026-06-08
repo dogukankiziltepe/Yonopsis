@@ -9,6 +9,7 @@ using NLog;
 using NLog.Web;
 using SiteYonetimi.API.Filters;
 using SiteYonetimi.API.Middleware;
+using SiteYonetimi.API.Services;
 using SiteYonetimi.Auth;
 using SiteYonetimi.Infrastructure.Data;
 using SiteYonetimi.Infrastructure.Seed;
@@ -78,6 +79,9 @@ try
     });
 
     builder.Services.AddMemoryCache();
+    builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+    builder.Services.AddScoped<IPaymentGatewayService, StripePaymentGatewayService>();
+    builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o => o.MultipartBodyLengthLimit = 10 * 1024 * 1024);
     builder.Services.AddRateLimiter(options =>
     {
         options.AddFixedWindowLimiter("login", opt =>
@@ -97,9 +101,14 @@ try
         };
     });
 
+    builder.Services.AddHealthChecks()
+        .AddSqlServer(builder.Configuration.GetConnectionString("MasterDb")!, name: "master-db")
+        .AddSqlServer(builder.Configuration.GetConnectionString("SharedTenantDb")!, name: "shared-db");
+
     builder.Services.AddAuthorization();
     builder.Services.AddScoped<IPermissionService, PermissionService>();
     builder.Services.AddScoped<IEmailService, SendGridEmailService>();
+    builder.Services.AddHostedService<OverduePaymentsBackgroundService>();
     builder.Services.AddControllers(options =>
     {
         options.Filters.Add<PermissionFilter>();
@@ -149,6 +158,7 @@ try
     app.UseMiddleware<MustChangePasswordMiddleware>();
     app.UseMiddleware<SubscriptionMiddleware>();
     app.MapControllers();
+    app.MapHealthChecks("/health");
 
     using (var scope = app.Services.CreateScope())
     {
