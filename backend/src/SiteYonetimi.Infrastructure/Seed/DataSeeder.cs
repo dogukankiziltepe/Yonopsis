@@ -88,7 +88,8 @@ public static class DataSeeder
             new { Name = "Aidatlar",        Label = "Aidatlar",         Route = "/payments",         Icon = (string?)"credit-card", Order = 7  },
             new { Name = "Araclar",         Label = "Araçlar",          Route = "/vehicles",         Icon = (string?)"car",         Order = 8  },
             new { Name = "GirisKartlari",   Label = "Giriş Kartları",   Route = "/access-cards",     Icon = (string?)"key",         Order = 9  },
-            new { Name = "Duyurular",       Label = "Duyurular",        Route = "/announcements",    Icon = (string?)"bell",        Order = 10 },
+            new { Name = "Duyurular",        Label = "Duyurular",         Route = "/announcements",    Icon = (string?)"bell",        Order = 10 },
+            new { Name = "TopluVeriGirisi", Label = "Toplu Veri Girişi", Route = "/import",           Icon = (string?)"upload",      Order = 11 },
         };
 
         foreach (var pageData in pagesToSeed)

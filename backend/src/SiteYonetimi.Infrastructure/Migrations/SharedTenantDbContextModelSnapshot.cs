@@ -128,6 +128,14 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -135,6 +143,9 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.Property<Guid>("SiteId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("TotalFloors")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");

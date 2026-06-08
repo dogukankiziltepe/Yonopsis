@@ -20,6 +20,7 @@ import {
   Shield,
   Layers,
   UserCircle,
+  Upload,
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
@@ -45,6 +46,7 @@ const iconMap: Record<string, LucideIcon> = {
   key: Key,
   shield: Shield,
   layers: Layers,
+  upload: Upload,
 }
 
 function PageIcon({ name }: { name?: string }) {
