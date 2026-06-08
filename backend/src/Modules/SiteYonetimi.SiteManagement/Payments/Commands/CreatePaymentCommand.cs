@@ -20,13 +20,20 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
         if (unitExists == null || unitExists.SiteId != request.SiteId)
             return Result<Guid>.Failure("Daire bulunamadı.");
 
+        var totalAmount = request.Dto.Items.Sum(i => i.Amount);
+
         var entity = new Payment
         {
             SiteId = request.SiteId,
             UnitId = request.Dto.UnitId,
-            Amount = request.Dto.Amount,
+            Amount = totalAmount,
             DueDate = request.Dto.DueDate,
-            Description = request.Dto.Description
+            Description = request.Dto.Description,
+            Items = request.Dto.Items.Select(i => new PaymentItem
+            {
+                Name = i.Name,
+                Amount = i.Amount
+            }).ToList()
         };
 
         _db.Payments.Add(entity);
@@ -40,7 +47,12 @@ public class CreatePaymentDtoValidator : AbstractValidator<CreatePaymentDto>
     public CreatePaymentDtoValidator()
     {
         RuleFor(x => x.UnitId).NotEmpty();
-        RuleFor(x => x.Amount).GreaterThan(0).WithMessage("Tutar sıfırdan büyük olmalıdır.");
+        RuleFor(x => x.Items).NotEmpty().WithMessage("En az bir aidat kalemi girilmelidir.");
+        RuleForEach(x => x.Items).ChildRules(item =>
+        {
+            item.RuleFor(i => i.Name).NotEmpty().MaximumLength(100).WithMessage("Kalem adı zorunludur.");
+            item.RuleFor(i => i.Amount).GreaterThan(0).WithMessage("Kalem tutarı sıfırdan büyük olmalıdır.");
+        });
         RuleFor(x => x.DueDate).NotEmpty();
     }
 }

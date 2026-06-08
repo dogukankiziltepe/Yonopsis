@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Plus, X, CreditCard, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, X, CreditCard, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,6 +10,7 @@ import { paymentsApi } from '@/lib/api/payments'
 import { showSuccess, showError } from '@/lib/toast'
 import {
   PaymentSummaryDto,
+  PaymentItemDto,
   PaymentStatus,
   PaymentStatusLabel,
   PaymentStatusColor,
@@ -18,6 +19,98 @@ import {
 } from '@/types/payment'
 
 const PAGE_SIZE = 20
+
+const SUGGESTED_ITEMS = ['Isınma', 'Sıcak Su', 'Soğuk Su', 'Ortak Alan Giderleri', 'Klima', 'Asansör', 'Bahçe Bakımı']
+
+function ItemsEditor({
+  items,
+  onChange,
+}: {
+  items: PaymentItemDto[]
+  onChange: (items: PaymentItemDto[]) => void
+}) {
+  const add = () => onChange([...items, { name: '', amount: 0 }])
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i))
+  const update = (i: number, field: keyof PaymentItemDto, value: string) => {
+    const next = items.map((item, idx) =>
+      idx === i
+        ? { ...item, [field]: field === 'amount' ? parseFloat(value) || 0 : value }
+        : item
+    )
+    onChange(next)
+  }
+  const addSuggestion = (name: string) => {
+    if (!items.find(i => i.name === name)) onChange([...items, { name, amount: 0 }])
+  }
+
+  const total = items.reduce((s, i) => s + (i.amount || 0), 0)
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-medium">Aidat Kalemleri <span className="text-destructive">*</span></Label>
+        <Button type="button" size="sm" variant="outline" className="h-6 text-xs px-2" onClick={add}>
+          <Plus className="h-3 w-3 mr-1" /> Kalem Ekle
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-1">
+        {SUGGESTED_ITEMS.map(s => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => addSuggestion(s)}
+            className="text-xs px-2 py-0.5 rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+          >
+            + {s}
+          </button>
+        ))}
+      </div>
+
+      {items.length === 0 && (
+        <p className="text-xs text-muted-foreground italic">Yukarıdan hızlı ekle veya "Kalem Ekle" butonunu kullan.</p>
+      )}
+
+      <div className="space-y-1.5">
+        {items.map((item, i) => (
+          <div key={i} className="flex gap-2 items-center">
+            <Input
+              className="flex-1 h-8 text-sm"
+              placeholder="Kalem adı (Isınma, Sıcak Su...)"
+              value={item.name}
+              onChange={e => update(i, 'name', e.target.value)}
+            />
+            <Input
+              type="number"
+              className="w-28 h-8 text-sm"
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              value={item.amount || ''}
+              onChange={e => update(i, 'amount', e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {items.length > 0 && (
+        <div className="flex justify-between items-center border-t pt-2 text-sm">
+          <span className="text-muted-foreground">Toplam</span>
+          <span className="font-semibold">
+            {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(total)}
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function PaymentsPage() {
   const [items, setItems] = useState<PaymentSummaryDto[]>([])
@@ -34,14 +127,14 @@ export default function PaymentsPage() {
   const [panelIndex, setPanelIndex] = useState(0)
 
   const [formUnitId, setFormUnitId] = useState('')
-  const [formAmount, setFormAmount] = useState('')
+  const [formItems, setFormItems] = useState<PaymentItemDto[]>([])
   const [formDueDate, setFormDueDate] = useState('')
   const [formDescription, setFormDescription] = useState('')
   const [saving, setSaving] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
 
   const [bulkBuildingId, setBulkBuildingId] = useState('')
-  const [bulkAmount, setBulkAmount] = useState('')
+  const [bulkItems, setBulkItems] = useState<PaymentItemDto[]>([])
   const [bulkDueDate, setBulkDueDate] = useState('')
   const [bulkDescription, setBulkDescription] = useState('')
 
@@ -77,7 +170,7 @@ export default function PaymentsPage() {
   const openCreate = () => {
     setSelected(null)
     setFormUnitId('')
-    setFormAmount('')
+    setFormItems([])
     setFormDueDate('')
     setFormDescription('')
     setPanelMode('create')
@@ -87,22 +180,30 @@ export default function PaymentsPage() {
   const openBulk = () => {
     setSelected(null)
     setBulkBuildingId('')
-    setBulkAmount('')
+    setBulkItems([])
     setBulkDueDate(new Date().toISOString().split('T')[0])
     setBulkDescription('')
     setPanelMode('bulk')
     setPanelOpen(true)
   }
 
+  const validateItems = (itemList: PaymentItemDto[]) => {
+    if (itemList.length === 0) { showError('En az bir aidat kalemi eklemelisiniz.'); return false }
+    for (const item of itemList) {
+      if (!item.name.trim()) { showError('Tüm kalemlerin adı dolu olmalıdır.'); return false }
+      if (!item.amount || item.amount <= 0) { showError('Tüm kalemlerin tutarı sıfırdan büyük olmalıdır.'); return false }
+    }
+    return true
+  }
+
   const handleBulkCreate = async () => {
-    const amount = parseFloat(bulkAmount)
-    if (!bulkAmount || isNaN(amount) || amount <= 0) { showError('Geçerli bir tutar giriniz.'); return }
+    if (!validateItems(bulkItems)) return
     if (!bulkDueDate) { showError('Vade tarihi zorunludur.'); return }
     setSaving(true)
     try {
       const dto: BulkCreatePaymentsDto = {
         buildingId: bulkBuildingId.trim() || undefined,
-        amount,
+        items: bulkItems,
         dueDate: new Date(bulkDueDate).toISOString(),
         description: bulkDescription || undefined,
       }
@@ -123,14 +224,13 @@ export default function PaymentsPage() {
 
   const handleCreate = async () => {
     if (!formUnitId.trim()) { showError('Daire ID zorunludur.'); return }
-    const amount = parseFloat(formAmount)
-    if (!formAmount || isNaN(amount) || amount <= 0) { showError('Geçerli bir tutar giriniz.'); return }
+    if (!validateItems(formItems)) return
     if (!formDueDate) { showError('Vade tarihi zorunludur.'); return }
     setSaving(true)
     try {
       const dto: CreatePaymentDto = {
         unitId: formUnitId,
-        amount,
+        items: formItems,
         dueDate: new Date(formDueDate).toISOString(),
         description: formDescription || undefined,
       }
@@ -221,15 +321,16 @@ export default function PaymentsPage() {
             <tr className="border-b bg-muted/50">
               <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Daire</th>
               <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Tutar</th>
+              <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Kalemler</th>
               <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Vade</th>
               <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Durum</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={4} className="text-center py-12 text-muted-foreground">Yükleniyor...</td></tr>
+              <tr><td colSpan={5} className="text-center py-12 text-muted-foreground">Yükleniyor...</td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan={4}>
+              <tr><td colSpan={5}>
                 <div className="flex flex-col items-center py-12">
                   <CreditCard className="h-10 w-10 text-muted-foreground/50 mb-3" />
                   <p className="text-muted-foreground">Henüz aidat kaydı bulunmuyor.</p>
@@ -245,7 +346,12 @@ export default function PaymentsPage() {
                   }`}
                 >
                   <td className="px-3 py-2.5 font-medium">{item.unitDoorNumber ?? '-'}</td>
-                  <td className="px-3 py-2.5">{formatCurrency(item.amount)}</td>
+                  <td className="px-3 py-2.5 font-semibold">{formatCurrency(item.amount)}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground text-xs">
+                    {item.items && item.items.length > 0
+                      ? item.items.map(k => k.name).join(', ')
+                      : '—'}
+                  </td>
                   <td className="px-3 py-2.5 text-muted-foreground">
                     {new Date(item.dueDate).toLocaleDateString('tr-TR')}
                   </td>
@@ -262,7 +368,7 @@ export default function PaymentsPage() {
       </div>
 
       {panelOpen && (
-        <div className="fixed right-0 top-0 h-screen w-[480px] bg-background border-l shadow-2xl flex flex-col z-50">
+        <div className="fixed right-0 top-0 h-screen w-[520px] bg-background border-l shadow-2xl flex flex-col z-50">
           <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
             <div className="flex items-center gap-2">
               {panelMode === 'view' && items.length > 0 && (
@@ -293,10 +399,7 @@ export default function PaymentsPage() {
                   <Label className="text-xs font-medium">Bina ID <span className="text-xs text-muted-foreground">(boş bırakılırsa tüm binalar)</span></Label>
                   <Input value={bulkBuildingId} onChange={(e) => setBulkBuildingId(e.target.value)} placeholder="Bina UUID (opsiyonel)" />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">Tutar (₺) <span className="text-destructive">*</span></Label>
-                  <Input type="number" value={bulkAmount} onChange={(e) => setBulkAmount(e.target.value)} placeholder="0.00" min="0" />
-                </div>
+                <ItemsEditor items={bulkItems} onChange={setBulkItems} />
                 <div className="space-y-1">
                   <Label className="text-xs font-medium">Vade Tarihi <span className="text-destructive">*</span></Label>
                   <Input type="date" value={bulkDueDate} onChange={(e) => setBulkDueDate(e.target.value)} />
@@ -315,10 +418,7 @@ export default function PaymentsPage() {
                   <Label className="text-xs font-medium">Daire ID <span className="text-destructive">*</span></Label>
                   <Input value={formUnitId} onChange={(e) => setFormUnitId(e.target.value)} placeholder="Daire UUID" />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">Tutar (₺) <span className="text-destructive">*</span></Label>
-                  <Input type="number" value={formAmount} onChange={(e) => setFormAmount(e.target.value)} placeholder="0.00" min="0" />
-                </div>
+                <ItemsEditor items={formItems} onChange={setFormItems} />
                 <div className="space-y-1">
                   <Label className="text-xs font-medium">Vade Tarihi <span className="text-destructive">*</span></Label>
                   <Input type="date" value={formDueDate} onChange={(e) => setFormDueDate(e.target.value)} />
@@ -339,8 +439,8 @@ export default function PaymentsPage() {
                     <p className="font-medium">{selected.unitDoorNumber ?? '-'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">Tutar</p>
-                    <p className="font-semibold">{formatCurrency(selected.amount)}</p>
+                    <p className="text-xs text-muted-foreground mb-0.5">Toplam Tutar</p>
+                    <p className="font-semibold text-base">{formatCurrency(selected.amount)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground mb-0.5">Vade Tarihi</p>
@@ -365,6 +465,26 @@ export default function PaymentsPage() {
                     </div>
                   )}
                 </div>
+
+                {selected.items && selected.items.length > 0 && (
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-muted/40 px-3 py-2">
+                      <p className="text-xs font-medium text-muted-foreground">AİDAT KALEMLERİ</p>
+                    </div>
+                    <div className="divide-y">
+                      {selected.items.map((item, i) => (
+                        <div key={i} className="flex items-center justify-between px-3 py-2 text-sm">
+                          <span>{item.name}</span>
+                          <span className="font-medium">{formatCurrency(item.amount)}</span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between px-3 py-2 text-sm bg-muted/20">
+                        <span className="font-medium">Toplam</span>
+                        <span className="font-semibold">{formatCurrency(selected.amount)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {selected.status !== 1 && (
                   <Button

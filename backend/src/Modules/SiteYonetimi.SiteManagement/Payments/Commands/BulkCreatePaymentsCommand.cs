@@ -43,13 +43,20 @@ public class BulkCreatePaymentsCommandHandler : IRequestHandler<BulkCreatePaymen
         if (newUnitIds.Count == 0)
             return Result<int>.Failure("Seçilen ay için tüm dairelerde zaten aidat kaydı mevcut.");
 
+        var totalAmount = request.Dto.Items.Sum(i => i.Amount);
+
         var payments = newUnitIds.Select(unitId => new Payment
         {
             SiteId = request.SiteId,
             UnitId = unitId,
-            Amount = request.Dto.Amount,
+            Amount = totalAmount,
             DueDate = request.Dto.DueDate,
-            Description = request.Dto.Description
+            Description = request.Dto.Description,
+            Items = request.Dto.Items.Select(i => new PaymentItem
+            {
+                Name = i.Name,
+                Amount = i.Amount
+            }).ToList()
         }).ToList();
 
         _db.Payments.AddRange(payments);

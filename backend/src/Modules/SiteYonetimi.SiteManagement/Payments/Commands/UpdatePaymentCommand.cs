@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SiteYonetimi.Infrastructure.Data;
+using SiteYonetimi.Infrastructure.Entities.Shared;
 using SiteYonetimi.Shared.Common;
 using SiteYonetimi.SiteManagement.Payments.DTOs;
 
@@ -16,12 +17,23 @@ public class UpdatePaymentCommandHandler : IRequestHandler<UpdatePaymentCommand,
     public async Task<Result> Handle(UpdatePaymentCommand request, CancellationToken cancellationToken)
     {
         var entity = await _db.Payments
+            .Include(x => x.Items)
             .FirstOrDefaultAsync(x => x.Id == request.Id && x.SiteId == request.SiteId, cancellationToken);
 
         if (entity == null)
             return Result.Failure("Ödeme bulunamadı.");
 
-        entity.Amount = request.Dto.Amount;
+        _db.PaymentItems.RemoveRange(entity.Items);
+
+        var newItems = request.Dto.Items.Select(i => new PaymentItem
+        {
+            PaymentId = entity.Id,
+            Name = i.Name,
+            Amount = i.Amount
+        }).ToList();
+
+        entity.Items = newItems;
+        entity.Amount = newItems.Sum(i => i.Amount);
         entity.DueDate = request.Dto.DueDate;
         entity.Description = request.Dto.Description;
         entity.UpdatedAt = DateTime.UtcNow;

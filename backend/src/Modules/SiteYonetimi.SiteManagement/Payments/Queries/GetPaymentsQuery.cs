@@ -20,6 +20,7 @@ public class GetPaymentsBySiteQueryHandler : IRequestHandler<GetPaymentsBySiteQu
     {
         var query = _db.Payments
             .Include(x => x.Unit)
+            .Include(x => x.Items)
             .Where(x => x.SiteId == request.SiteId);
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
@@ -32,14 +33,18 @@ public class GetPaymentsBySiteQueryHandler : IRequestHandler<GetPaymentsBySiteQu
 
         var totalCount = await query.CountAsync(cancellationToken);
 
-        var items = await query
+        var raw = await query
             .OrderByDescending(x => x.DueDate)
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Select(x => new PaymentSummaryDto(
-                x.Id, x.SiteId, x.UnitId, x.Unit.DoorNumber,
-                x.Amount, x.DueDate, x.PaidDate, x.Status, x.Description, x.CreatedAt))
             .ToListAsync(cancellationToken);
+
+        var items = raw.Select(x => new PaymentSummaryDto(
+            x.Id, x.SiteId, x.UnitId, x.Unit.DoorNumber,
+            x.Amount,
+            x.Items.Select(i => new PaymentItemDto(i.Name, i.Amount)).ToList(),
+            x.DueDate, x.PaidDate, x.Status, x.Description, x.CreatedAt))
+            .ToList();
 
         return Result<PaginatedResult<PaymentSummaryDto>>.Success(
             PaginatedResult<PaymentSummaryDto>.Create(items, totalCount, request.Page, request.PageSize));
@@ -53,14 +58,19 @@ public class GetPaymentsByUnitQueryHandler : IRequestHandler<GetPaymentsByUnitQu
 
     public async Task<Result<List<PaymentSummaryDto>>> Handle(GetPaymentsByUnitQuery request, CancellationToken cancellationToken)
     {
-        var items = await _db.Payments
+        var raw = await _db.Payments
             .Where(x => x.SiteId == request.SiteId && x.UnitId == request.UnitId)
             .Include(x => x.Unit)
+            .Include(x => x.Items)
             .OrderByDescending(x => x.DueDate)
-            .Select(x => new PaymentSummaryDto(
-                x.Id, x.SiteId, x.UnitId, x.Unit.DoorNumber,
-                x.Amount, x.DueDate, x.PaidDate, x.Status, x.Description, x.CreatedAt))
             .ToListAsync(cancellationToken);
+
+        var items = raw.Select(x => new PaymentSummaryDto(
+            x.Id, x.SiteId, x.UnitId, x.Unit.DoorNumber,
+            x.Amount,
+            x.Items.Select(i => new PaymentItemDto(i.Name, i.Amount)).ToList(),
+            x.DueDate, x.PaidDate, x.Status, x.Description, x.CreatedAt))
+            .ToList();
 
         return Result<List<PaymentSummaryDto>>.Success(items);
     }
@@ -75,6 +85,7 @@ public class GetPaymentByIdQueryHandler : IRequestHandler<GetPaymentByIdQuery, R
     {
         var item = await _db.Payments
             .Include(x => x.Unit)
+            .Include(x => x.Items)
             .FirstOrDefaultAsync(x => x.Id == request.Id && x.SiteId == request.SiteId, cancellationToken);
 
         if (item == null)
@@ -82,6 +93,8 @@ public class GetPaymentByIdQueryHandler : IRequestHandler<GetPaymentByIdQuery, R
 
         return Result<PaymentSummaryDto>.Success(new PaymentSummaryDto(
             item.Id, item.SiteId, item.UnitId, item.Unit?.DoorNumber,
-            item.Amount, item.DueDate, item.PaidDate, item.Status, item.Description, item.CreatedAt));
+            item.Amount,
+            item.Items.Select(i => new PaymentItemDto(i.Name, i.Amount)).ToList(),
+            item.DueDate, item.PaidDate, item.Status, item.Description, item.CreatedAt));
     }
 }

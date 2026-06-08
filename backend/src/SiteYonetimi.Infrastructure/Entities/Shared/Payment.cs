@@ -17,4 +17,5 @@ public class Payment
     public DateTime? UpdatedAt { get; set; }
 
     public Unit Unit { get; set; } = null!;
+    public ICollection<PaymentItem> Items { get; set; } = new List<PaymentItem>();
 }

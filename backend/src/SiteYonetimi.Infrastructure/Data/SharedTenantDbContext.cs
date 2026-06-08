@@ -19,6 +19,7 @@ public class SharedTenantDbContext : DbContext
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<AccessCard> AccessCards => Set<AccessCard>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<PaymentItem> PaymentItems => Set<PaymentItem>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<UploadedFile> UploadedFiles => Set<UploadedFile>();
 
@@ -113,7 +114,15 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.Amount).HasPrecision(18, 2).IsRequired();
             e.Property(x => x.Description).HasMaxLength(500);
             e.HasOne(x => x.Unit).WithMany().HasForeignKey(x => x.UnitId).OnDelete(DeleteBehavior.Restrict);
+            e.HasMany(x => x.Items).WithOne(x => x.Payment).HasForeignKey(x => x.PaymentId).OnDelete(DeleteBehavior.Cascade);
             e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<PaymentItem>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            e.Property(x => x.Amount).HasPrecision(18, 2).IsRequired();
         });
 
         modelBuilder.Entity<Announcement>(e =>

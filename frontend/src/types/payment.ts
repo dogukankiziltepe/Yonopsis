@@ -12,12 +12,18 @@ export const PaymentStatusColor: Record<PaymentStatus, string> = {
   2: 'bg-red-100 text-red-800',
 }
 
+export interface PaymentItemDto {
+  name: string
+  amount: number
+}
+
 export interface PaymentSummaryDto {
   id: string
   siteId: string
   unitId: string
   unitDoorNumber?: string
   amount: number
+  items: PaymentItemDto[]
   dueDate: string
   paidDate?: string
   status: PaymentStatus
@@ -27,20 +33,20 @@ export interface PaymentSummaryDto {
 
 export interface BulkCreatePaymentsDto {
   buildingId?: string
-  amount: number
+  items: PaymentItemDto[]
   dueDate: string
   description?: string
 }
 
 export interface CreatePaymentDto {
   unitId: string
-  amount: number
+  items: PaymentItemDto[]
   dueDate: string
   description?: string
 }
 
 export interface UpdatePaymentDto {
-  amount: number
+  items: PaymentItemDto[]
   dueDate: string
   description?: string
 }
