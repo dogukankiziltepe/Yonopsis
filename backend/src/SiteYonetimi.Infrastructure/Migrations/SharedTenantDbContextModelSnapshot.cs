@@ -189,6 +189,31 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.ToTable("Payments");
                 });
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.PaymentItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentId");
+
+                    b.ToTable("PaymentItems");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SupportRequest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -494,6 +519,17 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.Navigation("Unit");
                 });
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.PaymentItem", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.Payment", "Payment")
+                        .WithMany("Items")
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Payment");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SupportRequest", b =>
                 {
                     b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.Unit", "Unit")
@@ -537,6 +573,11 @@ namespace SiteYonetimi.Infrastructure.Migrations
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Building", b =>
                 {
                     b.Navigation("Units");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Payment", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SupportRequest", b =>

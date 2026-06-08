@@ -5,8 +5,19 @@ import {
   BulkCreatePaymentsDto,
   UpdatePaymentDto,
   UpdatePaymentStatusDto,
+  ImportPreviewRow,
+  ImportSkippedRow,
 } from '@/types/payment'
 import { PaginatedResult } from '@/types/api'
+
+export type ImportResponse = {
+  created: number
+  skipped: number
+  errors: string[]
+  preview: ImportPreviewRow[]
+  skippedRows: ImportSkippedRow[]
+  message: string
+}
 
 export const paymentsApi = {
   getAll: (page = 1, pageSize = 20, search?: string) =>
@@ -46,13 +57,13 @@ export const paymentsApi = {
       responseType: 'blob',
     }),
 
-  importExcel: (file: File, dueDate: string, description?: string) => {
+  importExcel: (file: File, dueDate: string, description?: string, dryRun = false) => {
     const form = new FormData()
     form.append('file', file)
     form.append('dueDate', dueDate)
     if (description) form.append('description', description)
-    return siteApi.post<{ created: number; skipped: number; errors: string[]; message: string }>(
-      '/api/payments/import',
+    return siteApi.post<ImportResponse>(
+      `/api/payments/import${dryRun ? '?dryRun=true' : ''}`,
       form,
       { headers: { 'Content-Type': 'multipart/form-data' } },
     )

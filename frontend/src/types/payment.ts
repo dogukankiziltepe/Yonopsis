@@ -55,3 +55,16 @@ export interface UpdatePaymentStatusDto {
   status: PaymentStatus
   paidDate?: string
 }
+
+export interface ImportPreviewRow {
+  buildingName: string
+  doorNumber: string
+  items: PaymentItemDto[]
+  total: number
+}
+
+export interface ImportSkippedRow {
+  buildingName: string
+  doorNumber: string
+  reason: string
+}

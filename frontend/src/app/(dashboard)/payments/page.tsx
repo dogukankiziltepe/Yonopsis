@@ -11,6 +11,8 @@ import { showSuccess, showError } from '@/lib/toast'
 import {
   PaymentSummaryDto,
   PaymentItemDto,
+  ImportPreviewRow,
+  ImportSkippedRow,
   PaymentStatus,
   PaymentStatusLabel,
   PaymentStatusColor,
@@ -139,7 +141,11 @@ export default function PaymentsPage() {
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importDueDate, setImportDueDate] = useState('')
   const [importDescription, setImportDescription] = useState('')
-  const [importResult, setImportResult] = useState<{ created: number; skipped: number; errors: string[] } | null>(null)
+  const [importPreview, setImportPreview] = useState<{
+    toCreate: ImportPreviewRow[]
+    skipped: ImportSkippedRow[]
+    errors: string[]
+  } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [bulkBuildingId, setBulkBuildingId] = useState('')
@@ -299,7 +305,7 @@ export default function PaymentsPage() {
     setImportFile(null)
     setImportDueDate(new Date().toISOString().split('T')[0])
     setImportDescription('')
-    setImportResult(null)
+    setImportPreview(null)
     setPanelMode('import')
     setPanelOpen(true)
   }
@@ -319,16 +325,40 @@ export default function PaymentsPage() {
     } catch { showError('Şablon indirilemedi.') } finally { setTplDownloading(false) }
   }
 
-  const handleImport = async () => {
+  const handlePreview = async () => {
     if (!importFile) { showError('Lütfen bir dosya seçin.'); return }
     if (!importDueDate) { showError('Vade tarihi zorunludur.'); return }
     setSaving(true)
-    setImportResult(null)
+    setImportPreview(null)
     try {
-      const res = await paymentsApi.importExcel(importFile, new Date(importDueDate).toISOString(), importDescription || undefined)
-      setImportResult({ created: res.data.created, skipped: res.data.skipped, errors: res.data.errors })
-      if (res.data.created > 0) { showSuccess(res.data.message); load() }
-      else showError(res.data.message)
+      const res = await paymentsApi.importExcel(
+        importFile,
+        new Date(importDueDate).toISOString(),
+        importDescription || undefined,
+        true,
+      )
+      const d = res.data
+      if (d.errors.length > 0 && d.preview.length === 0 && d.skippedRows.length === 0) {
+        showError('Dosyada işlenebilecek satır bulunamadı.')
+      }
+      setImportPreview({ toCreate: d.preview, skipped: d.skippedRows, errors: d.errors })
+    } catch {} finally { setSaving(false) }
+  }
+
+  const handleConfirmImport = async () => {
+    if (!importFile || !importDueDate) return
+    setSaving(true)
+    try {
+      const res = await paymentsApi.importExcel(
+        importFile,
+        new Date(importDueDate).toISOString(),
+        importDescription || undefined,
+        false,
+      )
+      showSuccess(res.data.message)
+      setPanelOpen(false)
+      setImportPreview(null)
+      load()
     } catch {} finally { setSaving(false) }
   }
 
@@ -446,7 +476,7 @@ export default function PaymentsPage() {
                 {panelMode === 'create' ? 'Yeni Aidat'
                   : panelMode === 'bulk' ? 'Toplu Aidat Oluştur'
                   : panelMode === 'template' ? 'Excel Şablonu İndir'
-                  : panelMode === 'import' ? 'Excel\'den İçe Aktar'
+                  : panelMode === 'import' ? (importPreview ? 'İçe Aktarma Önizlemesi' : 'Excel\'den İçe Aktar')
                   : `Daire ${selected?.unitDoorNumber ?? ''} — Aidat`}
               </h2>
             </div>
@@ -503,66 +533,150 @@ export default function PaymentsPage() {
                 </Button>
               </>
             ) : panelMode === 'import' ? (
-              <>
-                <p className="text-xs text-muted-foreground">
-                  Doldurulmuş Excel şablonunu seçin ve vade tarihini belirtin.
-                </p>
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">Excel Dosyası <span className="text-destructive">*</span></Label>
-                  <div
-                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {importFile ? (
-                      <div className="flex items-center justify-center gap-2 text-sm">
-                        <span className="font-medium text-primary">{importFile.name}</span>
-                        <button type="button" onClick={e => { e.stopPropagation(); setImportFile(null) }}
-                          className="text-muted-foreground hover:text-destructive">
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="text-muted-foreground">
-                        <Upload className="h-8 w-8 mx-auto mb-1 opacity-40" />
-                        <p className="text-xs">Dosya seçmek için tıklayın</p>
-                        <p className="text-xs opacity-60">.xlsx</p>
-                      </div>
-                    )}
-                  </div>
-                  <input ref={fileInputRef} type="file" accept=".xlsx"
-                    className="hidden"
-                    onChange={e => setImportFile(e.target.files?.[0] ?? null)} />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">Vade Tarihi <span className="text-destructive">*</span></Label>
-                  <Input type="date" value={importDueDate} onChange={e => setImportDueDate(e.target.value)} />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">Açıklama</Label>
-                  <Input value={importDescription} onChange={e => setImportDescription(e.target.value)}
-                    placeholder="Örn: Temmuz 2026 aidatı" />
-                </div>
-                <Button size="sm" className="w-full" onClick={handleImport} disabled={saving}>
-                  <Upload className="h-4 w-4 mr-1" />
-                  {saving ? 'Yükleniyor...' : 'İçe Aktar'}
-                </Button>
-                {importResult && (
-                  <div className="rounded-lg border p-3 space-y-2 text-sm">
-                    <div className="flex gap-4">
-                      <span className="text-green-600 font-medium">✓ {importResult.created} oluşturuldu</span>
-                      <span className="text-muted-foreground">{importResult.skipped} atlandı</span>
+              !importPreview ? (
+                /* ── Adım 1: Dosya seç ── */
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    Doldurulmuş Excel şablonunu seçin ve vade tarihini belirtin. Yüklemeden önce önizleme yapabilirsiniz.
+                  </p>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium">Excel Dosyası <span className="text-destructive">*</span></Label>
+                    <div
+                      className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {importFile ? (
+                        <div className="flex items-center justify-center gap-2 text-sm">
+                          <span className="font-medium text-primary">{importFile.name}</span>
+                          <button type="button" onClick={e => { e.stopPropagation(); setImportFile(null) }}
+                            className="text-muted-foreground hover:text-destructive">
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-muted-foreground">
+                          <Upload className="h-8 w-8 mx-auto mb-1 opacity-40" />
+                          <p className="text-xs">Dosya seçmek için tıklayın</p>
+                          <p className="text-xs opacity-60">.xlsx</p>
+                        </div>
+                      )}
                     </div>
-                    {importResult.errors.length > 0 && (
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-destructive">Hatalar:</p>
-                        <ul className="text-xs text-destructive space-y-0.5 max-h-32 overflow-y-auto">
-                          {importResult.errors.map((e, i) => <li key={i}>• {e}</li>)}
-                        </ul>
-                      </div>
-                    )}
+                    <input ref={fileInputRef} type="file" accept=".xlsx"
+                      className="hidden"
+                      onChange={e => { setImportFile(e.target.files?.[0] ?? null); setImportPreview(null) }} />
                   </div>
-                )}
-              </>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium">Vade Tarihi <span className="text-destructive">*</span></Label>
+                    <Input type="date" value={importDueDate} onChange={e => setImportDueDate(e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium">Açıklama</Label>
+                    <Input value={importDescription} onChange={e => setImportDescription(e.target.value)}
+                      placeholder="Örn: Temmuz 2026 aidatı" />
+                  </div>
+                  <Button size="sm" className="w-full" onClick={handlePreview} disabled={saving}>
+                    {saving ? 'Analiz ediliyor...' : 'Önizle'}
+                  </Button>
+                </>
+              ) : (
+                /* ── Adım 2: Önizleme + onay ── */
+                <>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setImportPreview(null)}
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" /> Geri dön
+                    </button>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(importDueDate).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} — {importFile?.name}
+                    </span>
+                  </div>
+
+                  {/* Özet banner */}
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="rounded-lg bg-green-50 border border-green-200 py-2">
+                      <p className="text-lg font-bold text-green-700">{importPreview.toCreate.length}</p>
+                      <p className="text-xs text-green-600">Oluşturulacak</p>
+                    </div>
+                    <div className="rounded-lg bg-yellow-50 border border-yellow-200 py-2">
+                      <p className="text-lg font-bold text-yellow-700">{importPreview.skipped.length}</p>
+                      <p className="text-xs text-yellow-600">Atlanacak</p>
+                    </div>
+                    <div className="rounded-lg bg-red-50 border border-red-200 py-2">
+                      <p className="text-lg font-bold text-red-700">{importPreview.errors.length}</p>
+                      <p className="text-xs text-red-600">Hata</p>
+                    </div>
+                  </div>
+
+                  {/* Oluşturulacak kayıtlar */}
+                  {importPreview.toCreate.length > 0 && (
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="bg-green-50 px-3 py-1.5 border-b border-green-200">
+                        <p className="text-xs font-medium text-green-700">Oluşturulacak ({importPreview.toCreate.length})</p>
+                      </div>
+                      <div className="max-h-52 overflow-y-auto divide-y text-sm">
+                        {importPreview.toCreate.map((row, i) => (
+                          <div key={i} className="px-3 py-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium">{row.buildingName} — {row.doorNumber}</span>
+                              <span className="font-semibold text-green-700">{formatCurrency(row.total)}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                              {row.items.map((item, j) => (
+                                <span key={j} className="text-xs text-muted-foreground">
+                                  {item.name}: {formatCurrency(item.amount)}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Atlanacak kayıtlar */}
+                  {importPreview.skipped.length > 0 && (
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="bg-yellow-50 px-3 py-1.5 border-b border-yellow-200">
+                        <p className="text-xs font-medium text-yellow-700">Atlanacak ({importPreview.skipped.length})</p>
+                      </div>
+                      <div className="max-h-32 overflow-y-auto divide-y text-xs">
+                        {importPreview.skipped.map((row, i) => (
+                          <div key={i} className="px-3 py-1.5 flex justify-between gap-2">
+                            <span className="font-medium">{row.buildingName} — {row.doorNumber}</span>
+                            <span className="text-muted-foreground text-right shrink-0">{row.reason}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Hatalar */}
+                  {importPreview.errors.length > 0 && (
+                    <div className="border border-red-200 rounded-lg overflow-hidden">
+                      <div className="bg-red-50 px-3 py-1.5 border-b border-red-200">
+                        <p className="text-xs font-medium text-red-700">Hatalar ({importPreview.errors.length})</p>
+                      </div>
+                      <ul className="max-h-28 overflow-y-auto divide-y text-xs">
+                        {importPreview.errors.map((e, i) => (
+                          <li key={i} className="px-3 py-1.5 text-red-600">• {e}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {importPreview.toCreate.length === 0 ? (
+                    <p className="text-sm text-center text-muted-foreground py-2">İçe aktarılacak kayıt yok.</p>
+                  ) : (
+                    <Button size="sm" className="w-full" onClick={handleConfirmImport} disabled={saving}>
+                      <Upload className="h-4 w-4 mr-1" />
+                      {saving ? 'Aktarılıyor...' : `Onayla ve ${importPreview.toCreate.length} Kaydı İçe Aktar`}
+                    </Button>
+                  )}
+                </>
+              )
             ) : panelMode === 'bulk' ? (
               <>
                 <p className="text-xs text-muted-foreground">Sitedeki tüm aktif daireler için aylık aidat kaydı oluşturur. Aynı aya ait mevcut kayıtlar atlanır.</p>

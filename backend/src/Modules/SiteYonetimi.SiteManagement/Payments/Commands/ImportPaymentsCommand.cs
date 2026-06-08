@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SiteYonetimi.Infrastructure.Data;
 using SiteYonetimi.Infrastructure.Entities.Shared;
 using SiteYonetimi.Shared.Common;
+using SiteYonetimi.SiteManagement.Payments.DTOs;
 
 namespace SiteYonetimi.SiteManagement.Payments.Commands;
 
@@ -11,9 +12,26 @@ public record ImportPaymentsCommand(
     Guid SiteId,
     Stream FileStream,
     DateTime DueDate,
-    string? Description) : IRequest<Result<ImportPaymentsResult>>;
+    string? Description,
+    bool DryRun = false) : IRequest<Result<ImportPaymentsResult>>;
 
-public record ImportPaymentsResult(int Created, int Skipped, List<string> Errors);
+public record ImportPreviewRow(
+    string BuildingName,
+    string DoorNumber,
+    List<PaymentItemDto> Items,
+    decimal Total);
+
+public record ImportSkippedRow(
+    string BuildingName,
+    string DoorNumber,
+    string Reason);
+
+public record ImportPaymentsResult(
+    int Created,
+    int Skipped,
+    List<string> Errors,
+    List<ImportPreviewRow> Preview,
+    List<ImportSkippedRow> SkippedRows);
 
 public class ImportPaymentsCommandHandler : IRequestHandler<ImportPaymentsCommand, Result<ImportPaymentsResult>>
 {
@@ -23,6 +41,8 @@ public class ImportPaymentsCommandHandler : IRequestHandler<ImportPaymentsComman
     public async Task<Result<ImportPaymentsResult>> Handle(ImportPaymentsCommand request, CancellationToken cancellationToken)
     {
         List<string> errors = new();
+        List<ImportPreviewRow> preview = new();
+        List<ImportSkippedRow> skippedRows = new();
 
         XLWorkbook wb;
         try { wb = new XLWorkbook(request.FileStream); }
@@ -34,7 +54,6 @@ public class ImportPaymentsCommandHandler : IRequestHandler<ImportPaymentsComman
             if (ws == null)
                 return Result<ImportPaymentsResult>.Failure("Excel dosyasında sayfa bulunamadı.");
 
-            // Header satırından kalem isimlerini oku (3. sütundan itibaren)
             var itemNames = new List<string>();
             int col = 3;
             while (true)
@@ -50,7 +69,6 @@ public class ImportPaymentsCommandHandler : IRequestHandler<ImportPaymentsComman
             if (itemNames.Count == 0)
                 return Result<ImportPaymentsResult>.Failure("Excel başlık satırında kalem bulunamadı.");
 
-            // Mevcut bina/daire haritasını çek
             var buildings = await _db.Buildings
                 .Where(b => b.SiteId == request.SiteId)
                 .ToDictionaryAsync(b => b.Name.Trim().ToLowerInvariant(), b => b.Id, cancellationToken);
@@ -69,7 +87,6 @@ public class ImportPaymentsCommandHandler : IRequestHandler<ImportPaymentsComman
                 .ToListAsync(cancellationToken);
 
             var toCreate = new List<Payment>();
-            int skipped = 0;
             int lastRow = ws.LastRowUsed()?.RowNumber() ?? 1;
 
             for (int row = 2; row <= lastRow; row++)
@@ -91,56 +108,64 @@ public class ImportPaymentsCommandHandler : IRequestHandler<ImportPaymentsComman
 
                 if (unit == null)
                 {
-                    errors.Add($"Satır {row}: '{buildingName}' bloğunda '{doorNumber}' kapı numaralı daire bulunamadı.");
+                    errors.Add($"Satır {row}: '{buildingName}' / '{doorNumber}' daire bulunamadı.");
                     continue;
                 }
 
                 if (existingUnitIds.Contains(unit.Id))
                 {
-                    skipped++;
+                    skippedRows.Add(new ImportSkippedRow(buildingName, doorNumber, "Bu ay için zaten aidat kaydı mevcut."));
                     continue;
                 }
 
-                var items = new List<PaymentItem>();
+                var itemDtos = new List<PaymentItemDto>();
                 for (int i = 0; i < itemNames.Count; i++)
                 {
                     var cell = ws.Cell(row, 3 + i);
                     if (cell.IsEmpty()) continue;
-                    if (!decimal.TryParse(cell.GetString().Replace(",", "."), System.Globalization.NumberStyles.Any,
-                        System.Globalization.CultureInfo.InvariantCulture, out var amount))
+                    decimal amount;
+                    if (!decimal.TryParse(cell.GetString().Replace(",", "."),
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out amount))
                     {
-                        // ClosedXML numeric value
                         try { amount = (decimal)cell.GetDouble(); } catch { continue; }
                     }
                     if (amount <= 0) continue;
-                    items.Add(new PaymentItem { Name = itemNames[i], Amount = amount });
+                    itemDtos.Add(new PaymentItemDto(itemNames[i], amount));
                 }
 
-                if (items.Count == 0)
+                if (itemDtos.Count == 0)
                 {
-                    skipped++;
+                    skippedRows.Add(new ImportSkippedRow(buildingName, doorNumber, "Tüm kalemler boş veya sıfır."));
                     continue;
                 }
+
+                var total = itemDtos.Sum(i => i.Amount);
+                preview.Add(new ImportPreviewRow(buildingName, doorNumber, itemDtos, total));
 
                 toCreate.Add(new Payment
                 {
                     SiteId = request.SiteId,
                     UnitId = unit.Id,
-                    Amount = items.Sum(i => i.Amount),
+                    Amount = total,
                     DueDate = request.DueDate,
                     Description = request.Description,
-                    Items = items
+                    Items = itemDtos.Select(i => new PaymentItem { Name = i.Name, Amount = i.Amount }).ToList()
                 });
             }
 
-            if (toCreate.Count > 0)
+            if (!request.DryRun && toCreate.Count > 0)
             {
                 _db.Payments.AddRange(toCreate);
                 await _db.SaveChangesAsync(cancellationToken);
             }
 
-            return Result<ImportPaymentsResult>.Success(
-                new ImportPaymentsResult(toCreate.Count, skipped, errors));
+            return Result<ImportPaymentsResult>.Success(new ImportPaymentsResult(
+                request.DryRun ? 0 : toCreate.Count,
+                skippedRows.Count,
+                errors,
+                request.DryRun ? preview : new List<ImportPreviewRow>(),
+                request.DryRun ? skippedRows : new List<ImportSkippedRow>()));
         }
     }
 }

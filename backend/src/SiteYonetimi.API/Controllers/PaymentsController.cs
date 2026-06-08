@@ -82,11 +82,15 @@ public class PaymentsController : BaseController
 
     [HttpPost("import")]
     [RequestSizeLimit(10 * 1024 * 1024)]
-    public async Task<IActionResult> Import([FromForm] IFormFile file, [FromForm] DateTime dueDate, [FromForm] string? description)
+    public async Task<IActionResult> Import(
+        [FromForm] IFormFile file,
+        [FromForm] DateTime dueDate,
+        [FromForm] string? description,
+        [FromQuery] bool dryRun = false)
     {
         if (file == null || file.Length == 0) return BadRequest(new { message = "Dosya boş." });
         using var stream = file.OpenReadStream();
-        var result = await Mediator.Send(new ImportPaymentsCommand(CurrentSiteId, stream, dueDate, description));
+        var result = await Mediator.Send(new ImportPaymentsCommand(CurrentSiteId, stream, dueDate, description, dryRun));
         if (!result.IsSuccess) return BadRequest(new { message = result.Error });
         var r = result.Data!;
         return Ok(new
@@ -94,7 +98,11 @@ public class PaymentsController : BaseController
             created = r.Created,
             skipped = r.Skipped,
             errors = r.Errors,
-            message = $"{r.Created} aidat oluşturuldu, {r.Skipped} satır atlandı."
+            preview = r.Preview,
+            skippedRows = r.SkippedRows,
+            message = dryRun
+                ? $"{r.Preview.Count} aidat oluşturulacak, {r.SkippedRows.Count} satır atlanacak."
+                : $"{r.Created} aidat oluşturuldu, {r.Skipped} satır atlandı."
         });
     }
 }
