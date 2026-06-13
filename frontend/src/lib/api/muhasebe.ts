@@ -1,11 +1,20 @@
 import { siteApi } from './client'
+import { PaginatedResult } from '@/types/api'
 import {
   CariTuru,
   CreateCariHesapDto,
+  CreateFisDto,
   CreateHesapDto,
+  Donem,
+  FisDetay,
+  FisDetaylarItem,
+  FisDurumu,
+  FisListItem,
+  FisTuru,
   HesapDetail,
   HesapListItem,
   HesapNode,
+  UpdateFisDto,
   UpdateHesapDto,
 } from '@/types/muhasebe'
 
@@ -39,4 +48,44 @@ export const muhasebeApi = {
 
   createCariHesap: (data: CreateCariHesapDto) =>
     siteApi.post<{ id: string }>('/api/muhasebe/cari-hesaplar', data),
+
+  // Dönemler
+  getDonemler: () => siteApi.get<Donem[]>('/api/muhasebe/donemler'),
+  getAktifDonem: () => siteApi.get<Donem | null>('/api/muhasebe/donemler/aktif'),
+  createDonem: (data: { yil: number; ad?: string }) =>
+    siteApi.post<{ id: string }>('/api/muhasebe/donemler', data),
+
+  // Fişler
+  getFisler: (params?: {
+    from?: string
+    to?: string
+    tur?: FisTuru
+    durum?: FisDurumu
+    q?: string
+    page?: number
+    pageSize?: number
+  }) => siteApi.get<PaginatedResult<FisListItem>>('/api/muhasebe/fisler', { params }),
+
+  getFis: (id: string) => siteApi.get<FisDetay>(`/api/muhasebe/fisler/${id}`),
+
+  createFis: (data: CreateFisDto) =>
+    siteApi.post<{ id: string }>('/api/muhasebe/fisler', data),
+
+  updateFis: (id: string, data: UpdateFisDto) =>
+    siteApi.put(`/api/muhasebe/fisler/${id}`, data),
+
+  onaylaFis: (id: string) => siteApi.post(`/api/muhasebe/fisler/${id}/onayla`),
+
+  iptalFis: (id: string) => siteApi.post(`/api/muhasebe/fisler/${id}/iptal`),
+
+  deleteFis: (id: string) => siteApi.delete(`/api/muhasebe/fisler/${id}`),
+
+  getFisDetaylari: (params?: {
+    hesapId?: string
+    from?: string
+    to?: string
+    durum?: FisDurumu
+    page?: number
+    pageSize?: number
+  }) => siteApi.get<PaginatedResult<FisDetaylarItem>>('/api/muhasebe/fis-detaylari', { params }),
 }

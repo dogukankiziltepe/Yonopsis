@@ -547,3 +547,24 @@ Yeni modül: **`SiteYonetimi.Muhasebe`** (`src/Modules/SiteYonetimi.Muhasebe`), 
 **Frontend:** `/muhasebe/hesap-plani` — hiyerarşik ağaç + Cari Hesaplar sekmesi, oluştur/düzenle yan paneli (`frontend/src/app/(dashboard)/muhasebe/hesap-plani/page.tsx`, `lib/api/muhasebe.ts`, `types/muhasebe.ts`). Sidebar linki dinamik (page seed'i Faz 7).
 
 > Migration gerekmez (Faz 2 yeni tablo eklemez). Faz 1 migration'ı yeterli.
+
+### Faz 3 — Muhasebe Fişi (tamamlandı)
+
+**Yeni entity'ler** (`Entities/Shared/Muhasebe/`): `MuhasebeFisi`, `MuhasebeFisiDetay`. EF config `SharedTenantDbContext`'te (decimal(18,2), cascade detay, `(SiteId,FisNo)` unique, query filter). **Yeni migration gerekir** (`Muhasebe_Faz3`).
+
+**Dönem** (`Donemler/`): `CreateDonemCommand`, `GetDonemlerQuery`, `GetAktifDonemQuery` + `MuhasebeDonemlerController` (`api/muhasebe/donemler`).
+
+**Fiş** (`Fisler/`):
+- Commands: `CreateFis` (taslak), `UpdateFis` (yalnız taslak), `OnaylaFis`, `IptalFis`, `DeleteFis`
+- Queries: `GetFisList` (sayfalı+filtre), `GetFisDetay`, `GetFisDetaylar` (düz satır ekranı)
+- `IFisService`/`FisService`: dönem çözümleme (yoksa açık dönem üretir), satır doğrulama (borç XOR alacak, fiş kesilebilir/aktif hesap), fiş no üretimi (`{yil}-{sıra:0000000}`).
+- `MuhasebeFislerController` (`api/muhasebe/fisler`, `fis-detaylari`), `[RequirePage("MuhasebeFis")]`.
+
+**İş kuralları:** Dengesiz/boş fiş onaylanamaz. Onayda dönem `SonYevmiyeNo` **Serializable transaction** içinde atomik artırılıp sıralı yevmiye no atanır. Kapalı döneme fiş girilemez. Onaylı fiş düzenlenemez; iptalde **ters kayıt (storno)** fişi üretilir. Taslak fiş soft-delete ile silinir.
+
+**Frontend:** `/muhasebe/fisler` (liste + dengeli giriş formu: Toplam Borç/Alacak/Fark, fark≠0 ise Onayla disabled, onaylıda salt-okunur + storno) ve `/muhasebe/fis-detaylari` (filtreli düz satır listesi).
+
+**Migration komutu (lokalde):**
+```bash
+dotnet ef migrations add Muhasebe_Faz3 --project ./src/SiteYonetimi.Infrastructure --startup-project ./src/SiteYonetimi.API --context SharedTenantDbContext --output-dir Migrations/SharedTenantDb
+```

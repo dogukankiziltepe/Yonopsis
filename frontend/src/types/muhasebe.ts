@@ -120,3 +120,117 @@ export interface CreateCariHesapDto {
   personId?: string
   aciklama?: string
 }
+
+// ---- Fiş / Dönem ----
+
+export enum FisTuru {
+  Acilis = 0,
+  Mahsup = 1,
+  Tahsil = 2,
+  Tediye = 3,
+  Kapanis = 4,
+}
+
+export enum FisDurumu {
+  Taslak = 0,
+  Onaylandi = 1,
+  Iptal = 2,
+}
+
+export const fisTuruLabel: Record<FisTuru, string> = {
+  [FisTuru.Acilis]: 'Açılış',
+  [FisTuru.Mahsup]: 'Mahsup',
+  [FisTuru.Tahsil]: 'Tahsil',
+  [FisTuru.Tediye]: 'Tediye',
+  [FisTuru.Kapanis]: 'Kapanış',
+}
+
+export const fisDurumuLabel: Record<FisDurumu, string> = {
+  [FisDurumu.Taslak]: 'Taslak',
+  [FisDurumu.Onaylandi]: 'Entegre',
+  [FisDurumu.Iptal]: 'İptal',
+}
+
+export interface FisDetaySatir {
+  hesapId: string
+  borcTutar: number
+  alacakTutar: number
+  aciklama?: string
+  belgeNo?: string
+}
+
+export interface CreateFisDto {
+  fisTuru: FisTuru
+  fisTarihi: string // YYYY-MM-DD
+  aciklama: string
+  detaylar: FisDetaySatir[]
+}
+
+export type UpdateFisDto = CreateFisDto
+
+export interface FisListItem {
+  id: string
+  fisNo: string
+  yevmiyeNo?: number | null
+  fisTarihi: string
+  fisTuru: FisTuru
+  aciklama: string
+  durum: FisDurumu
+  toplamBorc: number
+  toplamAlacak: number
+  satirSayisi: number
+}
+
+export interface FisDetaySatirView {
+  id: string
+  siraNo: number
+  hesapId: string
+  hesapKodu: string
+  hesapAdi: string
+  borcTutar: number
+  alacakTutar: number
+  aciklama?: string | null
+  belgeNo?: string | null
+}
+
+export interface FisDetay {
+  id: string
+  donemId: string
+  fisNo: string
+  yevmiyeNo?: number | null
+  fisTarihi: string
+  fisTuru: FisTuru
+  aciklama: string
+  durum: FisDurumu
+  toplamBorc: number
+  toplamAlacak: number
+  satirSayisi: number
+  detaylar: FisDetaySatirView[]
+}
+
+export interface FisDetaylarItem {
+  detayId: string
+  fisId: string
+  fisNo: string
+  yevmiyeNo?: number | null
+  fisTarihi: string
+  durum: FisDurumu
+  siraNo: number
+  hesapId: string
+  hesapKodu: string
+  hesapAdi: string
+  borcTutar: number
+  alacakTutar: number
+  aciklama?: string | null
+  belgeNo?: string | null
+}
+
+export interface Donem {
+  id: string
+  yil: number
+  ad: string
+  baslangicTarihi: string
+  bitisTarihi: string
+  durum: number
+  sonYevmiyeNo: number
+}
