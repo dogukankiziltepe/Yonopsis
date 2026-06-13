@@ -22,6 +22,10 @@ public class SharedTenantDbContext : DbContext
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<UploadedFile> UploadedFiles => Set<UploadedFile>();
 
+    // Muhasebe modülü
+    public DbSet<HesapPlani> HesapPlani => Set<HesapPlani>();
+    public DbSet<MuhasebeDonem> MuhasebeDonemler => Set<MuhasebeDonem>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -134,6 +138,38 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.StoredFileName).HasMaxLength(260).IsRequired();
             e.Property(x => x.ContentType).HasMaxLength(100).IsRequired();
             e.Property(x => x.FileSize).IsRequired();
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<HesapPlani>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.HesapKodu).HasMaxLength(50).IsRequired();
+            e.Property(x => x.HesapAdi).HasMaxLength(200).IsRequired();
+            e.Property(x => x.HesapTipi).HasConversion<int>();
+            e.Property(x => x.HesapKategorisi).HasConversion<int>();
+            e.Property(x => x.NormalBakiye).HasConversion<int>();
+            e.Property(x => x.CariTuru).HasConversion<int>();
+            e.Property(x => x.Aciklama).HasMaxLength(500);
+            // Hesap kodu tenant içinde unique (silinmemiş kayıtlar için)
+            e.HasIndex(x => new { x.SiteId, x.HesapKodu }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.ParentId });
+            e.HasIndex(x => new { x.SiteId, x.PersonId });
+            e.HasOne(x => x.Parent)
+                .WithMany(x => x.Children)
+                .HasForeignKey(x => x.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<MuhasebeDonem>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.Ad).HasMaxLength(100).IsRequired();
+            e.Property(x => x.Durum).HasConversion<int>();
+            e.HasIndex(x => new { x.SiteId, x.Yil }).IsUnique().HasFilter("[IsDeleted] = 0");
             e.HasQueryFilter(x => !x.IsDeleted);
         });
     }

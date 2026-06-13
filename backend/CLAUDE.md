@@ -493,3 +493,39 @@ API: http://5241 / https://7032 — Swagger: `/swagger`
 - `AllowAnyHeader`, `AllowAnyMethod`, `AllowCredentials` ile yapılandırılır
 - `UseCors()` middleware `UseRateLimiter()`'dan önce eklenir
 - Yeni bir frontend origin eklemek için `AllowedOrigins` dizisine eklenir
+
+---
+
+## Muhasebe Modülü (geliştirme aşamasında)
+
+Çift taraflı (double-entry) muhasebe modülü fazlı olarak geliştirilmektedir.
+Tüm muhasebe verisi tenant (site) bazında izole edilir ve `SharedTenantDbContext`
+içinde tutulur (Buildings/Units ile aynı tenant DB şeması).
+
+### Faz 1 — Domain & Persistence (tamamlandı)
+
+**Enum'lar** (`SiteYonetimi.Shared/Enums/MuhasebeEnums.cs`):
+`HesapTipi`, `HesapKategorisi`, `NormalBakiye`, `CariTuru`, `FisTuru`,
+`FisDurumu`, `DonemDurumu`.
+
+**Entity'ler** (`SiteYonetimi.Infrastructure/Entities/Shared/Muhasebe/`):
+
+| Entity | Açıklama |
+|---|---|
+| `HesapPlani` | Hiyerarşik hesap planı (self-ref `ParentId`). Cari hesaplar da bu tablodadır (`CariTuru` dolu). `(SiteId, HesapKodu)` unique. Sadece `FisKesilebilirMi` yaprak hesaplara fiş kesilir. |
+| `MuhasebeDonem` | Yıl bazlı mali dönem. `(SiteId, Yil)` unique. `SonYevmiyeNo` yevmiye sayacı. |
+
+- EF konfigürasyonu `SharedTenantDbContext.OnModelCreating` içinde; `HasQueryFilter(!IsDeleted)` + unique index'ler.
+- Tenant izolasyonu mevcut desene uyar: sorgu/komutlarda `SiteId` filtresi + dedicated DB için per-request connection resolution.
+
+**Seed iskeleti** (`SiteYonetimi.Infrastructure/Seed/MuhasebeSeeder.cs`):
+`MuhasebeSeeder.SeedForSiteAsync(db, siteId)` — varsayılan (sadeleştirilmiş TDHP)
+hesap planı + açık mali dönem seed eder (idempotent). Hiyerarşi (ParentId/Seviye)
+ve "fiş kesilebilir" yaprak tespiti hesap kodundan otomatik türetilir.
+> Site oluşturma akışına bağlanması (CreateSiteCommand) ileriki fazda yapılacak.
+
+**Migration (bu ortamda .NET SDK kısıtı nedeniyle üretilemedi — lokalde çalıştırın):**
+```bash
+dotnet ef migrations add Muhasebe_Faz1 --project ./src/SiteYonetimi.Infrastructure --startup-project ./src/SiteYonetimi.API --context SharedTenantDbContext --output-dir Migrations/SharedTenantDb
+dotnet ef database update --project ./src/SiteYonetimi.Infrastructure --startup-project ./src/SiteYonetimi.API --context SharedTenantDbContext
+```
