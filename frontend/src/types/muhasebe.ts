@@ -234,3 +234,74 @@ export interface Donem {
   durum: number
   sonYevmiyeNo: number
 }
+
+// ---- Raporlar / Defterler ----
+
+export interface HareketSatir {
+  fisTarihi: string
+  fisNo: string
+  yevmiyeNo?: number | null
+  hesapKodu: string
+  hesapAdi: string
+  aciklama?: string | null
+  borcTutar: number
+  alacakTutar: number
+  yuruyenBakiye: number
+}
+
+export interface Defter {
+  hesapId: string
+  hesapKodu: string
+  hesapAdi: string
+  acilisBakiye: number
+  toplamBorc: number
+  toplamAlacak: number
+  kapanisBakiye: number
+  satirlar: HareketSatir[]
+}
+
+export interface YevmiyeSatir {
+  yevmiyeNo?: number | null
+  fisNo: string
+  fisTarihi: string
+  fisTuru: FisTuru
+  hesapKodu: string
+  hesapAdi: string
+  aciklama?: string | null
+  borcTutar: number
+  alacakTutar: number
+}
+
+export interface YevmiyeDefteri {
+  toplamBorc: number
+  toplamAlacak: number
+  satirlar: YevmiyeSatir[]
+}
+
+export interface MizanSatir {
+  hesapId: string
+  hesapKodu: string
+  hesapAdi: string
+  borcToplam: number
+  alacakToplam: number
+  borcBakiye: number
+  alacakBakiye: number
+}
+
+export interface Mizan {
+  toplamBorc: number
+  toplamAlacak: number
+  toplamBorcBakiye: number
+  toplamAlacakBakiye: number
+  satirlar: MizanSatir[]
+}
+
+export interface CariBakiye {
+  hesapId: string
+  hesapKodu: string
+  hesapAdi: string
+  cariTuru?: CariTuru | null
+  borcToplam: number
+  alacakToplam: number
+  bakiye: number
+}

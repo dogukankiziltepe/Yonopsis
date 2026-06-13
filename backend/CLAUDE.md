@@ -568,3 +568,21 @@ Yeni modül: **`SiteYonetimi.Muhasebe`** (`src/Modules/SiteYonetimi.Muhasebe`), 
 ```bash
 dotnet ef migrations add Muhasebe_Faz3 --project ./src/SiteYonetimi.Infrastructure --startup-project ./src/SiteYonetimi.API --context SharedTenantDbContext --output-dir Migrations/SharedTenantDb
 ```
+
+### Faz 4 — Defterler & Raporlar (tamamlandı)
+
+Salt-okunur sorgular; yalnızca **onaylı (entegre)** fişler dikkate alınır. Migration gerekmez.
+
+**Defterler** (`Raporlar/Queries`):
+- `GetYevmiyeDefteriQuery` (tarih aralığı, sıralı tüm hareketler + toplam)
+- `GetDefteriKebirQuery` (tek hesap, alt hesaplar dahil, yürüyen bakiye)
+- `GetMuavinDefterQuery` (tek hesap, sadece kendisi)
+
+**Raporlar:**
+- `GetMizanQuery` (hesap bazlı borç/alacak toplam + bakiye, ΣBorç=ΣAlacak)
+- `GetCariEkstreQuery` (tek cari hesap dökümü + yürüyen bakiye)
+- `GetBorcAlacakDurumuQuery` (tüm carilerin özet bakiyeleri, CariTuru filtresi)
+
+`IRaporService.HesapDefteriAsync` ortak hesap-defteri çıkarımı (açılış bakiyesi = aralık öncesi net, yürüyen bakiye). Controller: `MuhasebeRaporlarController` (`api/muhasebe/defterler/*`, `api/muhasebe/raporlar/*`), `[RequirePage("MuhasebeRapor")]`.
+
+**Frontend:** `/muhasebe/defterler` (Yevmiye/Kebir/Muavin sekmeleri) ve `/muhasebe/raporlar` (Mizan/Cari Ekstre/Borç-Alacak). Excel/CSV export client-side (`lib/utils/exportCsv.ts`, UTF-8 BOM + ; ayraç).

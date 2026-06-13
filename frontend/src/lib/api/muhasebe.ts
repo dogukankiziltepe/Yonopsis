@@ -1,10 +1,12 @@
 import { siteApi } from './client'
 import { PaginatedResult } from '@/types/api'
 import {
+  CariBakiye,
   CariTuru,
   CreateCariHesapDto,
   CreateFisDto,
   CreateHesapDto,
+  Defter,
   Donem,
   FisDetay,
   FisDetaylarItem,
@@ -14,8 +16,10 @@ import {
   HesapDetail,
   HesapListItem,
   HesapNode,
+  Mizan,
   UpdateFisDto,
   UpdateHesapDto,
+  YevmiyeDefteri,
 } from '@/types/muhasebe'
 
 export const muhasebeApi = {
@@ -88,4 +92,18 @@ export const muhasebeApi = {
     page?: number
     pageSize?: number
   }) => siteApi.get<PaginatedResult<FisDetaylarItem>>('/api/muhasebe/fis-detaylari', { params }),
+
+  // Defterler & Raporlar
+  getYevmiye: (from?: string, to?: string) =>
+    siteApi.get<YevmiyeDefteri>('/api/muhasebe/defterler/yevmiye', { params: { from, to } }),
+  getKebir: (hesapId: string, from?: string, to?: string) =>
+    siteApi.get<Defter>('/api/muhasebe/defterler/kebir', { params: { hesapId, from, to } }),
+  getMuavin: (hesapId: string, from?: string, to?: string) =>
+    siteApi.get<Defter>('/api/muhasebe/defterler/muavin', { params: { hesapId, from, to } }),
+  getMizan: (from?: string, to?: string) =>
+    siteApi.get<Mizan>('/api/muhasebe/raporlar/mizan', { params: { from, to } }),
+  getCariEkstre: (hesapId: string, from?: string, to?: string) =>
+    siteApi.get<Defter>('/api/muhasebe/raporlar/cari-ekstre', { params: { hesapId, from, to } }),
+  getBorcAlacak: (cariTuru?: CariTuru) =>
+    siteApi.get<CariBakiye[]>('/api/muhasebe/raporlar/borc-alacak', { params: { cariTuru } }),
 }

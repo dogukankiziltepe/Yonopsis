@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using SiteYonetimi.Muhasebe.Fisler.Services;
 using SiteYonetimi.Muhasebe.Hesaplar.Services;
+using SiteYonetimi.Muhasebe.Raporlar.Services;
 
 namespace SiteYonetimi.Muhasebe;
 
@@ -14,6 +15,7 @@ public static class MuhasebeModule
         services.AddValidatorsFromAssembly(typeof(MuhasebeModule).Assembly);
         services.AddScoped<ICariHesapService, CariHesapService>();
         services.AddScoped<IFisService, FisService>();
+        services.AddScoped<IRaporService, RaporService>();
         return services;
     }
 }
