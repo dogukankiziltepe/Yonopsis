@@ -529,3 +529,21 @@ ve "fiş kesilebilir" yaprak tespiti hesap kodundan otomatik türetilir.
 dotnet ef migrations add Muhasebe_Faz1 --project ./src/SiteYonetimi.Infrastructure --startup-project ./src/SiteYonetimi.API --context SharedTenantDbContext --output-dir Migrations/SharedTenantDb
 dotnet ef database update --project ./src/SiteYonetimi.Infrastructure --startup-project ./src/SiteYonetimi.API --context SharedTenantDbContext
 ```
+
+### Faz 2 — Hesap Planı CRUD + Cari Hesap (tamamlandı)
+
+Yeni modül: **`SiteYonetimi.Muhasebe`** (`src/Modules/SiteYonetimi.Muhasebe`), `AddMuhasebeModule()` ile Program.cs'e kayıtlı. Mevcut CQRS/Result/SharedTenantDbContext desenine uyar.
+
+**CQRS** (`Hesaplar/` altında):
+- Commands: `CreateHesapCommand`, `UpdateHesapCommand`, `ToggleHesapAktifCommand`, `CreateCariHesapCommand`
+- Queries: `GetHesapPlaniTreeQuery`, `GetHesapListQuery`, `GetHesapByIdQuery`, `GetCariHesaplarQuery`
+- Servis: `ICariHesapService` / `CariHesapService` — cari hesap kodu üretimi tek noktada (Faz 5'te PersonCreated handler da kullanacak). PersonId ile idempotent. Ana hesap eşlemesi: Kiracı/EvSahibi→120, Tedarikçi→320, Personel→335 (Faz 6'da parametreyle override edilecek).
+
+**Controller:** `MuhasebeHesaplarController` — `[RequirePage("MuhasebeHesapPlani")]`, route `api/muhasebe/...`:
+`GET hesap-plani/tree`, `GET/POST hesaplar`, `GET/PUT hesaplar/{id}`, `PATCH hesaplar/{id}/aktif`, `GET/POST cari-hesaplar`.
+
+> ⚠️ Yetki: `MuhasebeHesapPlani` page'i ve rol-permission kaydı **Faz 7'de** seed edilecek. O zamana kadar endpoint'ler permission'a takılır (SuperAdmin hariç). Bu, doküman faz planına uygundur.
+
+**Frontend:** `/muhasebe/hesap-plani` — hiyerarşik ağaç + Cari Hesaplar sekmesi, oluştur/düzenle yan paneli (`frontend/src/app/(dashboard)/muhasebe/hesap-plani/page.tsx`, `lib/api/muhasebe.ts`, `types/muhasebe.ts`). Sidebar linki dinamik (page seed'i Faz 7).
+
+> Migration gerekmez (Faz 2 yeni tablo eklemez). Faz 1 migration'ı yeterli.
