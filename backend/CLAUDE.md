@@ -586,3 +586,14 @@ Salt-okunur sorgular; yalnızca **onaylı (entegre)** fişler dikkate alınır. 
 `IRaporService.HesapDefteriAsync` ortak hesap-defteri çıkarımı (açılış bakiyesi = aralık öncesi net, yürüyen bakiye). Controller: `MuhasebeRaporlarController` (`api/muhasebe/defterler/*`, `api/muhasebe/raporlar/*`), `[RequirePage("MuhasebeRapor")]`.
 
 **Frontend:** `/muhasebe/defterler` (Yevmiye/Kebir/Muavin sekmeleri) ve `/muhasebe/raporlar` (Mizan/Cari Ekstre/Borç-Alacak). Excel/CSV export client-side (`lib/utils/exportCsv.ts`, UTF-8 BOM + ; ayraç).
+
+### Faz 5 — Entegrasyon (Person → otomatik cari) (tamamlandı)
+
+**Domain event altyapısı** (en az invaziv, MediatR `INotification`):
+- `SiteYonetimi.Shared/Events/PersonEvents.cs`: `PersonCreatedDomainEvent`, `PersonRemovedFromSiteDomainEvent`. (Shared'a `MediatR.Contracts` paketi eklendi.)
+- Yayınlama: `InvitePersonCommand` (Owner/Renter eklenince) ve `RemovePersonFromSiteCommand` `IPublisher.Publish` ile event atar.
+- Dinleyiciler (Muhasebe `Integration/`): `PersonCreatedAccountingHandler` → `ICariHesapService.EnsureCariHesapAsync` (Owner→EvSahibi, Renter→Kiracı; idempotent, hata davet akışını bozmaz). `PersonRemovedAccountingHandler` → cari hesabı pasife alır.
+
+**Site oluşturma → hesap planı seed:** `CreateSiteCommand` commit sonrası `MuhasebeSeeder.SeedForSiteAsync` çağırır (Shared veya Dedicated DB'ye göre connection). Böylece yeni sitede otomatik cari için gerekli ana hesaplar (120 vb.) hazır olur. (Faz 1'de ertelenen bağlama tamamlandı.)
+
+> Migration gerekmez. **Opsiyonel** Payment→Tahsil ve Gider→Tediye otomatik fişleri parametre bağımlı olduğundan **Faz 6'ya** (MuhasebeParametre ile birlikte) bırakıldı.
