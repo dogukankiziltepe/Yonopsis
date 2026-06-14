@@ -630,3 +630,19 @@ Controller hizalaması: `fis-detaylari` → `MuhasebeFisDetay`, defter aksiyonla
 **Yetki davranışı:** Varsayılan `SiteAdmin` rolü (`IsDefault`) hem sidebar (my-pages) hem `PermissionFilter` tarafında **FullAccess** alır → muhasebe sayfaları otomatik görünür ve tüm uçlar çalışır. Özel roller için yöneticiler Rol Tipleri ekranından sayfa bazında izin verir (mevcut akış).
 
 > Muhasebe modülü 7 faz ile **tamamlandı**. Tüm fazların lokal `dotnet build` + 3 migration (`Muhasebe_Faz1/3/6`) ile doğrulanması gerekir (bu ortamda .NET SDK ağ politikasıyla engelliydi).
+
+---
+
+## Toplu Veri Girişi — Excel Import (SiteManagement)
+
+Excel tabanlı toplu import: **Binalar / Daireler / Kullanıcılar**. `ClosedXML` ile şablon üretimi + parse.
+
+- Servis: `IImportService` (`Modules/SiteYonetimi.SiteManagement/Import/Services/ImportService.cs`) — `GenerateTemplate`, `PreviewAsync` (parse + validation), `ConfirmAsync` (yalnız geçerli satırları transaction içinde kaydeder).
+- Controller: `ImportController` (`api/import`, `[RequirePage("Import")]`):
+  - `GET template/{type}` → .xlsx şablon
+  - `POST preview/{type}` (multipart, max 5MB) → satır bazlı validation önizlemesi
+  - `POST confirm/{type}` → geçerli satırları kaydet
+- Validation: Buildings (ad zorunlu+unique, TotalFloors pozitif), Units (BuildingName mevcut, UnitNumber bina içinde unique), Users (email unique+format, TR telefon, Role∈{Resident,Owner,Manager}, Resident/Owner için daire eşleşmesi). UnitType yoksa otomatik oluşturulur; Owner/Resident dairenin Owner/TenantUserId'sine işlenir.
+- Seed: `Import` sayfası (Temel modülü, route `/import`). Frontend: `/import` (tip seçimi, şablon indir, yükle, önizleme highlight, onay).
+
+> Not: `Building` entity'sinde TotalFloors/Address alanları yok; şablonda alınır ancak yalnızca `Name` kalıcıdır (FloorNumber<=TotalFloors kuralı bu nedenle uygulanmaz). Users iki DB'ye yazdığından (MasterDb + SharedTenantDb) kayıt context bazında transaction'lıdır.
