@@ -64,6 +64,7 @@ public class MuhasebeFislerController : BaseController
     }
 
     [HttpGet("fis-detaylari")]
+    [RequirePage("MuhasebeFisDetay")]
     public async Task<IActionResult> GetFisDetaylari(
         [FromQuery] Guid? hesapId = null,
         [FromQuery] DateOnly? from = null,

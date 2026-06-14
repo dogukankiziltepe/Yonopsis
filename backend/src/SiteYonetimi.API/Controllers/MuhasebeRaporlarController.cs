@@ -12,18 +12,21 @@ public class MuhasebeRaporlarController : BaseController
     // ---- Defterler ----
 
     [HttpGet("defterler/yevmiye")]
+    [RequirePage("MuhasebeDefter")]
     public async Task<IActionResult> Yevmiye([FromQuery] DateOnly? from = null, [FromQuery] DateOnly? to = null)
     {
         return Handle(await Mediator.Send(new GetYevmiyeDefteriQuery(CurrentSiteId, from, to)));
     }
 
     [HttpGet("defterler/kebir")]
+    [RequirePage("MuhasebeDefter")]
     public async Task<IActionResult> Kebir([FromQuery] Guid hesapId, [FromQuery] DateOnly? from = null, [FromQuery] DateOnly? to = null)
     {
         return Handle(await Mediator.Send(new GetDefteriKebirQuery(CurrentSiteId, hesapId, from, to)));
     }
 
     [HttpGet("defterler/muavin")]
+    [RequirePage("MuhasebeDefter")]
     public async Task<IActionResult> Muavin([FromQuery] Guid hesapId, [FromQuery] DateOnly? from = null, [FromQuery] DateOnly? to = null)
     {
         return Handle(await Mediator.Send(new GetMuavinDefterQuery(CurrentSiteId, hesapId, from, to)));

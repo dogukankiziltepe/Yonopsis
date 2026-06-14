@@ -615,3 +615,18 @@ Salt-okunur sorgular; yalnızca **onaylı (entegre)** fişler dikkate alınır. 
 ```bash
 dotnet ef migrations add Muhasebe_Faz6 --project ./src/SiteYonetimi.Infrastructure --startup-project ./src/SiteYonetimi.API --context SharedTenantDbContext --output-dir Migrations/SharedTenantDb
 ```
+
+### Faz 7 — Yetkilendirme & Cila (tamamlandı)
+
+Şema değişikliği yok — yalnızca **seed verisi** (Modules/Pages/SubscriptionPlanModule). Migration gerekmez.
+
+`DataSeeder.SeedMuhasebeModuleAsync` (startup'ta idempotent):
+- **"Muhasebe" modülü** oluşturulur.
+- 7 sayfa seed edilir; `Page.Name` controller `[RequirePage]` anahtarlarıyla **birebir**: `MuhasebeHesapPlani`, `MuhasebeFis`, `MuhasebeFisDetay`, `MuhasebeDefter`, `MuhasebeRapor`, `MuhasebeParametre`, `MuhasebeDonemSonu`.
+- Muhasebe modülü **tüm planlara** (`SubscriptionPlanModule`) bağlanır.
+
+Controller hizalaması: `fis-detaylari` → `MuhasebeFisDetay`, defter aksiyonları → `MuhasebeDefter` (action-level `[RequirePage]` override). Böylece her route ↔ sayfa ↔ izin **1:1**.
+
+**Yetki davranışı:** Varsayılan `SiteAdmin` rolü (`IsDefault`) hem sidebar (my-pages) hem `PermissionFilter` tarafında **FullAccess** alır → muhasebe sayfaları otomatik görünür ve tüm uçlar çalışır. Özel roller için yöneticiler Rol Tipleri ekranından sayfa bazında izin verir (mevcut akış).
+
+> Muhasebe modülü 7 faz ile **tamamlandı**. Tüm fazların lokal `dotnet build` + 3 migration (`Muhasebe_Faz1/3/6`) ile doğrulanması gerekir (bu ortamda .NET SDK ağ politikasıyla engelliydi).
