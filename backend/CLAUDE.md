@@ -597,3 +597,21 @@ Salt-okunur sorgular; yalnızca **onaylı (entegre)** fişler dikkate alınır. 
 **Site oluşturma → hesap planı seed:** `CreateSiteCommand` commit sonrası `MuhasebeSeeder.SeedForSiteAsync` çağırır (Shared veya Dedicated DB'ye göre connection). Böylece yeni sitede otomatik cari için gerekli ana hesaplar (120 vb.) hazır olur. (Faz 1'de ertelenen bağlama tamamlandı.)
 
 > Migration gerekmez. **Opsiyonel** Payment→Tahsil ve Gider→Tediye otomatik fişleri parametre bağımlı olduğundan **Faz 6'ya** (MuhasebeParametre ile birlikte) bırakıldı.
+
+### Faz 6 — Parametreler & Dönem Sonu (tamamlandı)
+
+**Yeni entity:** `MuhasebeParametre` (tenant başına tek kayıt, `(SiteId)` unique). **Yeni migration gerekir** (`Muhasebe_Faz6`).
+
+**Parametreler** (`Parametreler/`): `IParametreService.GetOrCreateAsync`, `GetMuhasebeParametreQuery`, `UpdateMuhasebeParametreCommand` + `MuhasebeParametreController` (`api/muhasebe/parametreler`, `[RequirePage("MuhasebeParametre")]`). Varsayılan hesaplar, ana hesap kodları, kod/fiş-no şablonları, para birimi, KDV, otomatik tahsil/tediye bayrakları.
+
+**Dönem Sonu** (`Donemler/`): `IDonemSonuService.HesapBakiyeleriAsync`, `GetKapanisOnizlemeQuery` (gelir/gider/net + bakiyeler), `DonemSonuKapanisCommand` + `MuhasebeDonemSonuController` (`api/muhasebe/donem-sonu/onizleme|kapanis`, `[RequirePage("MuhasebeDonemSonu")]`).
+- Kapanış: tüm bakiyeleri sıfırlayan **kapanış fişi** (onaylı) → dönem `Kapali` → bir sonraki dönem açılır → **bilanço** hesaplarını taşıyan **açılış fişi**; net sonuç `570` sonuç hesabına yazılır (yoksa oluşturulur). Serializable transaction.
+
+**Opsiyonel Payment → Tahsil fişi:** `PaymentPaidDomainEvent` (`UpdatePaymentStatusCommand` "ödendi"ye ilk geçişte yayınlar) → `PaymentTahsilFisiHandler` parametre `OtomatikTahsilFisi` açıksa Borç Kasa / Alacak cari Tahsil fişi üretip onaylar (mevcut `CreateFis`/`OnaylaFis` komutlarını kullanır). Gider→Tediye: sistemde gider entity'si bulunmadığından kapsam dışı (parametre bayrağı ileride için hazır).
+
+**Frontend:** `/muhasebe/parametreler` (form) ve `/muhasebe/donem-sonu` (önizleme → dengeli ise kapat wizard).
+
+**Migration komutu (lokalde):**
+```bash
+dotnet ef migrations add Muhasebe_Faz6 --project ./src/SiteYonetimi.Infrastructure --startup-project ./src/SiteYonetimi.API --context SharedTenantDbContext --output-dir Migrations/SharedTenantDb
+```

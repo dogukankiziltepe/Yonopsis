@@ -305,3 +305,48 @@ export interface CariBakiye {
   alacakToplam: number
   bakiye: number
 }
+
+// ---- Parametreler / Dönem Sonu ----
+
+export interface MuhasebeParametre {
+  id: string
+  varsayilanKasaHesapId?: string | null
+  varsayilanBankaHesapId?: string | null
+  aidatGelirHesapId?: string | null
+  gecikmeFaiziHesapId?: string | null
+  alicilarAnaHesapKodu: string
+  saticilarAnaHesapKodu: string
+  giderAnaHesapKodu: string
+  cariKodSablonu: string
+  fisNoSablonu: string
+  paraBirimi: string
+  kdvOrani?: number | null
+  otomatikTahsilFisi: boolean
+  otomatikTediyeFisi: boolean
+}
+
+export type UpdateMuhasebeParametreDto = Omit<MuhasebeParametre, 'id'>
+
+export interface DonemHesapBakiye {
+  hesapId: string
+  hesapKodu: string
+  hesapAdi: string
+  kategori: HesapKategorisi
+  net: number
+}
+
+export interface KapanisOnizleme {
+  donemId: string
+  yil: number
+  toplamGelir: number
+  toplamGider: number
+  netSonuc: number
+  dengeli: boolean
+  bakiyeler: DonemHesapBakiye[]
+}
+
+export interface DonemSonuSonuc {
+  kapanisFisId: string
+  yeniDonemId: string
+  acilisFisId: string
+}

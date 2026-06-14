@@ -16,9 +16,13 @@ import {
   HesapDetail,
   HesapListItem,
   HesapNode,
+  KapanisOnizleme,
   Mizan,
+  MuhasebeParametre,
+  DonemSonuSonuc,
   UpdateFisDto,
   UpdateHesapDto,
+  UpdateMuhasebeParametreDto,
   YevmiyeDefteri,
 } from '@/types/muhasebe'
 
@@ -106,4 +110,15 @@ export const muhasebeApi = {
     siteApi.get<Defter>('/api/muhasebe/raporlar/cari-ekstre', { params: { hesapId, from, to } }),
   getBorcAlacak: (cariTuru?: CariTuru) =>
     siteApi.get<CariBakiye[]>('/api/muhasebe/raporlar/borc-alacak', { params: { cariTuru } }),
+
+  // Parametreler
+  getParametre: () => siteApi.get<MuhasebeParametre>('/api/muhasebe/parametreler'),
+  updateParametre: (data: UpdateMuhasebeParametreDto) =>
+    siteApi.put('/api/muhasebe/parametreler', data),
+
+  // Dönem Sonu
+  kapanisOnizleme: (donemId: string) =>
+    siteApi.post<KapanisOnizleme>('/api/muhasebe/donem-sonu/onizleme', null, { params: { donemId } }),
+  donemSonuKapanis: (donemId: string) =>
+    siteApi.post<DonemSonuSonuc>('/api/muhasebe/donem-sonu/kapanis', null, { params: { donemId } }),
 }

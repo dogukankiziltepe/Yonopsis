@@ -27,6 +27,7 @@ public class SharedTenantDbContext : DbContext
     public DbSet<MuhasebeDonem> MuhasebeDonemler => Set<MuhasebeDonem>();
     public DbSet<MuhasebeFisi> MuhasebeFisleri => Set<MuhasebeFisi>();
     public DbSet<MuhasebeFisiDetay> MuhasebeFisiDetaylari => Set<MuhasebeFisiDetay>();
+    public DbSet<MuhasebeParametre> MuhasebeParametreler => Set<MuhasebeParametre>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -207,6 +208,21 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.BelgeNo).HasMaxLength(100);
             e.HasIndex(x => new { x.SiteId, x.HesapId });
             e.HasIndex(x => x.FisId);
+        });
+
+        modelBuilder.Entity<MuhasebeParametre>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.AlicilarAnaHesapKodu).HasMaxLength(50);
+            e.Property(x => x.SaticilarAnaHesapKodu).HasMaxLength(50);
+            e.Property(x => x.GiderAnaHesapKodu).HasMaxLength(50);
+            e.Property(x => x.CariKodSablonu).HasMaxLength(100);
+            e.Property(x => x.FisNoSablonu).HasMaxLength(100);
+            e.Property(x => x.ParaBirimi).HasMaxLength(10);
+            e.Property(x => x.KdvOrani).HasPrecision(5, 2);
+            e.HasIndex(x => x.SiteId).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasQueryFilter(x => !x.IsDeleted);
         });
     }
 }
