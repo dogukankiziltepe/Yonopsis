@@ -27,6 +27,7 @@ import { useAuthStore } from '@/lib/store/auth.store'
 import { authApi } from '@/lib/api/auth'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { PageDto } from '@/types/page'
 
 const iconMap: Record<string, LucideIcon> = {
@@ -169,15 +170,18 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
           </div>
           <UserCircle className="h-4 w-4 text-sidebar-foreground/40 shrink-0" />
         </Link>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-4 w-4 mr-2" />
-          Çıkış Yap
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1 justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Çıkış Yap
+          </Button>
+          <ThemeToggle className="text-sidebar-foreground/70 hover:text-sidebar-foreground" />
+        </div>
       </div>
     </aside>
     </>

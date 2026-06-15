@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import { Toaster } from 'sonner'
+import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
 const jakarta = Plus_Jakarta_Sans({
@@ -22,10 +23,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr">
+    <html lang="tr" suppressHydrationWarning>
       <body className={`${jakarta.variable} ${jetbrains.variable} font-sans antialiased`}>
-        {children}
-        <Toaster richColors position="top-right" duration={4000} />
+        <ThemeProvider>
+          {children}
+          <Toaster richColors position="top-right" duration={4000} />
+        </ThemeProvider>
       </body>
     </html>
   )
