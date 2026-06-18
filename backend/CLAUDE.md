@@ -493,3 +493,156 @@ API: http://5241 / https://7032 — Swagger: `/swagger`
 - `AllowAnyHeader`, `AllowAnyMethod`, `AllowCredentials` ile yapılandırılır
 - `UseCors()` middleware `UseRateLimiter()`'dan önce eklenir
 - Yeni bir frontend origin eklemek için `AllowedOrigins` dizisine eklenir
+
+---
+
+## Muhasebe Modülü (geliştirme aşamasında)
+
+Çift taraflı (double-entry) muhasebe modülü fazlı olarak geliştirilmektedir.
+Tüm muhasebe verisi tenant (site) bazında izole edilir ve `SharedTenantDbContext`
+içinde tutulur (Buildings/Units ile aynı tenant DB şeması).
+
+### Faz 1 — Domain & Persistence (tamamlandı)
+
+**Enum'lar** (`SiteYonetimi.Shared/Enums/MuhasebeEnums.cs`):
+`HesapTipi`, `HesapKategorisi`, `NormalBakiye`, `CariTuru`, `FisTuru`,
+`FisDurumu`, `DonemDurumu`.
+
+**Entity'ler** (`SiteYonetimi.Infrastructure/Entities/Shared/Muhasebe/`):
+
+| Entity | Açıklama |
+|---|---|
+| `HesapPlani` | Hiyerarşik hesap planı (self-ref `ParentId`). Cari hesaplar da bu tablodadır (`CariTuru` dolu). `(SiteId, HesapKodu)` unique. Sadece `FisKesilebilirMi` yaprak hesaplara fiş kesilir. |
+| `MuhasebeDonem` | Yıl bazlı mali dönem. `(SiteId, Yil)` unique. `SonYevmiyeNo` yevmiye sayacı. |
+
+- EF konfigürasyonu `SharedTenantDbContext.OnModelCreating` içinde; `HasQueryFilter(!IsDeleted)` + unique index'ler.
+- Tenant izolasyonu mevcut desene uyar: sorgu/komutlarda `SiteId` filtresi + dedicated DB için per-request connection resolution.
+
+**Seed iskeleti** (`SiteYonetimi.Infrastructure/Seed/MuhasebeSeeder.cs`):
+`MuhasebeSeeder.SeedForSiteAsync(db, siteId)` — varsayılan (sadeleştirilmiş TDHP)
+hesap planı + açık mali dönem seed eder (idempotent). Hiyerarşi (ParentId/Seviye)
+ve "fiş kesilebilir" yaprak tespiti hesap kodundan otomatik türetilir.
+> Site oluşturma akışına bağlanması (CreateSiteCommand) ileriki fazda yapılacak.
+
+**Migration (bu ortamda .NET SDK kısıtı nedeniyle üretilemedi — lokalde çalıştırın):**
+```bash
+dotnet ef migrations add Muhasebe_Faz1 --project ./src/SiteYonetimi.Infrastructure --startup-project ./src/SiteYonetimi.API --context SharedTenantDbContext --output-dir Migrations/SharedTenantDb
+dotnet ef database update --project ./src/SiteYonetimi.Infrastructure --startup-project ./src/SiteYonetimi.API --context SharedTenantDbContext
+```
+
+### Faz 2 — Hesap Planı CRUD + Cari Hesap (tamamlandı)
+
+Yeni modül: **`SiteYonetimi.Muhasebe`** (`src/Modules/SiteYonetimi.Muhasebe`), `AddMuhasebeModule()` ile Program.cs'e kayıtlı. Mevcut CQRS/Result/SharedTenantDbContext desenine uyar.
+
+**CQRS** (`Hesaplar/` altında):
+- Commands: `CreateHesapCommand`, `UpdateHesapCommand`, `ToggleHesapAktifCommand`, `CreateCariHesapCommand`
+- Queries: `GetHesapPlaniTreeQuery`, `GetHesapListQuery`, `GetHesapByIdQuery`, `GetCariHesaplarQuery`
+- Servis: `ICariHesapService` / `CariHesapService` — cari hesap kodu üretimi tek noktada (Faz 5'te PersonCreated handler da kullanacak). PersonId ile idempotent. Ana hesap eşlemesi: Kiracı/EvSahibi→120, Tedarikçi→320, Personel→335 (Faz 6'da parametreyle override edilecek).
+
+**Controller:** `MuhasebeHesaplarController` — `[RequirePage("MuhasebeHesapPlani")]`, route `api/muhasebe/...`:
+`GET hesap-plani/tree`, `GET/POST hesaplar`, `GET/PUT hesaplar/{id}`, `PATCH hesaplar/{id}/aktif`, `GET/POST cari-hesaplar`.
+
+> ⚠️ Yetki: `MuhasebeHesapPlani` page'i ve rol-permission kaydı **Faz 7'de** seed edilecek. O zamana kadar endpoint'ler permission'a takılır (SuperAdmin hariç). Bu, doküman faz planına uygundur.
+
+**Frontend:** `/muhasebe/hesap-plani` — hiyerarşik ağaç + Cari Hesaplar sekmesi, oluştur/düzenle yan paneli (`frontend/src/app/(dashboard)/muhasebe/hesap-plani/page.tsx`, `lib/api/muhasebe.ts`, `types/muhasebe.ts`). Sidebar linki dinamik (page seed'i Faz 7).
+
+> Migration gerekmez (Faz 2 yeni tablo eklemez). Faz 1 migration'ı yeterli.
+
+### Faz 3 — Muhasebe Fişi (tamamlandı)
+
+**Yeni entity'ler** (`Entities/Shared/Muhasebe/`): `MuhasebeFisi`, `MuhasebeFisiDetay`. EF config `SharedTenantDbContext`'te (decimal(18,2), cascade detay, `(SiteId,FisNo)` unique, query filter). **Yeni migration gerekir** (`Muhasebe_Faz3`).
+
+**Dönem** (`Donemler/`): `CreateDonemCommand`, `GetDonemlerQuery`, `GetAktifDonemQuery` + `MuhasebeDonemlerController` (`api/muhasebe/donemler`).
+
+**Fiş** (`Fisler/`):
+- Commands: `CreateFis` (taslak), `UpdateFis` (yalnız taslak), `OnaylaFis`, `IptalFis`, `DeleteFis`
+- Queries: `GetFisList` (sayfalı+filtre), `GetFisDetay`, `GetFisDetaylar` (düz satır ekranı)
+- `IFisService`/`FisService`: dönem çözümleme (yoksa açık dönem üretir), satır doğrulama (borç XOR alacak, fiş kesilebilir/aktif hesap), fiş no üretimi (`{yil}-{sıra:0000000}`).
+- `MuhasebeFislerController` (`api/muhasebe/fisler`, `fis-detaylari`), `[RequirePage("MuhasebeFis")]`.
+
+**İş kuralları:** Dengesiz/boş fiş onaylanamaz. Onayda dönem `SonYevmiyeNo` **Serializable transaction** içinde atomik artırılıp sıralı yevmiye no atanır. Kapalı döneme fiş girilemez. Onaylı fiş düzenlenemez; iptalde **ters kayıt (storno)** fişi üretilir. Taslak fiş soft-delete ile silinir.
+
+**Frontend:** `/muhasebe/fisler` (liste + dengeli giriş formu: Toplam Borç/Alacak/Fark, fark≠0 ise Onayla disabled, onaylıda salt-okunur + storno) ve `/muhasebe/fis-detaylari` (filtreli düz satır listesi).
+
+**Migration komutu (lokalde):**
+```bash
+dotnet ef migrations add Muhasebe_Faz3 --project ./src/SiteYonetimi.Infrastructure --startup-project ./src/SiteYonetimi.API --context SharedTenantDbContext --output-dir Migrations/SharedTenantDb
+```
+
+### Faz 4 — Defterler & Raporlar (tamamlandı)
+
+Salt-okunur sorgular; yalnızca **onaylı (entegre)** fişler dikkate alınır. Migration gerekmez.
+
+**Defterler** (`Raporlar/Queries`):
+- `GetYevmiyeDefteriQuery` (tarih aralığı, sıralı tüm hareketler + toplam)
+- `GetDefteriKebirQuery` (tek hesap, alt hesaplar dahil, yürüyen bakiye)
+- `GetMuavinDefterQuery` (tek hesap, sadece kendisi)
+
+**Raporlar:**
+- `GetMizanQuery` (hesap bazlı borç/alacak toplam + bakiye, ΣBorç=ΣAlacak)
+- `GetCariEkstreQuery` (tek cari hesap dökümü + yürüyen bakiye)
+- `GetBorcAlacakDurumuQuery` (tüm carilerin özet bakiyeleri, CariTuru filtresi)
+
+`IRaporService.HesapDefteriAsync` ortak hesap-defteri çıkarımı (açılış bakiyesi = aralık öncesi net, yürüyen bakiye). Controller: `MuhasebeRaporlarController` (`api/muhasebe/defterler/*`, `api/muhasebe/raporlar/*`), `[RequirePage("MuhasebeRapor")]`.
+
+**Frontend:** `/muhasebe/defterler` (Yevmiye/Kebir/Muavin sekmeleri) ve `/muhasebe/raporlar` (Mizan/Cari Ekstre/Borç-Alacak). Excel/CSV export client-side (`lib/utils/exportCsv.ts`, UTF-8 BOM + ; ayraç).
+
+### Faz 5 — Entegrasyon (Person → otomatik cari) (tamamlandı)
+
+**Domain event altyapısı** (en az invaziv, MediatR `INotification`):
+- `SiteYonetimi.Shared/Events/PersonEvents.cs`: `PersonCreatedDomainEvent`, `PersonRemovedFromSiteDomainEvent`. (Shared'a `MediatR.Contracts` paketi eklendi.)
+- Yayınlama: `InvitePersonCommand` (Owner/Renter eklenince) ve `RemovePersonFromSiteCommand` `IPublisher.Publish` ile event atar.
+- Dinleyiciler (Muhasebe `Integration/`): `PersonCreatedAccountingHandler` → `ICariHesapService.EnsureCariHesapAsync` (Owner→EvSahibi, Renter→Kiracı; idempotent, hata davet akışını bozmaz). `PersonRemovedAccountingHandler` → cari hesabı pasife alır.
+
+**Site oluşturma → hesap planı seed:** `CreateSiteCommand` commit sonrası `MuhasebeSeeder.SeedForSiteAsync` çağırır (Shared veya Dedicated DB'ye göre connection). Böylece yeni sitede otomatik cari için gerekli ana hesaplar (120 vb.) hazır olur. (Faz 1'de ertelenen bağlama tamamlandı.)
+
+> Migration gerekmez. **Opsiyonel** Payment→Tahsil ve Gider→Tediye otomatik fişleri parametre bağımlı olduğundan **Faz 6'ya** (MuhasebeParametre ile birlikte) bırakıldı.
+
+### Faz 6 — Parametreler & Dönem Sonu (tamamlandı)
+
+**Yeni entity:** `MuhasebeParametre` (tenant başına tek kayıt, `(SiteId)` unique). **Yeni migration gerekir** (`Muhasebe_Faz6`).
+
+**Parametreler** (`Parametreler/`): `IParametreService.GetOrCreateAsync`, `GetMuhasebeParametreQuery`, `UpdateMuhasebeParametreCommand` + `MuhasebeParametreController` (`api/muhasebe/parametreler`, `[RequirePage("MuhasebeParametre")]`). Varsayılan hesaplar, ana hesap kodları, kod/fiş-no şablonları, para birimi, KDV, otomatik tahsil/tediye bayrakları.
+
+**Dönem Sonu** (`Donemler/`): `IDonemSonuService.HesapBakiyeleriAsync`, `GetKapanisOnizlemeQuery` (gelir/gider/net + bakiyeler), `DonemSonuKapanisCommand` + `MuhasebeDonemSonuController` (`api/muhasebe/donem-sonu/onizleme|kapanis`, `[RequirePage("MuhasebeDonemSonu")]`).
+- Kapanış: tüm bakiyeleri sıfırlayan **kapanış fişi** (onaylı) → dönem `Kapali` → bir sonraki dönem açılır → **bilanço** hesaplarını taşıyan **açılış fişi**; net sonuç `570` sonuç hesabına yazılır (yoksa oluşturulur). Serializable transaction.
+
+**Opsiyonel Payment → Tahsil fişi:** `PaymentPaidDomainEvent` (`UpdatePaymentStatusCommand` "ödendi"ye ilk geçişte yayınlar) → `PaymentTahsilFisiHandler` parametre `OtomatikTahsilFisi` açıksa Borç Kasa / Alacak cari Tahsil fişi üretip onaylar (mevcut `CreateFis`/`OnaylaFis` komutlarını kullanır). Gider→Tediye: sistemde gider entity'si bulunmadığından kapsam dışı (parametre bayrağı ileride için hazır).
+
+**Frontend:** `/muhasebe/parametreler` (form) ve `/muhasebe/donem-sonu` (önizleme → dengeli ise kapat wizard).
+
+**Migration komutu (lokalde):**
+```bash
+dotnet ef migrations add Muhasebe_Faz6 --project ./src/SiteYonetimi.Infrastructure --startup-project ./src/SiteYonetimi.API --context SharedTenantDbContext --output-dir Migrations/SharedTenantDb
+```
+
+### Faz 7 — Yetkilendirme & Cila (tamamlandı)
+
+Şema değişikliği yok — yalnızca **seed verisi** (Modules/Pages/SubscriptionPlanModule). Migration gerekmez.
+
+`DataSeeder.SeedMuhasebeModuleAsync` (startup'ta idempotent):
+- **"Muhasebe" modülü** oluşturulur.
+- 7 sayfa seed edilir; `Page.Name` controller `[RequirePage]` anahtarlarıyla **birebir**: `MuhasebeHesapPlani`, `MuhasebeFis`, `MuhasebeFisDetay`, `MuhasebeDefter`, `MuhasebeRapor`, `MuhasebeParametre`, `MuhasebeDonemSonu`.
+- Muhasebe modülü **tüm planlara** (`SubscriptionPlanModule`) bağlanır.
+
+Controller hizalaması: `fis-detaylari` → `MuhasebeFisDetay`, defter aksiyonları → `MuhasebeDefter` (action-level `[RequirePage]` override). Böylece her route ↔ sayfa ↔ izin **1:1**.
+
+**Yetki davranışı:** Varsayılan `SiteAdmin` rolü (`IsDefault`) hem sidebar (my-pages) hem `PermissionFilter` tarafında **FullAccess** alır → muhasebe sayfaları otomatik görünür ve tüm uçlar çalışır. Özel roller için yöneticiler Rol Tipleri ekranından sayfa bazında izin verir (mevcut akış).
+
+> Muhasebe modülü 7 faz ile **tamamlandı**. Tüm fazların lokal `dotnet build` + 3 migration (`Muhasebe_Faz1/3/6`) ile doğrulanması gerekir (bu ortamda .NET SDK ağ politikasıyla engelliydi).
+
+---
+
+## Toplu Veri Girişi — Excel Import (SiteManagement)
+
+Excel tabanlı toplu import: **Binalar / Daireler / Kullanıcılar**. `ClosedXML` ile şablon üretimi + parse.
+
+- Servis: `IImportService` (`Modules/SiteYonetimi.SiteManagement/Import/Services/ImportService.cs`) — `GenerateTemplate`, `PreviewAsync` (parse + validation), `ConfirmAsync` (yalnız geçerli satırları transaction içinde kaydeder).
+- Controller: `ImportController` (`api/import`, `[RequirePage("Import")]`):
+  - `GET template/{type}` → .xlsx şablon
+  - `POST preview/{type}` (multipart, max 5MB) → satır bazlı validation önizlemesi
+  - `POST confirm/{type}` → geçerli satırları kaydet
+- Validation: Buildings (ad zorunlu+unique, TotalFloors pozitif), Units (BuildingName mevcut, UnitNumber bina içinde unique), Users (email unique+format, TR telefon, Role∈{Resident,Owner,Manager}, Resident/Owner için daire eşleşmesi). UnitType yoksa otomatik oluşturulur; Owner/Resident dairenin Owner/TenantUserId'sine işlenir.
+- Seed: `Import` sayfası (Temel modülü, route `/import`). Frontend: `/import` (tip seçimi, şablon indir, yükle, önizleme highlight, onay).
+
+> Not: `Building` entity'sinde TotalFloors/Address alanları yok; şablonda alınır ancak yalnızca `Name` kalıcıdır (FloorNumber<=TotalFloors kuralı bu nedenle uygulanmaz). Users iki DB'ye yazdığından (MasterDb + SharedTenantDb) kayıt context bazında transaction'lıdır.

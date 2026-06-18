@@ -6,6 +6,7 @@ using SiteYonetimi.Infrastructure.Entities;
 using SiteYonetimi.Infrastructure.Services;
 using SiteYonetimi.Shared.Common;
 using SiteYonetimi.Shared.Enums;
+using SiteYonetimi.Shared.Events;
 using SiteYonetimi.SiteManagement.Persons.DTOs;
 
 namespace SiteYonetimi.SiteManagement.Persons.Commands;
@@ -16,11 +17,13 @@ public class InvitePersonCommandHandler : IRequestHandler<InvitePersonCommand, R
 {
     private readonly MasterDbContext _db;
     private readonly IEmailService _emailService;
+    private readonly IPublisher _publisher;
 
-    public InvitePersonCommandHandler(MasterDbContext db, IEmailService emailService)
+    public InvitePersonCommandHandler(MasterDbContext db, IEmailService emailService, IPublisher publisher)
     {
         _db = db;
         _emailService = emailService;
+        _publisher = publisher;
     }
 
     public async Task<Result<Guid>> Handle(InvitePersonCommand request, CancellationToken cancellationToken)
@@ -69,6 +72,14 @@ public class InvitePersonCommandHandler : IRequestHandler<InvitePersonCommand, R
 
         _db.UserSites.Add(userSite);
         await _db.SaveChangesAsync(cancellationToken);
+
+        // Kiracı/Ev sahibi için otomatik cari hesap açılması (Muhasebe modülü dinler).
+        if (dto.UserType is UserType.Owner or UserType.Renter)
+        {
+            await _publisher.Publish(
+                new PersonCreatedDomainEvent(request.SiteId, user!.Id, user.FirstName, user.LastName, dto.UserType),
+                cancellationToken);
+        }
 
         if (isNewUser)
         {

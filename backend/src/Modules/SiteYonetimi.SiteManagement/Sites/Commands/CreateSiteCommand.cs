@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using SiteYonetimi.Infrastructure.Data;
 using SiteYonetimi.Infrastructure.Entities;
+using SiteYonetimi.Infrastructure.Seed;
 using SiteYonetimi.Infrastructure.Services;
 using SiteYonetimi.Shared.Common;
 using SiteYonetimi.Shared.Enums;
@@ -132,6 +133,20 @@ public class CreateSiteCommandHandler : IRequestHandler<CreateSiteCommand, Resul
 
         await _db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+
+        // Yeni site için varsayılan muhasebe hesap planı + açık dönem seed et (idempotent).
+        try
+        {
+            var tenantConnStr = site.DbMode == DbMode.Dedicated
+                ? site.ConnectionString!
+                : _configuration.GetConnectionString("SharedTenantDb")!;
+            var tenantOptions = new DbContextOptionsBuilder<SharedTenantDbContext>()
+                .UseSqlServer(tenantConnStr)
+                .Options;
+            await using var tenantDb = new SharedTenantDbContext(tenantOptions);
+            await MuhasebeSeeder.SeedForSiteAsync(tenantDb, site.Id);
+        }
+        catch { /* Seed başarısız olsa da site oluşturma başarılı sayılır; sonradan tekrar denenebilir */ }
 
         await _emailService.SendAsync(
             dto.AdminEmail,

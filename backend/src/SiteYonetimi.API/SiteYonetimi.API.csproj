@@ -17,6 +17,7 @@
     <ProjectReference Include="..\SiteYonetimi.Infrastructure\SiteYonetimi.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\SiteYonetimi.Auth\SiteYonetimi.Auth.csproj" />
     <ProjectReference Include="..\Modules\SiteYonetimi.Tenancy\SiteYonetimi.Tenancy.csproj" />
-<ProjectReference Include="..\Modules\SiteYonetimi.SiteManagement\SiteYonetimi.SiteManagement.csproj" />
+    <ProjectReference Include="..\Modules\SiteYonetimi.SiteManagement\SiteYonetimi.SiteManagement.csproj" />
+    <ProjectReference Include="..\Modules\SiteYonetimi.Muhasebe\SiteYonetimi.Muhasebe.csproj" />
   </ItemGroup>
 </Project>

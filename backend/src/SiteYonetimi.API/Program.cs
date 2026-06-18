@@ -14,6 +14,7 @@ using SiteYonetimi.Auth;
 using SiteYonetimi.Infrastructure.Data;
 using SiteYonetimi.Infrastructure.Seed;
 using SiteYonetimi.Infrastructure.Services;
+using SiteYonetimi.Muhasebe;
 using SiteYonetimi.SiteManagement;
 using SiteYonetimi.Tenancy;
 
@@ -47,6 +48,7 @@ try
     builder.Services.AddAuthModule();
     builder.Services.AddTenancyModule();
     builder.Services.AddSiteManagementModule();
+    builder.Services.AddMuhasebeModule();
 
     // JWT Authentication
     var jwtKey = builder.Configuration["Jwt:SecretKey"]!;

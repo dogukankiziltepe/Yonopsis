@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SiteYonetimi.Infrastructure.Data;
 using SiteYonetimi.Shared.Common;
+using SiteYonetimi.Shared.Events;
 
 namespace SiteYonetimi.SiteManagement.Persons.Commands;
 
@@ -10,8 +11,13 @@ public record RemovePersonFromSiteCommand(Guid UserSiteId, Guid SiteId) : IReque
 public class RemovePersonFromSiteCommandHandler : IRequestHandler<RemovePersonFromSiteCommand, Result>
 {
     private readonly MasterDbContext _db;
+    private readonly IPublisher _publisher;
 
-    public RemovePersonFromSiteCommandHandler(MasterDbContext db) => _db = db;
+    public RemovePersonFromSiteCommandHandler(MasterDbContext db, IPublisher publisher)
+    {
+        _db = db;
+        _publisher = publisher;
+    }
 
     public async Task<Result> Handle(RemovePersonFromSiteCommand request, CancellationToken cancellationToken)
     {
@@ -25,6 +31,12 @@ public class RemovePersonFromSiteCommandHandler : IRequestHandler<RemovePersonFr
         us.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(cancellationToken);
+
+        // İlgili cari hesabın pasife alınması (Muhasebe modülü dinler).
+        await _publisher.Publish(
+            new PersonRemovedFromSiteDomainEvent(request.SiteId, us.UserId, us.UserType),
+            cancellationToken);
+
         return Result.Success();
     }
 }
