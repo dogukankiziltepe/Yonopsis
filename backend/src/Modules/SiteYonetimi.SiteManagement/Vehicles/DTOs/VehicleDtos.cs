@@ -1,7 +1,8 @@
 namespace SiteYonetimi.SiteManagement.Vehicles.DTOs;
 
 public record CreateVehicleDto(
-    Guid UserId,
+    Guid UnitId,
+    Guid? OwnerUserId,
     string Plate,
     string? Brand,
     string? Model,
@@ -16,10 +17,19 @@ public record UpdateVehicleDto(
     int? Year,
     bool IsActive);
 
+public record AssignVehicleToUnitDto(
+    Guid UnitId,
+    Guid? OwnerUserId);
+
+public record ChangeVehicleOwnerDto(
+    Guid? OwnerUserId);
+
 public record VehicleSummaryDto(
     Guid Id,
     Guid SiteId,
-    Guid UserId,
+    Guid? UnitId,
+    string? UnitDoorNumber,
+    Guid? OwnerUserId,
     string Plate,
     string? Brand,
     string? Model,

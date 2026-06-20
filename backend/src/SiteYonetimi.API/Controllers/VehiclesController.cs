@@ -22,6 +22,12 @@ public class VehiclesController : BaseController
         return Handle(await Mediator.Send(new GetVehicleByIdQuery(id, CurrentSiteId)));
     }
 
+    [HttpGet("by-unit/{unitId:guid}")]
+    public async Task<IActionResult> GetByUnit(Guid unitId)
+    {
+        return Handle(await Mediator.Send(new GetVehiclesByUnitQuery(unitId, CurrentSiteId)));
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateVehicleDto dto)
     {
@@ -34,6 +40,18 @@ public class VehiclesController : BaseController
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateVehicleDto dto)
     {
         return Handle(await Mediator.Send(new UpdateVehicleCommand(id, CurrentSiteId, dto)));
+    }
+
+    [HttpPatch("{id:guid}/assign-unit")]
+    public async Task<IActionResult> AssignUnit(Guid id, [FromBody] AssignVehicleToUnitDto dto)
+    {
+        return Handle(await Mediator.Send(new AssignVehicleToUnitCommand(CurrentSiteId, id, dto)));
+    }
+
+    [HttpPatch("{id:guid}/owner")]
+    public async Task<IActionResult> ChangeOwner(Guid id, [FromBody] ChangeVehicleOwnerDto dto)
+    {
+        return Handle(await Mediator.Send(new ChangeVehicleOwnerCommand(CurrentSiteId, id, dto)));
     }
 
     [HttpDelete("{id:guid}")]

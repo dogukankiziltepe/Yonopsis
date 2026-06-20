@@ -646,3 +646,53 @@ Excel tabanlı toplu import: **Binalar / Daireler / Kullanıcılar**. `ClosedXML
 - Seed: `Import` sayfası (Temel modülü, route `/import`). Frontend: `/import` (tip seçimi, şablon indir, yükle, önizleme highlight, onay).
 
 > Not: `Building` entity'sinde TotalFloors/Address alanları yok; şablonda alınır ancak yalnızca `Name` kalıcıdır (FloorNumber<=TotalFloors kuralı bu nedenle uygulanmaz). Users iki DB'ye yazdığından (MasterDb + SharedTenantDb) kayıt context bazında transaction'lıdır.
+
+---
+
+## Araç–Daire İlişkisi (Vehicle → Unit)
+
+**Tasarım kararı:** Option C — `Vehicle → Unit` (required) + `OwnerUserId` (optional, cross-context soft ref to User).
+
+| Değişiklik | Detay |
+|---|---|
+| `Vehicle.UnitId` | Yeni FK (Unit, SharedTenantDb) — Phase 1: nullable, Phase 2: NOT NULL |
+| `Vehicle.OwnerUserId` | Eski `UserId` rename edildi; nullable; MasterDb'e cross-context referans |
+| `Unit.Vehicles` | `ICollection<Vehicle>` navigation eklendi |
+| İndeks | `(SiteId, Plate) UNIQUE WHERE IsDeleted=0` + `IX_Vehicles_UnitId` |
+| Silme davranışı | `OnDelete(Restrict)` — daire silinince araçlar silinmez |
+
+### İki Aşamalı Migration
+
+**Phase 1** — `20260620000001_AddVehicleUnitRelationship`: UnitId nullable eklenir; UserId → OwnerUserId (nullable). Orphan veriler korunur.
+
+**Backfill SQL** (Phase 2 öncesi çalıştır):
+```sql
+UPDATE v SET v.UnitId = u.Id
+FROM Vehicles v
+JOIN Units u ON u.SiteId = v.SiteId AND u.IsDeleted = 0
+    AND (u.OwnerUserId = v.OwnerUserId OR u.TenantUserId = v.OwnerUserId)
+WHERE v.UnitId IS NULL AND v.OwnerUserId IS NOT NULL AND v.IsDeleted = 0;
+```
+
+**Kontrol:** `SELECT COUNT(*) FROM Vehicles WHERE UnitId IS NULL AND IsDeleted = 0;` → 0 olmalı.
+
+**Phase 2** — `20260620000002_AddVehicleUnitIdRequired`: UnitId NOT NULL yapılır.
+
+### Yeni CQRS Endpoint'leri
+
+| Method | Route | Command/Query |
+|---|---|---|
+| GET | `api/vehicles/by-unit/{unitId}` | `GetVehiclesByUnitQuery` |
+| PATCH | `api/vehicles/{id}/assign-unit` | `AssignVehicleToUnitCommand` |
+| PATCH | `api/vehicles/{id}/owner` | `ChangeVehicleOwnerCommand` |
+
+### İş Kuralları
+
+- Plate site içinde unique (`HasIndex + HasFilter`)
+- UnitId, aynı `SiteId`'ye ait olmalı (cross-tenant erişim engeli)
+- OwnerUserId varsa, o kullanıcı Unit'in `OwnerUserId` veya `TenantUserId` olmalı
+- OwnerUserId değiştirirken araç henüz bir Unite bağlı değilse 400 döner
+
+### İlerideki Genişleme (ParkingSpot)
+
+`ParkingSpot` entity eklenecekse Vehicle'a `Guid? ParkingSpotId` FK eklenir. Mevcut model buna kapalı değil — `Unit.Vehicles` navigasyonu ve `OnDelete(Restrict)` bu genişlemeyi destekler.

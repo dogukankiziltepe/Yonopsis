@@ -27,7 +27,8 @@ export default function VehiclesPage() {
   const [selected, setSelected] = useState<VehicleSummaryDto | null>(null)
   const [panelIndex, setPanelIndex] = useState(0)
 
-  const [formUserId, setFormUserId] = useState('')
+  const [formUnitId, setFormUnitId] = useState('')
+  const [formOwnerUserId, setFormOwnerUserId] = useState('')
   const [formPlate, setFormPlate] = useState('')
   const [formBrand, setFormBrand] = useState('')
   const [formModel, setFormModel] = useState('')
@@ -66,7 +67,8 @@ export default function VehiclesPage() {
 
   const openCreate = () => {
     setSelected(null)
-    setFormUserId('')
+    setFormUnitId('')
+    setFormOwnerUserId('')
     setFormPlate('')
     setFormBrand('')
     setFormModel('')
@@ -77,12 +79,13 @@ export default function VehiclesPage() {
   }
 
   const handleCreate = async () => {
-    if (!formUserId.trim()) { showError('Kullanıcı ID zorunludur.'); return }
+    if (!formUnitId.trim()) { showError('Daire ID zorunludur.'); return }
     if (!formPlate.trim()) { showError('Plaka zorunludur.'); return }
     setSaving(true)
     try {
       const dto: CreateVehicleDto = {
-        userId: formUserId,
+        unitId: formUnitId,
+        ownerUserId: formOwnerUserId || undefined,
         plate: formPlate,
         brand: formBrand || undefined,
         model: formModel || undefined,
@@ -136,7 +139,7 @@ export default function VehiclesPage() {
             <tr className="border-b bg-muted/50">
               <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Plaka</th>
               <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Marka / Model</th>
-              <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Renk</th>
+              <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Daire</th>
               <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Durum</th>
             </tr>
           </thead>
@@ -163,7 +166,7 @@ export default function VehiclesPage() {
                   <td className="px-3 py-2.5 text-muted-foreground">
                     {[item.brand, item.model].filter(Boolean).join(' ') || '-'}
                   </td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{item.color ?? '-'}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{item.unitDoorNumber ?? '-'}</td>
                   <td className="px-3 py-2.5">
                     <Badge variant={item.isActive ? 'default' : 'secondary'}>
                       {item.isActive ? 'Aktif' : 'Pasif'}
@@ -204,8 +207,12 @@ export default function VehiclesPage() {
             {panelMode === 'create' ? (
               <>
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium">Kullanıcı ID <span className="text-destructive">*</span></Label>
-                  <Input value={formUserId} onChange={(e) => setFormUserId(e.target.value)} placeholder="Kullanıcı UUID" />
+                  <Label className="text-xs font-medium">Daire ID <span className="text-destructive">*</span></Label>
+                  <Input value={formUnitId} onChange={(e) => setFormUnitId(e.target.value)} placeholder="Daire UUID" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Araç Sahibi (opsiyonel)</Label>
+                  <Input value={formOwnerUserId} onChange={(e) => setFormOwnerUserId(e.target.value)} placeholder="Kullanıcı UUID" />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs font-medium">Plaka <span className="text-destructive">*</span></Label>
@@ -246,6 +253,12 @@ export default function VehiclesPage() {
                       {selected.isActive ? 'Aktif' : 'Pasif'}
                     </Badge>
                   </div>
+                  {selected.unitDoorNumber && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">Daire</p>
+                      <p>{selected.unitDoorNumber}</p>
+                    </div>
+                  )}
                   {selected.brand && (
                     <div>
                       <p className="text-xs text-muted-foreground mb-0.5">Marka</p>

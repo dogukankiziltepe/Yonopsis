@@ -95,11 +95,19 @@ public class SharedTenantDbContext : DbContext
         {
             e.HasKey(x => x.Id);
             e.Property(x => x.SiteId).IsRequired();
-            e.Property(x => x.UserId).IsRequired();
             e.Property(x => x.Plate).HasMaxLength(20).IsRequired();
             e.Property(x => x.Brand).HasMaxLength(50);
             e.Property(x => x.Model).HasMaxLength(50);
             e.Property(x => x.Color).HasMaxLength(30);
+            e.HasOne(x => x.Unit)
+                .WithMany(u => u.Vehicles)
+                .HasForeignKey(x => x.UnitId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.SiteId, x.Plate })
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => x.UnitId);
             e.HasQueryFilter(x => !x.IsDeleted);
         });
 
