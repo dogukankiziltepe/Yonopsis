@@ -118,6 +118,12 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.UserId).IsRequired();
             e.Property(x => x.CardNumber).HasMaxLength(50).IsRequired();
             e.Property(x => x.Notes).HasMaxLength(500);
+            e.HasOne(x => x.Unit)
+                .WithMany()
+                .HasForeignKey(x => x.UnitId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.UnitId);
             e.HasQueryFilter(x => !x.IsDeleted);
         });
 
