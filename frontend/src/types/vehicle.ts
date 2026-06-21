@@ -1,7 +1,9 @@
 export interface VehicleSummaryDto {
   id: string
   siteId: string
-  userId: string
+  unitId: string | null
+  unitDoorNumber: string | null
+  ownerUserId: string | null
   plate: string
   brand?: string
   model?: string
@@ -12,7 +14,8 @@ export interface VehicleSummaryDto {
 }
 
 export interface CreateVehicleDto {
-  userId: string
+  unitId: string
+  ownerUserId?: string
   plate: string
   brand?: string
   model?: string
@@ -27,4 +30,13 @@ export interface UpdateVehicleDto {
   color?: string
   year?: number
   isActive: boolean
+}
+
+export interface AssignVehicleToUnitDto {
+  unitId: string
+  ownerUserId?: string
+}
+
+export interface ChangeVehicleOwnerDto {
+  ownerUserId: string | null
 }

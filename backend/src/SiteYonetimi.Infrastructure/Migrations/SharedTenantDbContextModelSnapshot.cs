@@ -461,6 +461,9 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<Guid?>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Plate")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -469,16 +472,22 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.Property<Guid>("SiteId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("UnitId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("Year")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UnitId");
+
+                    b.HasIndex("SiteId", "Plate")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("Vehicles");
                 });
@@ -534,6 +543,16 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.Navigation("UnitType");
                 });
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Vehicle", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.Unit", "Unit")
+                        .WithMany("Vehicles")
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Unit");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Building", b =>
                 {
                     b.Navigation("Units");
@@ -542,6 +561,11 @@ namespace SiteYonetimi.Infrastructure.Migrations
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SupportRequest", b =>
                 {
                     b.Navigation("Comments");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Unit", b =>
+                {
+                    b.Navigation("Vehicles");
                 });
 #pragma warning restore 612, 618
         }
