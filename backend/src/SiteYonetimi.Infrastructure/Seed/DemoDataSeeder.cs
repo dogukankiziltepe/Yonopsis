@@ -126,6 +126,12 @@ public static class DemoDataSeeder
 
         await masterDb.SaveChangesAsync();
 
+        // ── RolePermissions — SiteAdmin rolleri tüm sayfalara FullAccess ──────
+        // GetUserPagesQuery sidebar için RolePermissions'ı doğrudan okur;
+        // PermissionService'in IsDefault kısayolu sadece endpoint filtresi içindir.
+        await SeedRolePermissionsAsync(masterDb, role1.Id);
+        await SeedRolePermissionsAsync(masterDb, role2.Id);
+
         // ── SharedDB verileri ─────────────────────────────────────────────────
         await SeedSite1SharedAsync(sharedDb, site1.Id, s1Owners, s1Tenants);
         await SeedSite2SharedAsync(sharedDb, site2.Id, s2Owners, s2Tenants);
@@ -461,6 +467,32 @@ public static class DemoDataSeeder
         }
 
         await db.SaveChangesAsync();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // RolePermissions
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private static async Task SeedRolePermissionsAsync(MasterDbContext masterDb, Guid roleTypeId)
+    {
+        var pageIds = await masterDb.Pages.Select(p => p.Id).ToListAsync();
+
+        foreach (var pageId in pageIds)
+        {
+            var exists = await masterDb.RolePermissions
+                .AnyAsync(rp => rp.RoleTypeId == roleTypeId && rp.PageId == pageId);
+            if (exists) continue;
+
+            masterDb.RolePermissions.Add(new RolePermission
+            {
+                RoleTypeId = roleTypeId,
+                PageId = pageId,
+                PermissionLevel = PermissionLevel.FullAccess,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        await masterDb.SaveChangesAsync();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
