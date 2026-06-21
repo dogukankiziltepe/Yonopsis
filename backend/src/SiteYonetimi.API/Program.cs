@@ -170,6 +170,8 @@ try
 
         var sharedDb = scope.ServiceProvider.GetRequiredService<SharedTenantDbContext>();
         await sharedDb.Database.MigrateAsync();
+
+        await DemoDataSeeder.SeedAsync(db, sharedDb);
     }
 
     app.Run();
