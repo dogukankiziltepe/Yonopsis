@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace SiteYonetimi.Infrastructure.Migrations.SharedTenantDb
+namespace SiteYonetimi.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class AddAccessCardUnitRelationship : Migration

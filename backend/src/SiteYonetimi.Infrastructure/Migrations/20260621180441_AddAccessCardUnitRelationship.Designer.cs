@@ -9,7 +9,7 @@ using SiteYonetimi.Infrastructure.Data;
 
 #nullable disable
 
-namespace SiteYonetimi.Infrastructure.Migrations.SharedTenantDb
+namespace SiteYonetimi.Infrastructure.Migrations
 {
     [DbContext(typeof(SharedTenantDbContext))]
     [Migration("20260621180441_AddAccessCardUnitRelationship")]
