@@ -16,6 +16,14 @@ namespace SiteYonetimi.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Vehicles_Units_UnitId",
+                table: "Vehicles");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Vehicles_UnitId",
+                table: "Vehicles");
+
             migrationBuilder.AlterColumn<Guid>(
                 name: "UnitId",
                 table: "Vehicles",
@@ -25,11 +33,32 @@ namespace SiteYonetimi.Infrastructure.Migrations
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier",
                 oldNullable: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Vehicles_UnitId",
+                table: "Vehicles",
+                column: "UnitId");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Vehicles_Units_UnitId",
+                table: "Vehicles",
+                column: "UnitId",
+                principalTable: "Units",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Vehicles_Units_UnitId",
+                table: "Vehicles");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Vehicles_UnitId",
+                table: "Vehicles");
+
             migrationBuilder.AlterColumn<Guid>(
                 name: "UnitId",
                 table: "Vehicles",
@@ -37,6 +66,19 @@ namespace SiteYonetimi.Infrastructure.Migrations
                 nullable: true,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Vehicles_UnitId",
+                table: "Vehicles",
+                column: "UnitId");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Vehicles_Units_UnitId",
+                table: "Vehicles",
+                column: "UnitId",
+                principalTable: "Units",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
         }
     }
 }

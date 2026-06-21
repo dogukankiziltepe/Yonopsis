@@ -7,6 +7,60 @@ public enum ImportType
     Users
 }
 
+// ─── Row data records (parsed from Excel) ─────────────────────────────────────
+
+public record BuildingImportRowData(
+    string? BuildingName,
+    int? TotalFloors,
+    string? Address,
+    string? Description
+);
+
+public record UnitImportRowData(
+    string? BuildingName,
+    int? FloorNumber,
+    string? UnitNumber,
+    string? UnitType,
+    decimal? SquareMeters,
+    string? Description
+);
+
+public record UserImportRowData(
+    string? FirstName,
+    string? LastName,
+    string? Email,
+    string? Phone,
+    string? UnitNumber,
+    string? BuildingName,
+    string? Role
+);
+
+// ─── Preview result types ──────────────────────────────────────────────────────
+
+public record ImportPreviewRow(
+    int RowIndex,
+    Dictionary<string, object?> Data,
+    bool IsValid,
+    List<string> Errors
+);
+
+public record ImportPreviewResult(
+    int TotalRows,
+    int ValidRows,
+    int InvalidRows,
+    List<ImportPreviewRow> Rows
+);
+
+// ─── Confirm result ────────────────────────────────────────────────────────────
+
+public record ImportConfirmResult(
+    int Saved,
+    int Skipped,
+    List<string> Errors
+);
+
+// ─── Legacy DTOs (kept for controller compatibility) ──────────────────────────
+
 /// <summary>Tek satırın parse + validation sonucu.</summary>
 public class ImportRowResultDto
 {

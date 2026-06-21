@@ -139,7 +139,7 @@ public class ConfirmUnitsImportCommandHandler : IRequestHandler<ConfirmUnitsImpo
                         unitTypeId = typeId;
                 }
 
-                _db.Units.Add(new Unit
+                _db.Units.Add(new()
                 {
                     SiteId = request.SiteId,
                     BuildingId = building.Id,

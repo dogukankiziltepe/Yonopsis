@@ -34,7 +34,7 @@ public class RemovePersonFromSiteCommandHandler : IRequestHandler<RemovePersonFr
 
         // İlgili cari hesabın pasife alınması (Muhasebe modülü dinler).
         await _publisher.Publish(
-            new PersonRemovedFromSiteDomainEvent(request.SiteId, us.UserId, us.UserType),
+            new PersonRemovedFromSiteDomainEvent(request.SiteId, us.UserId, (Shared.Enums.UserType)us.UserType),
             cancellationToken);
 
         return Result.Success();

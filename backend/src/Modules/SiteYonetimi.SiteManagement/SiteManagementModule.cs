@@ -12,6 +12,7 @@ public static class SiteManagementModule
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(SiteManagementModule).Assembly));
         services.AddValidatorsFromAssembly(typeof(SiteManagementModule).Assembly);
         services.AddScoped<IImportService, ImportService>();
+        services.AddScoped<ExcelTemplateService>();
         return services;
     }
 }
