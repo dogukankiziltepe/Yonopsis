@@ -12,6 +12,7 @@ public class Payment
     public DateTime? PaidDate { get; set; }
     public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
     public string? Description { get; set; }
+    public Guid? AidatKalemId { get; set; }
     public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

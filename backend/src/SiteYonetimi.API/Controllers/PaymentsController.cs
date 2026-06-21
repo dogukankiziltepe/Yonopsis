@@ -4,6 +4,7 @@ using SiteYonetimi.SiteManagement.Payments.Commands;
 using SiteYonetimi.SiteManagement.Payments.DTOs;
 using SiteYonetimi.SiteManagement.Payments.Queries;
 
+
 namespace SiteYonetimi.API.Controllers;
 
 [Route("api/payments")]
@@ -62,6 +63,14 @@ public class PaymentsController : BaseController
         var result = await Mediator.Send(new MarkOverduePaymentsCommand(CurrentSiteId));
         if (!result.IsSuccess) return BadRequest(new { message = result.Error });
         return Ok(new { count = result.Data, message = $"{result.Data} kayıt gecikmiş olarak işaretlendi." });
+    }
+
+    [HttpPost("bulk-aidat")]
+    public async Task<IActionResult> BulkCreateAidat([FromBody] BulkCreateAidatPaymentsDto dto)
+    {
+        var result = await Mediator.Send(new BulkCreateAidatPaymentsCommand(CurrentSiteId, dto));
+        if (!result.IsSuccess) return BadRequest(new { message = result.Error });
+        return Ok(new { count = result.Data, message = $"{result.Data} aidat kaydı oluşturuldu." });
     }
 
     [HttpDelete("{id:guid}")]

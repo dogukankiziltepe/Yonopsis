@@ -153,7 +153,8 @@ public static class DataSeeder
             new { Name = "DaireTipleri", Label = "Daire Tipleri", Route = "/unit-types", Icon = (string?)"layers", Order = 4 },
             new { Name = "RoleTipleri",     Label = "Rol Tipleri",      Route = "/role-types",       Icon = (string?)"shield",      Order = 5  },
             new { Name = "DestekTalepleri", Label = "Destek Talepleri", Route = "/support-requests", Icon = (string?)"help-circle", Order = 6  },
-            new { Name = "Aidatlar",        Label = "Aidatlar",         Route = "/payments",         Icon = (string?)"credit-card", Order = 7  },
+            new { Name = "Aidatlar",        Label = "Aidatlar",         Route = "/aidatlar",         Icon = (string?)"credit-card", Order = 7  },
+            new { Name = "AidatKalemleri", Label = "Aidat Kalemleri",  Route = "/aidat-kalemleri",  Icon = (string?)"list",        Order = 8  },
             new { Name = "Araclar",         Label = "Araçlar",          Route = "/vehicles",         Icon = (string?)"car",         Order = 8  },
             new { Name = "GirisKartlari",   Label = "Giriş Kartları",   Route = "/access-cards",     Icon = (string?)"key",         Order = 9  },
             new { Name = "Duyurular",       Label = "Duyurular",        Route = "/announcements",    Icon = (string?)"bell",        Order = 10 },
@@ -180,6 +181,14 @@ public static class DataSeeder
         }
 
         await db.SaveChangesAsync();
+
+        // "Aidatlar" sayfasının route'u "/payments"ten "/aidatlar"a güncellendi
+        var aidatlarPage = await db.Pages.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Name == "Aidatlar" && p.Route == "/payments");
+        if (aidatlarPage != null)
+        {
+            aidatlarPage.Route = "/aidatlar";
+            await db.SaveChangesAsync();
+        }
 
         // Temel modülünü tüm planlara bağla
         var planIds = await db.SubscriptionPlans.Select(p => p.Id).ToListAsync();

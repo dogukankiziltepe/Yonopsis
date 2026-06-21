@@ -6,6 +6,7 @@ import {
   UpdatePaymentDto,
   UpdatePaymentStatusDto,
 } from '@/types/payment'
+import { BulkCreateAidatPaymentsDto } from '@/types/aidatKalemi'
 import { PaginatedResult } from '@/types/api'
 
 export const paymentsApi = {
@@ -35,6 +36,9 @@ export const paymentsApi = {
 
   delete: (id: string) =>
     siteApi.delete(`/api/payments/${id}`),
+
+  bulkAidat: (data: BulkCreateAidatPaymentsDto) =>
+    siteApi.post<{ count: number; message: string }>('/api/payments/bulk-aidat', data),
 
   createCheckout: (id: string, successUrl: string, cancelUrl: string) =>
     siteApi.post<{ checkoutUrl: string }>(`/api/online-payments/${id}/checkout`, { successUrl, cancelUrl }),
