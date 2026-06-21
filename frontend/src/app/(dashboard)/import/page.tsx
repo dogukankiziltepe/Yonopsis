@@ -1,203 +1,164 @@
 'use client'
 
-import { useState } from 'react'
-import { Download, RefreshCw, CheckCircle2 } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Download, Upload, CheckCircle2, AlertTriangle, Building2, Home, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ImportTypeSelector } from '@/components/import/ImportTypeSelector'
-import { FileUploadZone } from '@/components/import/FileUploadZone'
-import { ImportPreviewTable } from '@/components/import/ImportPreviewTable'
-import { ImportSummaryBar } from '@/components/import/ImportSummaryBar'
-import { ConfirmImportButton } from '@/components/import/ConfirmImportButton'
+import { Badge } from '@/components/ui/badge'
+import { showSuccess, showError } from '@/lib/toast'
 import { importApi } from '@/lib/api/import'
-import {
-  ImportType,
-  ImportPreviewResult,
-  ImportConfirmResult,
-  BuildingImportRowData,
-  UnitImportRowData,
-  UserImportRowData,
-} from '@/types/import'
+import { ImportPreview, ImportType } from '@/types/import'
 
-type Step = 'idle' | 'uploading' | 'previewing' | 'confirming' | 'success'
+const TYPES: { key: ImportType; label: string; icon: typeof Building2 }[] = [
+  { key: 'buildings', label: 'Binalar', icon: Building2 },
+  { key: 'units', label: 'Daireler', icon: Home },
+  { key: 'users', label: 'Kullanıcılar', icon: Users },
+]
 
 export default function ImportPage() {
-  const [importType, setImportType] = useState<ImportType>('buildings')
-  const [step, setStep] = useState<Step>('idle')
-  const [preview, setPreview] = useState<ImportPreviewResult | null>(null)
-  const [confirmResult, setConfirmResult] = useState<ImportConfirmResult | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [type, setType] = useState<ImportType>('buildings')
+  const [preview, setPreview] = useState<ImportPreview | null>(null)
+  const [fileName, setFileName] = useState('')
+  const [busy, setBusy] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
-  const handleTypeChange = (type: ImportType) => {
-    setImportType(type)
-    setStep('idle')
-    setPreview(null)
-    setConfirmResult(null)
-    setError(null)
-  }
+  const reset = () => { setPreview(null); setFileName('') }
 
-  const handleDownloadTemplate = async () => {
+  const changeType = (t: ImportType) => { setType(t); reset() }
+
+  const downloadTemplate = async () => {
     try {
-      const res = await importApi.downloadTemplate(importType)
-      const url = URL.createObjectURL(res.data)
+      const res = await importApi.downloadTemplate(type)
+      const url = URL.createObjectURL(res.data as Blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${importType}_template.xlsx`
+      a.download = `${type}_template.xlsx`
+      document.body.appendChild(a)
       a.click()
+      document.body.removeChild(a)
       URL.revokeObjectURL(url)
-    } catch {
-      setError('Şablon indirilirken hata oluştu.')
-    }
+    } catch { showError('Şablon indirilemedi.') }
   }
 
-  const handleFile = async (file: File) => {
-    setError(null)
-    setStep('uploading')
-    try {
-      const res = await importApi.preview(importType, file)
-      setPreview(res.data)
-      setStep('previewing')
-    } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setError(msg ?? 'Dosya işlenirken hata oluştu.')
-      setStep('idle')
-    }
-  }
-
-  const handleConfirm = async () => {
-    if (!preview) return
-    setStep('confirming')
-    setError(null)
-
-    const validRows = preview.rows.filter((r) => r.isValid)
-
-    try {
-      let res
-      if (importType === 'buildings') {
-        const rows = validRows.map((r) => r.data as unknown as BuildingImportRowData)
-        res = await importApi.confirmBuildings(rows)
-      } else if (importType === 'units') {
-        const rows = validRows.map((r) => r.data as unknown as UnitImportRowData)
-        res = await importApi.confirmUnits(rows)
-      } else {
-        const rows = validRows.map((r) => r.data as unknown as UserImportRowData)
-        res = await importApi.confirmUsers(rows)
-      }
-      setConfirmResult(res.data)
-      setStep('success')
-    } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setError(msg ?? 'Kayıt sırasında hata oluştu.')
-      setStep('previewing')
-    }
-  }
-
-  const handleReset = () => {
-    setStep('idle')
+  const onFile = async (file?: File) => {
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) { showError('Dosya 5MB sınırını aşıyor.'); return }
+    setFileName(file.name)
+    setBusy(true)
     setPreview(null)
-    setConfirmResult(null)
-    setError(null)
+    try {
+      const { data } = await importApi.preview(type, file)
+      setPreview(data)
+    } catch { showError('Dosya işlenemedi.') } finally { setBusy(false) }
   }
+
+  const confirm = async () => {
+    if (!preview) return
+    setBusy(true)
+    try {
+      const rows = preview.rows.map((r) => r.data)
+      const { data } = await importApi.confirm(type, rows)
+      showSuccess(`${data.savedRows} kayıt eklendi${data.skippedRows ? `, ${data.skippedRows} satır atlandı` : ''}.`)
+      reset()
+      if (fileRef.current) fileRef.current.value = ''
+    } catch { showError('Kayıt sırasında hata oluştu.') } finally { setBusy(false) }
+  }
+
+  const columns = preview && preview.rows.length > 0 ? Object.keys(preview.rows[0].data) : []
 
   return (
-    <div className="space-y-6 max-w-5xl">
-      <div>
-        <h1 className="text-2xl font-semibold">Toplu Veri Girişi</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Excel şablonunu indirin, doldurun ve sisteme yükleyin.
-        </p>
+    <div className="flex flex-col h-full">
+      <h1 className="text-xl font-semibold mb-4">Toplu Veri Girişi (Excel)</h1>
+
+      {/* Tip seçimi */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+        {TYPES.map((t) => {
+          const Icon = t.icon
+          const active = type === t.key
+          return (
+            <button
+              key={t.key}
+              onClick={() => changeType(t.key)}
+              className={`flex items-center gap-3 rounded-lg border p-3 text-left transition-colors ${
+                active ? 'border-primary bg-accent' : 'hover:bg-muted/40'
+              }`}
+            >
+              <Icon className={`h-5 w-5 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
+              <span className="font-medium">{t.label}</span>
+            </button>
+          )
+        })}
       </div>
 
-      {/* Step 1: Type selector */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">1. Veri Tipi Seçin</h2>
-        <ImportTypeSelector value={importType} onChange={handleTypeChange} />
-      </div>
-
-      {/* Step 2: Download template */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">2. Şablonu İndirin</h2>
-        <Button variant="outline" onClick={handleDownloadTemplate} className="gap-2">
-          <Download className="h-4 w-4" />
-          {importType === 'buildings' ? 'Bina' : importType === 'units' ? 'Daire' : 'Kullanıcı'} Şablonunu İndir
+      {/* Aksiyonlar */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <Button size="sm" variant="outline" onClick={downloadTemplate}>
+          <Download className="h-4 w-4 mr-1" /> Şablon İndir
         </Button>
+        <Button size="sm" onClick={() => fileRef.current?.click()} disabled={busy}>
+          <Upload className="h-4 w-4 mr-1" /> Dosya Yükle (.xlsx)
+        </Button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          className="hidden"
+          onChange={(e) => onFile(e.target.files?.[0])}
+        />
+        {fileName && <span className="text-sm text-muted-foreground">{fileName}</span>}
       </div>
 
-      {/* Step 3: Upload */}
-      {step !== 'success' && (
-        <div className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">3. Doldurulmuş Dosyayı Yükleyin</h2>
-          <FileUploadZone onFile={handleFile} disabled={step === 'uploading' || step === 'confirming'} />
-          {step === 'uploading' && (
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <RefreshCw className="h-4 w-4 animate-spin" />
-              Dosya işleniyor…
-            </p>
-          )}
-        </div>
-      )}
+      {busy && <div className="text-center py-8 text-muted-foreground">İşleniyor...</div>}
 
-      {/* Error */}
-      {error && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {error}
-        </div>
-      )}
-
-      {/* Preview */}
-      {(step === 'previewing' || step === 'confirming') && preview && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">4. Önizleme ve Onay</h2>
-            <Button variant="ghost" size="sm" onClick={handleReset} className="gap-1.5 text-muted-foreground">
-              <RefreshCw className="h-3.5 w-3.5" />
-              Yeni Dosya
-            </Button>
+      {preview && (
+        <>
+          <div className="flex flex-wrap items-center gap-3 mb-3">
+            <Badge variant="default" className="gap-1">
+              <CheckCircle2 className="h-3 w-3" /> {preview.validRows} geçerli
+            </Badge>
+            <Badge variant={preview.invalidRows > 0 ? 'destructive' : 'secondary'} className="gap-1">
+              <AlertTriangle className="h-3 w-3" /> {preview.invalidRows} hatalı
+            </Badge>
+            <span className="text-sm text-muted-foreground">Toplam {preview.totalRows} satır</span>
+            <div className="ml-auto">
+              <Button size="sm" onClick={confirm} disabled={busy || preview.validRows === 0}>
+                Geçerli {preview.validRows} satırı kaydet
+              </Button>
+            </div>
           </div>
 
-          <ImportSummaryBar
-            totalRows={preview.totalRows}
-            validRows={preview.validRows}
-            invalidRows={preview.invalidRows}
-          />
-
-          <ImportPreviewTable importType={importType} rows={preview.rows} />
-
-          <div className="flex items-center gap-3">
-            <ConfirmImportButton
-              validCount={preview.validRows}
-              loading={step === 'confirming'}
-              onConfirm={handleConfirm}
-            />
-            {preview.invalidRows > 0 && (
-              <p className="text-xs text-muted-foreground">
-                {preview.invalidRows} hatalı satır atlanacak.
-              </p>
-            )}
+          <div className="border rounded-lg overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left px-3 py-2 font-medium text-muted-foreground">#</th>
+                  {columns.map((c) => (
+                    <th key={c} className="text-left px-3 py-2 font-medium text-muted-foreground">{c}</th>
+                  ))}
+                  <th className="text-left px-3 py-2 font-medium text-muted-foreground">Durum</th>
+                </tr>
+              </thead>
+              <tbody>
+                {preview.rows.map((r) => (
+                  <tr key={r.rowIndex} className={`border-b last:border-0 ${r.isValid ? '' : 'bg-destructive/5'}`}>
+                    <td className="px-3 py-1.5 text-muted-foreground">{r.rowIndex}</td>
+                    {columns.map((c) => (
+                      <td key={c} className="px-3 py-1.5">{r.data[c]}</td>
+                    ))}
+                    <td className="px-3 py-1.5">
+                      {r.isValid ? (
+                        <span className="inline-flex items-center gap-1 text-emerald-600"><CheckCircle2 className="h-4 w-4" /> Geçerli</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-destructive" title={r.errors.join('\n')}>
+                          <AlertTriangle className="h-4 w-4" /> {r.errors.join(', ')}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
-      )}
-
-      {/* Success */}
-      {step === 'success' && confirmResult && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-6 space-y-4">
-          <div className="flex items-center gap-2 text-emerald-700">
-            <CheckCircle2 className="h-5 w-5" />
-            <h2 className="font-semibold">İçe Aktarma Tamamlandı</h2>
-          </div>
-          <div className="text-sm text-emerald-700 space-y-1">
-            <p><strong>{confirmResult.savedCount}</strong> kayıt başarıyla oluşturuldu.</p>
-            {confirmResult.skippedCount > 0 && <p>{confirmResult.skippedCount} satır atlandı.</p>}
-          </div>
-          {confirmResult.errors.length > 0 && (
-            <ul className="text-xs text-amber-700 space-y-1 border-t border-emerald-200 pt-3">
-              {confirmResult.errors.map((e, i) => <li key={i}>• {e}</li>)}
-            </ul>
-          )}
-          <Button onClick={handleReset} variant="outline" size="sm" className="gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Yeni İçe Aktarma
-          </Button>
-        </div>
+        </>
       )}
     </div>
   )

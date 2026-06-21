@@ -22,6 +22,13 @@ public class SharedTenantDbContext : DbContext
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<UploadedFile> UploadedFiles => Set<UploadedFile>();
 
+    // Muhasebe modülü
+    public DbSet<HesapPlani> HesapPlani => Set<HesapPlani>();
+    public DbSet<MuhasebeDonem> MuhasebeDonemler => Set<MuhasebeDonem>();
+    public DbSet<MuhasebeFisi> MuhasebeFisleri => Set<MuhasebeFisi>();
+    public DbSet<MuhasebeFisiDetay> MuhasebeFisiDetaylari => Set<MuhasebeFisiDetay>();
+    public DbSet<MuhasebeParametre> MuhasebeParametreler => Set<MuhasebeParametre>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -88,11 +95,19 @@ public class SharedTenantDbContext : DbContext
         {
             e.HasKey(x => x.Id);
             e.Property(x => x.SiteId).IsRequired();
-            e.Property(x => x.UserId).IsRequired();
             e.Property(x => x.Plate).HasMaxLength(20).IsRequired();
             e.Property(x => x.Brand).HasMaxLength(50);
             e.Property(x => x.Model).HasMaxLength(50);
             e.Property(x => x.Color).HasMaxLength(30);
+            e.HasOne(x => x.Unit)
+                .WithMany(u => u.Vehicles)
+                .HasForeignKey(x => x.UnitId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.SiteId, x.Plate })
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => x.UnitId);
             e.HasQueryFilter(x => !x.IsDeleted);
         });
 
@@ -103,6 +118,12 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.UserId).IsRequired();
             e.Property(x => x.CardNumber).HasMaxLength(50).IsRequired();
             e.Property(x => x.Notes).HasMaxLength(500);
+            e.HasOne(x => x.Unit)
+                .WithMany()
+                .HasForeignKey(x => x.UnitId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.UnitId);
             e.HasQueryFilter(x => !x.IsDeleted);
         });
 
@@ -134,6 +155,87 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.StoredFileName).HasMaxLength(260).IsRequired();
             e.Property(x => x.ContentType).HasMaxLength(100).IsRequired();
             e.Property(x => x.FileSize).IsRequired();
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<HesapPlani>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.HesapKodu).HasMaxLength(50).IsRequired();
+            e.Property(x => x.HesapAdi).HasMaxLength(200).IsRequired();
+            e.Property(x => x.HesapTipi).HasConversion<int>();
+            e.Property(x => x.HesapKategorisi).HasConversion<int>();
+            e.Property(x => x.NormalBakiye).HasConversion<int>();
+            e.Property(x => x.CariTuru).HasConversion<int>();
+            e.Property(x => x.Aciklama).HasMaxLength(500);
+            // Hesap kodu tenant içinde unique (silinmemiş kayıtlar için)
+            e.HasIndex(x => new { x.SiteId, x.HesapKodu }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.ParentId });
+            e.HasIndex(x => new { x.SiteId, x.PersonId });
+            e.HasOne(x => x.Parent)
+                .WithMany(x => x.Children)
+                .HasForeignKey(x => x.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<MuhasebeDonem>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.Ad).HasMaxLength(100).IsRequired();
+            e.Property(x => x.Durum).HasConversion<int>();
+            e.HasIndex(x => new { x.SiteId, x.Yil }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<MuhasebeFisi>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.DonemId).IsRequired();
+            e.Property(x => x.FisNo).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Aciklama).HasMaxLength(500);
+            e.Property(x => x.FisTuru).HasConversion<int>();
+            e.Property(x => x.Durum).HasConversion<int>();
+            e.Property(x => x.ToplamBorc).HasPrecision(18, 2);
+            e.Property(x => x.ToplamAlacak).HasPrecision(18, 2);
+            e.HasIndex(x => new { x.SiteId, x.FisNo }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.DonemId, x.YevmiyeNo });
+            e.HasIndex(x => new { x.SiteId, x.FisTarihi });
+            e.HasOne(x => x.Donem).WithMany().HasForeignKey(x => x.DonemId).OnDelete(DeleteBehavior.Restrict);
+            e.HasMany(x => x.Detaylar).WithOne(x => x.Fis).HasForeignKey(x => x.FisId).OnDelete(DeleteBehavior.Cascade);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<MuhasebeFisiDetay>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.FisId).IsRequired();
+            e.Property(x => x.HesapId).IsRequired();
+            e.Property(x => x.HesapKodu).HasMaxLength(50).IsRequired();
+            e.Property(x => x.BorcTutar).HasPrecision(18, 2);
+            e.Property(x => x.AlacakTutar).HasPrecision(18, 2);
+            e.Property(x => x.Aciklama).HasMaxLength(500);
+            e.Property(x => x.BelgeNo).HasMaxLength(100);
+            e.HasIndex(x => new { x.SiteId, x.HesapId });
+            e.HasIndex(x => x.FisId);
+        });
+
+        modelBuilder.Entity<MuhasebeParametre>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.AlicilarAnaHesapKodu).HasMaxLength(50);
+            e.Property(x => x.SaticilarAnaHesapKodu).HasMaxLength(50);
+            e.Property(x => x.GiderAnaHesapKodu).HasMaxLength(50);
+            e.Property(x => x.CariKodSablonu).HasMaxLength(100);
+            e.Property(x => x.FisNoSablonu).HasMaxLength(100);
+            e.Property(x => x.ParaBirimi).HasMaxLength(10);
+            e.Property(x => x.KdvOrani).HasPrecision(5, 2);
+            e.HasIndex(x => x.SiteId).IsUnique().HasFilter("[IsDeleted] = 0");
             e.HasQueryFilter(x => !x.IsDeleted);
         });
     }

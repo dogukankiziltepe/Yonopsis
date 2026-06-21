@@ -21,6 +21,15 @@ public class UpdateAccessCardCommandHandler : IRequestHandler<UpdateAccessCardCo
         if (entity == null)
             return Result.Failure("Kart bulunamadı.");
 
+        if (request.Dto.UnitId.HasValue)
+        {
+            var unitExists = await _db.Units
+                .AnyAsync(u => u.Id == request.Dto.UnitId.Value && u.SiteId == request.SiteId, cancellationToken);
+            if (!unitExists)
+                return Result.Failure("Daire bulunamadı.");
+        }
+
+        entity.UnitId = request.Dto.UnitId;
         entity.CardNumber = request.Dto.CardNumber;
         entity.IsActive = request.Dto.IsActive;
         entity.IssueDate = request.Dto.IssueDate;

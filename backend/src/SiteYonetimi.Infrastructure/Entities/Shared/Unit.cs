@@ -30,4 +30,5 @@ public class Unit
     // Navigation (same DB)
     public Building Building { get; set; } = null!;
     public UnitType? UnitType { get; set; }
+    public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
 }

@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using SiteYonetimi.Infrastructure.Data;
 using SiteYonetimi.Infrastructure.Entities.Shared;
 using SiteYonetimi.Shared.Common;
@@ -16,10 +17,19 @@ public class CreateAccessCardCommandHandler : IRequestHandler<CreateAccessCardCo
 
     public async Task<Result<Guid>> Handle(CreateAccessCardCommand request, CancellationToken cancellationToken)
     {
+        if (request.Dto.UnitId.HasValue)
+        {
+            var unitExists = await _db.Units
+                .AnyAsync(u => u.Id == request.Dto.UnitId.Value && u.SiteId == request.SiteId, cancellationToken);
+            if (!unitExists)
+                return Result<Guid>.Failure("Daire bulunamadı.");
+        }
+
         var entity = new AccessCard
         {
             SiteId = request.SiteId,
             UserId = request.Dto.UserId,
+            UnitId = request.Dto.UnitId,
             CardNumber = request.Dto.CardNumber,
             IssueDate = request.Dto.IssueDate,
             ExpiryDate = request.Dto.ExpiryDate,

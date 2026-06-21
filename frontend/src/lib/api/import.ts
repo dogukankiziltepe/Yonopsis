@@ -1,30 +1,18 @@
 import { siteApi } from './client'
-import {
-  ImportPreviewResult,
-  ImportConfirmResult,
-  BuildingImportRowData,
-  UnitImportRowData,
-  UserImportRowData,
-} from '@/types/import'
+import { ImportPreview, ImportResult, ImportType } from '@/types/import'
 
 export const importApi = {
-  downloadTemplate: (type: 'buildings' | 'units' | 'users') =>
-    siteApi.get<Blob>(`/api/import/template/${type}`, { responseType: 'blob' }),
+  downloadTemplate: (type: ImportType) =>
+    siteApi.get(`/api/import/template/${type}`, { responseType: 'blob' }),
 
-  preview: (type: 'buildings' | 'units' | 'users', file: File) => {
-    const form = new FormData()
-    form.append('file', file)
-    return siteApi.post<ImportPreviewResult>(`/api/import/preview/${type}`, form, {
+  preview: (type: ImportType, file: File) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    return siteApi.post<ImportPreview>(`/api/import/preview/${type}`, fd, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
 
-  confirmBuildings: (rows: BuildingImportRowData[]) =>
-    siteApi.post<ImportConfirmResult>('/api/import/confirm/buildings', { rows }),
-
-  confirmUnits: (rows: UnitImportRowData[]) =>
-    siteApi.post<ImportConfirmResult>('/api/import/confirm/units', { rows }),
-
-  confirmUsers: (rows: UserImportRowData[]) =>
-    siteApi.post<ImportConfirmResult>('/api/import/confirm/users', { rows }),
+  confirm: (type: ImportType, rows: Record<string, string | null>[]) =>
+    siteApi.post<ImportResult>(`/api/import/confirm/${type}`, { rows }),
 }

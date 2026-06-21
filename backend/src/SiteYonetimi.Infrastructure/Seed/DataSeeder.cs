@@ -13,6 +13,74 @@ public static class DataSeeder
         await db.SaveChangesAsync();
 
         await SeedModulesAndPagesAsync(db);
+        await SeedMuhasebeModuleAsync(db);
+    }
+
+    private static async Task SeedMuhasebeModuleAsync(MasterDbContext db)
+    {
+        // Muhasebe modülü
+        var modul = await db.Modules.IgnoreQueryFilters().FirstOrDefaultAsync(m => m.Name == "Muhasebe");
+        if (modul == null)
+        {
+            modul = new Module
+            {
+                Name = "Muhasebe",
+                DisplayName = "Muhasebe",
+                Description = "Çift taraflı muhasebe: hesap planı, fişler, defterler, raporlar",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            db.Modules.Add(modul);
+            await db.SaveChangesAsync();
+        }
+
+        // Sayfalar (Name = controller [RequirePage] anahtarı ile birebir)
+        var pages = new[]
+        {
+            new { Name = "MuhasebeHesapPlani", Label = "Hesap Planı",     Route = "/muhasebe/hesap-plani",   Icon = (string?)"file",     Order = 20 },
+            new { Name = "MuhasebeFis",        Label = "Muhasebe Fişleri", Route = "/muhasebe/fisler",        Icon = (string?)"file",     Order = 21 },
+            new { Name = "MuhasebeFisDetay",   Label = "Fiş Detayları",    Route = "/muhasebe/fis-detaylari", Icon = (string?)"file",     Order = 22 },
+            new { Name = "MuhasebeDefter",     Label = "Defterler",        Route = "/muhasebe/defterler",     Icon = (string?)"file",     Order = 23 },
+            new { Name = "MuhasebeRapor",      Label = "Raporlar",         Route = "/muhasebe/raporlar",      Icon = (string?)"file",     Order = 24 },
+            new { Name = "MuhasebeParametre",  Label = "Parametreler",     Route = "/muhasebe/parametreler",  Icon = (string?)"settings", Order = 25 },
+            new { Name = "MuhasebeDonemSonu",  Label = "Dönem Sonu",       Route = "/muhasebe/donem-sonu",    Icon = (string?)"settings", Order = 26 },
+        };
+
+        foreach (var pd in pages)
+        {
+            var exists = await db.Pages.IgnoreQueryFilters().AnyAsync(p => p.Name == pd.Name);
+            if (exists) continue;
+
+            db.Pages.Add(new Page
+            {
+                Name = pd.Name,
+                DisplayName = pd.Label,
+                Label = pd.Label,
+                Icon = pd.Icon,
+                Route = pd.Route,
+                ModuleId = modul.Id,
+                OrderIndex = pd.Order,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        await db.SaveChangesAsync();
+
+        // Muhasebe modülünü tüm planlara bağla (özel rollerin yetkilendirilebilmesi için)
+        var planIds = await db.SubscriptionPlans.Select(p => p.Id).ToListAsync();
+        foreach (var planId in planIds)
+        {
+            var linked = await db.SubscriptionPlanModules
+                .AnyAsync(spm => spm.SubscriptionPlanId == planId && spm.ModuleId == modul.Id);
+            if (linked) continue;
+
+            db.SubscriptionPlanModules.Add(new SubscriptionPlanModule
+            {
+                SubscriptionPlanId = planId,
+                ModuleId = modul.Id
+            });
+        }
+        await db.SaveChangesAsync();
     }
 
     private static async Task SeedSuperAdminAsync(MasterDbContext db)
@@ -88,8 +156,8 @@ public static class DataSeeder
             new { Name = "Aidatlar",        Label = "Aidatlar",         Route = "/payments",         Icon = (string?)"credit-card", Order = 7  },
             new { Name = "Araclar",         Label = "Araçlar",          Route = "/vehicles",         Icon = (string?)"car",         Order = 8  },
             new { Name = "GirisKartlari",   Label = "Giriş Kartları",   Route = "/access-cards",     Icon = (string?)"key",         Order = 9  },
-            new { Name = "Duyurular",        Label = "Duyurular",         Route = "/announcements",    Icon = (string?)"bell",        Order = 10 },
-            new { Name = "TopluVeriGirisi", Label = "Toplu Veri Girişi", Route = "/import",           Icon = (string?)"upload",      Order = 11 },
+            new { Name = "Duyurular",       Label = "Duyurular",        Route = "/announcements",    Icon = (string?)"bell",        Order = 10 },
+            new { Name = "Import",          Label = "Toplu Veri Girişi", Route = "/import",          Icon = (string?)"download",    Order = 11 },
         };
 
         foreach (var pageData in pagesToSeed)
