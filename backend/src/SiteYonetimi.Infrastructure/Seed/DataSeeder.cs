@@ -180,5 +180,21 @@ public static class DataSeeder
         }
 
         await db.SaveChangesAsync();
+
+        // Temel modülünü tüm planlara bağla
+        var planIds = await db.SubscriptionPlans.Select(p => p.Id).ToListAsync();
+        foreach (var planId in planIds)
+        {
+            var linked = await db.SubscriptionPlanModules
+                .AnyAsync(spm => spm.SubscriptionPlanId == planId && spm.ModuleId == temelModule.Id);
+            if (linked) continue;
+
+            db.SubscriptionPlanModules.Add(new SubscriptionPlanModule
+            {
+                SubscriptionPlanId = planId,
+                ModuleId = temelModule.Id
+            });
+        }
+        await db.SaveChangesAsync();
     }
 }
