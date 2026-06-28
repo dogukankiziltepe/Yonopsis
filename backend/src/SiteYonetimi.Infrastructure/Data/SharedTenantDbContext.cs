@@ -23,6 +23,14 @@ public class SharedTenantDbContext : DbContext
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<UploadedFile> UploadedFiles => Set<UploadedFile>();
 
+    // Tanımlar modülü
+    public DbSet<GelirGrubu> GelirGruplari => Set<GelirGrubu>();
+    public DbSet<GiderGrubu> GiderGruplari => Set<GiderGrubu>();
+    public DbSet<GelirTanimi> GelirTanimlari => Set<GelirTanimi>();
+    public DbSet<GiderTanimi> GiderTanimlari => Set<GiderTanimi>();
+    public DbSet<KasaBanka> KasaBanka => Set<KasaBanka>();
+    public DbSet<Tesis> Tesisler => Set<Tesis>();
+
     // Muhasebe modülü
     public DbSet<HesapPlani> HesapPlani => Set<HesapPlani>();
     public DbSet<MuhasebeDonem> MuhasebeDonemler => Set<MuhasebeDonem>();
@@ -241,13 +249,4 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.SiteId).IsRequired();
             e.Property(x => x.AlicilarAnaHesapKodu).HasMaxLength(50);
             e.Property(x => x.SaticilarAnaHesapKodu).HasMaxLength(50);
-            e.Property(x => x.GiderAnaHesapKodu).HasMaxLength(50);
-            e.Property(x => x.CariKodSablonu).HasMaxLength(100);
-            e.Property(x => x.FisNoSablonu).HasMaxLength(100);
-            e.Property(x => x.ParaBirimi).HasMaxLength(10);
-            e.Property(x => x.KdvOrani).HasPrecision(5, 2);
-            e.HasIndex(x => x.SiteId).IsUnique().HasFilter("[IsDeleted] = 0");
-            e.HasQueryFilter(x => !x.IsDeleted);
-        });
-    }
-}
+            e.Property(x => x.GiderAnaHesapKodu).HasMaxLength(5
