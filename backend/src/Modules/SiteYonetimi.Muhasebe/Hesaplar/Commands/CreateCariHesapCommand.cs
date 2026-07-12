@@ -25,7 +25,8 @@ public class CreateCariHesapCommandHandler : IRequestHandler<CreateCariHesapComm
     {
         var dto = request.Dto;
         return _cariHesapService.EnsureCariHesapAsync(
-            request.SiteId, dto.CariTuru, dto.HesapAdi, dto.PersonId, dto.Aciklama, cancellationToken);
+            request.SiteId, dto.CariTuru, dto.HesapAdi, dto.PersonId, dto.Aciklama, cancellationToken,
+            dto.VergiDairesi, dto.VergiNumarasi);
     }
 }
 

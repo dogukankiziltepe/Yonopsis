@@ -20,8 +20,9 @@ public class GetGiderTanimlariQueryHandler : IRequestHandler<GetGiderTanimlariQu
             .Where(x => x.SiteId == request.SiteId)
             .OrderBy(x => x.Order).ThenBy(x => x.Name)
             .Select(x => new GiderTanimiDto(
-                x.Id, x.Name, x.Description,
+                x.Id, x.GiderKodu, x.Name, x.Description,
                 x.GiderGrubuId, x.GiderGrubu != null ? x.GiderGrubu.Name : null,
+                x.DagitimSekli, x.BosDairelereDagit, x.Kdv, x.BorclandirilacakKisi, x.MuhasebeKodu,
                 x.IsActive, x.Order, x.CreatedAt))
             .ToListAsync(cancellationToken);
 

@@ -41,6 +41,10 @@ public class HesapPlani
     public bool AktifMi { get; set; } = true;
     public string? Aciklama { get; set; }
 
+    /// <summary>Cari hesaplarda kullanılan vergi dairesi/numarası (opsiyonel).</summary>
+    public string? VergiDairesi { get; set; }
+    public string? VergiNumarasi { get; set; }
+
     public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

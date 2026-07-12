@@ -18,17 +18,26 @@ public class CreatePersonelCommandHandler : IRequestHandler<CreatePersonelComman
     public async Task<Result<Guid>> Handle(CreatePersonelCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Dto.Name))
-            return Result<Guid>.Failure("Ad alanı zorunludur.");
+            return Result<Guid>.Failure("Ad Soyad alanı zorunludur.");
+        if (string.IsNullOrWhiteSpace(request.Dto.PersonelKodu))
+            return Result<Guid>.Failure("Personel Kodu alanı zorunludur.");
+        if (string.IsNullOrWhiteSpace(request.Dto.Title))
+            return Result<Guid>.Failure("Görevi alanı zorunludur.");
+
+        var koduExists = await _db.Personeller.AnyAsync(
+            x => x.SiteId == request.SiteId && x.PersonelKodu == request.Dto.PersonelKodu.Trim(), cancellationToken);
+        if (koduExists)
+            return Result<Guid>.Failure("Bu personel kodu zaten kullanılıyor.");
 
         var entity = new Personel
         {
-            SiteId     = request.SiteId,
-            Name       = request.Dto.Name.Trim(),
-            Title      = request.Dto.Title,
-            Phone      = request.Dto.Phone,
-            Email      = request.Dto.Email,
-            Department = request.Dto.Department,
-            StartDate  = request.Dto.StartDate,
+            SiteId       = request.SiteId,
+            PersonelKodu = request.Dto.PersonelKodu.Trim(),
+            Name         = request.Dto.Name.Trim(),
+            Firma        = request.Dto.Firma,
+            Title        = request.Dto.Title.Trim(),
+            Email        = request.Dto.Email,
+            StartDate    = request.Dto.StartDate,
         };
 
         _db.Personeller.Add(entity);
@@ -51,14 +60,41 @@ public class UpdatePersonelCommandHandler : IRequestHandler<UpdatePersonelComman
             .FirstOrDefaultAsync(x => x.Id == request.Id && x.SiteId == request.SiteId, cancellationToken);
         if (entity is null) return Result.Failure("Personel bulunamadı.");
 
-        entity.Name       = request.Dto.Name.Trim();
-        entity.Title      = request.Dto.Title;
-        entity.Phone      = request.Dto.Phone;
-        entity.Email      = request.Dto.Email;
-        entity.Department = request.Dto.Department;
-        entity.StartDate  = request.Dto.StartDate;
-        entity.IsActive   = request.Dto.IsActive;
-        entity.UpdatedAt  = DateTime.UtcNow;
+        if (string.IsNullOrWhiteSpace(request.Dto.Name))
+            return Result.Failure("Ad Soyad alanı zorunludur.");
+        if (string.IsNullOrWhiteSpace(request.Dto.PersonelKodu))
+            return Result.Failure("Personel Kodu alanı zorunludur.");
+        if (string.IsNullOrWhiteSpace(request.Dto.Title))
+            return Result.Failure("Görevi alanı zorunludur.");
+
+        var koduCakisiyor = await _db.Personeller.AnyAsync(
+            x => x.SiteId == request.SiteId && x.Id != request.Id && x.PersonelKodu == request.Dto.PersonelKodu.Trim(),
+            cancellationToken);
+        if (koduCakisiyor)
+            return Result.Failure("Bu personel kodu zaten kullanılıyor.");
+
+        entity.PersonelKodu = request.Dto.PersonelKodu.Trim();
+        entity.Name = request.Dto.Name.Trim();
+        entity.Firma = request.Dto.Firma;
+        entity.Title = request.Dto.Title.Trim();
+        entity.Cinsiyet = request.Dto.Cinsiyet;
+        entity.YemekKarti = request.Dto.YemekKarti;
+        entity.Aciklama = request.Dto.Aciklama;
+        entity.Email = request.Dto.Email;
+        entity.KanGrubu = request.Dto.KanGrubu;
+        entity.OgrenimDurumu = request.Dto.OgrenimDurumu;
+        entity.OkulKurum = request.Dto.OkulKurum;
+        entity.Adres = request.Dto.Adres;
+        entity.StartDate = request.Dto.StartDate;
+        entity.CikisTarihi = request.Dto.CikisTarihi;
+        entity.KidemTazminatiBaslamaTarihi = request.Dto.KidemTazminatiBaslamaTarihi;
+        entity.IsActive = request.Dto.IsActive;
+        entity.MuhasebeHesapKoduId = request.Dto.MuhasebeHesapKoduId;
+        entity.BankaSubesiId = request.Dto.BankaSubesiId;
+        entity.BankaHesapNo = request.Dto.BankaHesapNo;
+        entity.BankaIBAN = request.Dto.BankaIBAN;
+        entity.YillikIzinHakkiGun = request.Dto.YillikIzinHakkiGun;
+        entity.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(cancellationToken);
         return Result.Success();
