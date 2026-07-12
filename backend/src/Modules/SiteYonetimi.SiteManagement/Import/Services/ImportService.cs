@@ -7,6 +7,7 @@ using SiteYonetimi.Infrastructure.Entities;
 using SiteYonetimi.Infrastructure.Entities.Shared;
 using SiteYonetimi.Shared.Enums;
 using SiteYonetimi.SiteManagement.Import.DTOs;
+using SiteYonetimi.SiteManagement.Units.Services;
 
 namespace SiteYonetimi.SiteManagement.Import.Services;
 
@@ -21,11 +22,13 @@ public class ImportService : IImportService
 {
     private readonly SharedTenantDbContext _shared;
     private readonly MasterDbContext _master;
+    private readonly IPersonUnitHistoryService _historyService;
 
-    public ImportService(SharedTenantDbContext shared, MasterDbContext master)
+    public ImportService(SharedTenantDbContext shared, MasterDbContext master, IPersonUnitHistoryService historyService)
     {
         _shared = shared;
         _master = master;
+        _historyService = historyService;
     }
 
     private static readonly string[] BuildingCols = { "BuildingName", "TotalFloors", "Address", "Description" };
@@ -425,8 +428,16 @@ public class ImportService : IImportService
                 u => u.SiteId == siteId && u.BuildingId == bId && u.DoorNumber == info.Unit.Trim(), ct);
             if (unit is null) continue;
 
-            if (info.Role.Equals("Owner", StringComparison.OrdinalIgnoreCase)) unit.OwnerUserId = info.UserId;
-            else if (info.Role.Equals("Resident", StringComparison.OrdinalIgnoreCase)) unit.TenantUserId = info.UserId;
+            if (info.Role.Equals("Owner", StringComparison.OrdinalIgnoreCase))
+            {
+                unit.OwnerUserId = info.UserId;
+                await _historyService.RecordAssignmentAsync(siteId, unit.Id, info.UserId, UserType.Owner, ct);
+            }
+            else if (info.Role.Equals("Resident", StringComparison.OrdinalIgnoreCase))
+            {
+                unit.TenantUserId = info.UserId;
+                await _historyService.RecordAssignmentAsync(siteId, unit.Id, info.UserId, UserType.Renter, ct);
+            }
             unit.UpdatedAt = DateTime.UtcNow;
         }
         await _shared.SaveChangesAsync(ct);

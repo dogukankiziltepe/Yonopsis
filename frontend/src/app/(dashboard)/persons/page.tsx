@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Plus, ChevronLeft, ChevronRight, X, Users, UserCheck } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Plus, X, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,15 +13,13 @@ import { unitsApi } from '@/lib/api/units'
 import { showSuccess, showError } from '@/lib/toast'
 import {
   PersonDto,
-  PersonDetailDto,
   InvitePersonDto,
-  UpdatePersonDto,
   UserType,
   UserTypeLabel,
   UserSiteStatus,
   UserSiteStatusLabel,
 } from '@/types/person'
-import { UnitSummary, UnitStatusLabel } from '@/types/unit'
+import { UnitSummary } from '@/types/unit'
 
 const PAGE_SIZE = 20
 
@@ -31,6 +30,7 @@ const USER_TYPES: { value: UserType; label: string }[] = [
 ]
 
 export default function PersonsPage() {
+  const router = useRouter()
   const [persons, setPersons] = useState<PersonDto[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
@@ -40,11 +40,6 @@ export default function PersonsPage() {
   const [searchDebounced, setSearchDebounced] = useState('')
 
   const [panelOpen, setPanelOpen] = useState(false)
-  const [panelMode, setPanelMode] = useState<'view' | 'create'>('view')
-  const [selected, setSelected] = useState<PersonDto | null>(null)
-  const [detail, setDetail] = useState<PersonDetailDto | null>(null)
-  const [detailLoading, setDetailLoading] = useState(false)
-  const [panelIndex, setPanelIndex] = useState(0)
 
   const [formEmail, setFormEmail] = useState('')
   const [formFirstName, setFormFirstName] = useState('')
@@ -82,19 +77,6 @@ export default function PersonsPage() {
 
   const handleSearchChange = (val: string) => { setSearch(val); setPage(1) }
 
-  const openView = (person: PersonDto, index: number) => {
-    setPanelMode('view')
-    setSelected(person)
-    setPanelIndex(index)
-    setDetail(null)
-    setPanelOpen(true)
-    setDetailLoading(true)
-    personsApi.getById(person.userSiteId)
-      .then((res) => setDetail(res.data))
-      .catch(() => {})
-      .finally(() => setDetailLoading(false))
-  }
-
   const loadUnits = () => {
     setUnitsLoading(true)
     unitsApi.getAll()
@@ -107,9 +89,6 @@ export default function PersonsPage() {
   }
 
   const openCreate = () => {
-    setPanelMode('create')
-    setSelected(null)
-    setDetail(null)
     setFormEmail('')
     setFormFirstName('')
     setFormLastName('')
@@ -118,13 +97,6 @@ export default function PersonsPage() {
     setFormUnitId('')
     setPanelOpen(true)
     loadUnits()
-  }
-
-  const navigatePanel = (dir: 'prev' | 'next') => {
-    const newIndex = dir === 'prev' ? panelIndex - 1 : panelIndex + 1
-    if (newIndex >= 0 && newIndex < persons.length) {
-      openView(persons[newIndex], newIndex)
-    }
   }
 
   const handleInvite = async () => {
@@ -171,7 +143,6 @@ export default function PersonsPage() {
     try {
       await personsApi.remove(id)
       showSuccess('Kişi siteden kaldırıldı.')
-      setPanelOpen(false)
       load()
     } catch {}
   }
@@ -210,18 +181,19 @@ export default function PersonsPage() {
                 <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Telefon</th>
                 <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Kullanıcı Tipi</th>
                 <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Durum</th>
+                <th className="text-right px-3 py-2.5 font-medium text-muted-foreground">İşlemler</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-muted-foreground">
+                  <td colSpan={6} className="text-center py-12 text-muted-foreground">
                     Yükleniyor...
                   </td>
                 </tr>
               ) : persons.length === 0 ? (
                 <tr>
-                  <td colSpan={5}>
+                  <td colSpan={6}>
                     <div className="flex flex-col items-center justify-center py-12">
                       <Users className="h-10 w-10 text-muted-foreground/50 mb-3" />
                       <p className="text-muted-foreground">
@@ -231,15 +203,11 @@ export default function PersonsPage() {
                   </td>
                 </tr>
               ) : (
-                persons.map((person, index) => (
+                persons.map((person) => (
                   <tr
                     key={person.userSiteId}
-                    onClick={() => openView(person, index)}
-                    className={`border-b last:border-0 cursor-pointer transition-colors ${
-                      selected?.userSiteId === person.userSiteId && panelOpen
-                        ? 'bg-accent'
-                        : 'hover:bg-muted/30'
-                    }`}
+                    onClick={() => router.push(`/persons/${person.userSiteId}`)}
+                    className="border-b last:border-0 cursor-pointer transition-colors hover:bg-muted/30"
                   >
                     <td className="px-3 py-2.5 font-medium">
                       {person.firstName} {person.lastName}
@@ -258,6 +226,19 @@ export default function PersonsPage() {
                         {UserSiteStatusLabel[person.status]}
                       </Badge>
                     </td>
+                    <td className="px-3 py-2.5 text-right">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleRemove(person.userSiteId)
+                        }}
+                      >
+                        Kaldır
+                      </Button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -266,196 +247,82 @@ export default function PersonsPage() {
         </div>
       </div>
 
-      {/* Side Panel */}
+      {/* Kişi Ekle Panel */}
       {panelOpen && (
         <div className="fixed right-0 top-0 h-screen w-[460px] bg-background border-l shadow-2xl flex flex-col z-50">
           <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-            <h2 className="text-sm font-semibold">
-              {panelMode === 'create' ? 'Kişi Ekle' : 'Kişi Detayı'}
-            </h2>
-            <div className="flex items-center gap-0.5">
-              {panelMode === 'view' && (
-                <>
-                  <Button
-                    variant="ghost" size="icon" className="h-7 w-7"
-                    disabled={panelIndex <= 0}
-                    onClick={() => navigatePanel('prev')}
-                    title="Önceki"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost" size="icon" className="h-7 w-7"
-                    disabled={panelIndex >= persons.length - 1}
-                    onClick={() => navigatePanel('next')}
-                    title="Sonraki"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-              <Button
-                variant="ghost" size="icon" className="h-7 w-7"
-                onClick={() => setPanelOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <h2 className="text-sm font-semibold">Kişi Ekle</h2>
+            <Button
+              variant="ghost" size="icon" className="h-7 w-7"
+              onClick={() => setPanelOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {panelMode === 'create' ? (
-              <>
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">E-posta <span className="text-destructive">*</span></Label>
-                  <Input value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="ornek@mail.com" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium">Ad <span className="text-destructive">*</span></Label>
-                    <Input value={formFirstName} onChange={(e) => setFormFirstName(e.target.value)} placeholder="Ad" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium">Soyad <span className="text-destructive">*</span></Label>
-                    <Input value={formLastName} onChange={(e) => setFormLastName(e.target.value)} placeholder="Soyad" />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">Telefon</Label>
-                  <Input value={formPhone} onChange={(e) => setFormPhone(e.target.value)} placeholder="+90 555 000 00 00" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">Kullanıcı Tipi <span className="text-destructive">*</span></Label>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">E-posta <span className="text-destructive">*</span></Label>
+              <Input value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="ornek@mail.com" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Ad <span className="text-destructive">*</span></Label>
+                <Input value={formFirstName} onChange={(e) => setFormFirstName(e.target.value)} placeholder="Ad" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Soyad <span className="text-destructive">*</span></Label>
+                <Input value={formLastName} onChange={(e) => setFormLastName(e.target.value)} placeholder="Soyad" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Telefon</Label>
+              <Input value={formPhone} onChange={(e) => setFormPhone(e.target.value)} placeholder="+90 555 000 00 00" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Kullanıcı Tipi <span className="text-destructive">*</span></Label>
+              <select
+                value={formUserType}
+                onChange={(e) => {
+                  setFormUserType(Number(e.target.value) as UserType)
+                  setFormUnitId('')
+                }}
+                className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+              >
+                {USER_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {needsUnit(formUserType) && (
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">
+                  Daire <span className="text-destructive">*</span>
+                </Label>
+                {unitsLoading ? (
+                  <p className="text-xs text-muted-foreground py-2">Daireler yükleniyor...</p>
+                ) : (
                   <select
-                    value={formUserType}
-                    onChange={(e) => {
-                      setFormUserType(Number(e.target.value) as UserType)
-                      setFormUnitId('')
-                    }}
+                    value={formUnitId}
+                    onChange={(e) => setFormUnitId(e.target.value)}
                     className="w-full border rounded-md px-3 py-2 text-sm bg-background"
                   >
-                    {USER_TYPES.map((t) => (
-                      <option key={t.value} value={t.value}>{t.label}</option>
+                    <option value="">Daire seçin</option>
+                    {units.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.buildingName ? `${u.buildingName} - ` : ''}{u.doorNumber}
+                        {u.floor ? ` (Kat ${u.floor})` : ''}
+                      </option>
                     ))}
                   </select>
-                </div>
-
-                {needsUnit(formUserType) && (
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium">
-                      Daire <span className="text-destructive">*</span>
-                    </Label>
-                    {unitsLoading ? (
-                      <p className="text-xs text-muted-foreground py-2">Daireler yükleniyor...</p>
-                    ) : (
-                      <select
-                        value={formUnitId}
-                        onChange={(e) => setFormUnitId(e.target.value)}
-                        className="w-full border rounded-md px-3 py-2 text-sm bg-background"
-                      >
-                        <option value="">Daire seçin</option>
-                        {units.map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {u.buildingName ? `${u.buildingName} - ` : ''}{u.doorNumber}
-                            {u.floor ? ` (Kat ${u.floor})` : ''}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
                 )}
+              </div>
+            )}
 
-                <Button size="sm" className="w-full" onClick={handleInvite} disabled={saving}>
-                  {saving ? 'Ekleniyor...' : 'Ekle'}
-                </Button>
-              </>
-            ) : detailLoading ? (
-              <div className="text-center py-12 text-muted-foreground">Yükleniyor...</div>
-            ) : detail ? (
-              <>
-                <div className="flex items-center gap-3 pb-3 border-b">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium">
-                    {detail.firstName[0]?.toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-medium">{detail.firstName} {detail.lastName}</p>
-                    <p className="text-xs text-muted-foreground">{detail.email}</p>
-                  </div>
-                  <div className="ml-auto flex gap-1.5">
-                    {detail.userType != null && (
-                      <Badge variant="outline">{UserTypeLabel[detail.userType]}</Badge>
-                    )}
-                    <Badge variant={statusBadgeVariant(detail.status)}>
-                      {UserSiteStatusLabel[detail.status]}
-                    </Badge>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  {detail.phoneNumber && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-0.5">Telefon</p>
-                      <p>{detail.phoneNumber}</p>
-                    </div>
-                  )}
-                  {detail.roleName && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-0.5">Rol</p>
-                      <p>{detail.roleName}</p>
-                    </div>
-                  )}
-                  {detail.nationalId && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-0.5">TC Kimlik</p>
-                      <p>{detail.nationalId}</p>
-                    </div>
-                  )}
-                </div>
-
-                {detail.units.length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <UserCheck className="h-4 w-4 text-muted-foreground" />
-                      <h3 className="text-sm font-semibold">Bağlı Daireler</h3>
-                    </div>
-                    <div className="border rounded-lg overflow-hidden overflow-x-auto">
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="border-b bg-muted/50">
-                            <th className="text-left px-2 py-2 font-medium text-muted-foreground">Daire</th>
-                            <th className="text-left px-2 py-2 font-medium text-muted-foreground">Blok</th>
-                            <th className="text-left px-2 py-2 font-medium text-muted-foreground">Durum</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {detail.units.map((u) => (
-                            <tr key={u.id} className="border-b last:border-0">
-                              <td className="px-2 py-2 font-medium">{u.doorNumber}</td>
-                              <td className="px-2 py-2 text-muted-foreground">{u.buildingName ?? '-'}</td>
-                              <td className="px-2 py-2">
-                                <Badge variant="outline" className="text-xs">
-                                  {UnitStatusLabel[u.status]}
-                                </Badge>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-                <div className="pt-2 border-t">
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleRemove(detail.userSiteId)}
-                  >
-                    Siteden Kaldır
-                  </Button>
-                </div>
-              </>
-            ) : null}
+            <Button size="sm" className="w-full" onClick={handleInvite} disabled={saving}>
+              {saving ? 'Ekleniyor...' : 'Ekle'}
+            </Button>
           </div>
         </div>
       )}

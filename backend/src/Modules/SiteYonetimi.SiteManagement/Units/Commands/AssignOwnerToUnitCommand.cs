@@ -3,6 +3,8 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SiteYonetimi.Infrastructure.Data;
 using SiteYonetimi.Shared.Common;
+using SiteYonetimi.Shared.Enums;
+using SiteYonetimi.SiteManagement.Units.Services;
 
 namespace SiteYonetimi.SiteManagement.Units.Commands;
 
@@ -12,11 +14,13 @@ public class AssignOwnerToUnitCommandHandler : IRequestHandler<AssignOwnerToUnit
 {
     private readonly SharedTenantDbContext _db;
     private readonly MasterDbContext _masterDb;
+    private readonly IPersonUnitHistoryService _historyService;
 
-    public AssignOwnerToUnitCommandHandler(SharedTenantDbContext db, MasterDbContext masterDb)
+    public AssignOwnerToUnitCommandHandler(SharedTenantDbContext db, MasterDbContext masterDb, IPersonUnitHistoryService historyService)
     {
         _db = db;
         _masterDb = masterDb;
+        _historyService = historyService;
     }
 
     public async Task<Result> Handle(AssignOwnerToUnitCommand request, CancellationToken cancellationToken)
@@ -31,6 +35,8 @@ public class AssignOwnerToUnitCommandHandler : IRequestHandler<AssignOwnerToUnit
 
         unit.OwnerUserId = request.UserId;
         unit.UpdatedAt = DateTime.UtcNow;
+
+        await _historyService.RecordAssignmentAsync(unit.SiteId, unit.Id, request.UserId, UserType.Owner, cancellationToken);
 
         await _db.SaveChangesAsync(cancellationToken);
         return Result.Success();
