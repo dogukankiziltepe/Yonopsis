@@ -1,32 +1,27 @@
 export interface Personel {
   id: string
   siteId: string
+  personelKodu: string
   name: string
+  firma?: string | null
   title?: string | null
+  tcKimlikNo?: string | null
   phone?: string | null
   email?: string | null
-  department?: string | null
+  dogumTarihi?: string | null
+  aciklama?: string | null
   startDate?: string | null
+  cikisTarihi?: string | null
   isActive: boolean
   createdAt: string
   updatedAt?: string | null
 }
 
 export interface CreatePersonelDto {
+  personelKodu: string
   name: string
-  title?: string | null
-  phone?: string | null
+  firma?: string | null
+  title: string
   email?: string | null
-  department?: string | null
   startDate?: string | null
-}
-
-export interface UpdatePersonelDto {
-  name: string
-  title?: string | null
-  phone?: string | null
-  email?: string | null
-  department?: string | null
-  startDate?: string | null
-  isActive: boolean
 }

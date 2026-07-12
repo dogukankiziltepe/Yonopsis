@@ -31,6 +31,8 @@ public class UpdateHesapCommandHandler : IRequestHandler<UpdateHesapCommand, Res
         hesap.NormalBakiye = dto.NormalBakiye;
         hesap.FisKesilebilirMi = dto.FisKesilebilirMi;
         hesap.Aciklama = dto.Aciklama;
+        hesap.VergiDairesi = dto.VergiDairesi;
+        hesap.VergiNumarasi = dto.VergiNumarasi;
         hesap.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(cancellationToken);

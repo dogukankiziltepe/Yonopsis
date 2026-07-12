@@ -20,6 +20,8 @@ public class MasterDbContext : DbContext
     public DbSet<SiteSubscription> SiteSubscriptions => Set<SiteSubscription>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<PersonPhone> PersonPhones => Set<PersonPhone>();
+    public DbSet<Banka> Bankalar => Set<Banka>();
+    public DbSet<BankaSubesi> BankaSubeleri => Set<BankaSubesi>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -152,6 +154,24 @@ public class MasterDbContext : DbContext
             e.Property(x => x.PhoneNumber).HasMaxLength(50).IsRequired();
             e.Property(x => x.Label).HasMaxLength(50);
             e.HasOne(x => x.UserSite).WithMany(x => x.Phones).HasForeignKey(x => x.UserSiteId).OnDelete(DeleteBehavior.Cascade);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<Banka>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.Name).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<BankaSubesi>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SubeAdi).HasMaxLength(200).IsRequired();
+            e.Property(x => x.SubeKodu).HasMaxLength(20);
+            e.HasIndex(x => new { x.BankaId, x.SubeAdi });
+            e.HasOne(x => x.Banka).WithMany(x => x.Subeler).HasForeignKey(x => x.BankaId).OnDelete(DeleteBehavior.Cascade);
             e.HasQueryFilter(x => !x.IsDeleted);
         });
     }

@@ -31,7 +31,9 @@ public record HesapListItemDto(
     bool FisKesilebilirMi,
     bool AktifMi,
     CariTuru? CariTuru,
-    Guid? PersonId);
+    Guid? PersonId,
+    string? VergiDairesi,
+    string? VergiNumarasi);
 
 /// <summary>Hesap detayı (GetHesapByIdQuery).</summary>
 public record HesapDetailDto(
@@ -71,6 +73,8 @@ public class UpdateHesapDto
     public NormalBakiye NormalBakiye { get; set; }
     public bool FisKesilebilirMi { get; set; }
     public string? Aciklama { get; set; }
+    public string? VergiDairesi { get; set; }
+    public string? VergiNumarasi { get; set; }
 }
 
 /// <summary>Manuel cari hesap oluşturma (kiracı/ev sahibi/tedarikçi/personel).</summary>
@@ -80,4 +84,6 @@ public class CreateCariHesapDto
     public string HesapAdi { get; set; } = string.Empty;
     public Guid? PersonId { get; set; }
     public string? Aciklama { get; set; }
+    public string? VergiDairesi { get; set; }
+    public string? VergiNumarasi { get; set; }
 }

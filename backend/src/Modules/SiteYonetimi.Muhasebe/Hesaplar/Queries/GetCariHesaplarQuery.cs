@@ -39,7 +39,7 @@ public class GetCariHesaplarQueryHandler
             .Select(h => new HesapListItemDto(
                 h.Id, h.HesapKodu, h.HesapAdi, h.HesapTipi, h.HesapKategorisi,
                 h.NormalBakiye, h.Seviye, h.ParentId, h.FisKesilebilirMi, h.AktifMi,
-                h.CariTuru, h.PersonId))
+                h.CariTuru, h.PersonId, h.VergiDairesi, h.VergiNumarasi))
             .ToListAsync(cancellationToken);
 
         return Result<List<HesapListItemDto>>.Success(liste);

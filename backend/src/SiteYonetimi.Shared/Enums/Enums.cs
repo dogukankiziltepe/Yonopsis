@@ -242,3 +242,32 @@ public enum PetType
     Diger = 4
 }
 
+public enum KanGrubu
+{
+    ARhPlus = 0,
+    ARhMinus = 1,
+    BRhPlus = 2,
+    BRhMinus = 3,
+    ABRhPlus = 4,
+    ABRhMinus = 5,
+    ZeroRhPlus = 6,
+    ZeroRhMinus = 7
+}
+
+public enum PersonelIzinTuru
+{
+    YillikIzin = 0,
+    MazeretIzni = 1,
+    UcretsizIzin = 2,
+    Rapor = 3,
+    Diger = 4
+}
+
+public enum DagitimSekli
+{
+    EsitDagitim = 0,
+    ArsaPayinaGore = 1,
+    MetrekareyeGore = 2,
+    ManuelDagitim = 3
+}
+

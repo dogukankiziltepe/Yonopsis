@@ -76,6 +76,8 @@ export interface HesapListItem {
   aktifMi: boolean
   cariTuru?: CariTuru | null
   personId?: string | null
+  vergiDairesi?: string | null
+  vergiNumarasi?: string | null
 }
 
 export interface HesapDetail {
@@ -112,6 +114,8 @@ export interface UpdateHesapDto {
   normalBakiye: NormalBakiye
   fisKesilebilirMi: boolean
   aciklama?: string
+  vergiDairesi?: string
+  vergiNumarasi?: string
 }
 
 export interface CreateCariHesapDto {
@@ -119,6 +123,8 @@ export interface CreateCariHesapDto {
   hesapAdi: string
   personId?: string
   aciklama?: string
+  vergiDairesi?: string
+  vergiNumarasi?: string
 }
 
 // ---- Fiş / Dönem ----

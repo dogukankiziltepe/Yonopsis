@@ -22,6 +22,75 @@ namespace SiteYonetimi.Infrastructure.Migrations.MasterDb
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Banka", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("Bankalar");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.BankaSubesi", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BankaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SubeAdi")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("SubeKodu")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BankaId", "SubeAdi");
+
+                    b.ToTable("BankaSubeleri");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Module", b =>
                 {
                     b.Property<Guid>("Id")
@@ -653,6 +722,17 @@ namespace SiteYonetimi.Infrastructure.Migrations.MasterDb
                     b.ToTable("UserSites");
                 });
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.BankaSubesi", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Banka", "Banka")
+                        .WithMany("Subeler")
+                        .HasForeignKey("BankaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Banka");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Page", b =>
                 {
                     b.HasOne("SiteYonetimi.Infrastructure.Entities.Module", "Module")
@@ -795,6 +875,11 @@ namespace SiteYonetimi.Infrastructure.Migrations.MasterDb
                     b.Navigation("Site");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Banka", b =>
+                {
+                    b.Navigation("Subeler");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Module", b =>

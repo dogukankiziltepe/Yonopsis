@@ -24,7 +24,9 @@ public interface ICariHesapService
         string hesapAdi,
         Guid? personId,
         string? aciklama,
-        CancellationToken ct);
+        CancellationToken ct,
+        string? vergiDairesi = null,
+        string? vergiNumarasi = null);
 }
 
 public class CariHesapService : ICariHesapService
@@ -55,7 +57,9 @@ public class CariHesapService : ICariHesapService
         string hesapAdi,
         Guid? personId,
         string? aciklama,
-        CancellationToken ct)
+        CancellationToken ct,
+        string? vergiDairesi = null,
+        string? vergiNumarasi = null)
     {
         if (string.IsNullOrWhiteSpace(hesapAdi))
             return Result<Guid>.Failure("Cari hesap adı zorunludur.");
@@ -135,6 +139,8 @@ public class CariHesapService : ICariHesapService
             CariTuru = cariTuru,
             PersonId = personId,
             Aciklama = aciklama,
+            VergiDairesi = vergiDairesi,
+            VergiNumarasi = vergiNumarasi,
             AktifMi = true
         };
 
