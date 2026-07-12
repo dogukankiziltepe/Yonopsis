@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SiteYonetimi.Infrastructure.Data;
 
 #nullable disable
 
-namespace SiteYonetimi.Infrastructure.Migrations
+namespace SiteYonetimi.Infrastructure.Migrations.SharedTenantDb
 {
     [DbContext(typeof(SharedTenantDbContext))]
-    partial class SharedTenantDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260621200024_AddAidatKalemi")]
+    partial class AddAidatKalemi
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
