@@ -18,6 +18,11 @@ public class SharedTenantDbContext : DbContext
     public DbSet<SupportRequestComment> SupportRequestComments => Set<SupportRequestComment>();
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<AccessCard> AccessCards => Set<AccessCard>();
+    public DbSet<PersonUnitHistory> PersonUnitHistories => Set<PersonUnitHistory>();
+    public DbSet<EmailLog> EmailLogs => Set<EmailLog>();
+    public DbSet<SmsLog> SmsLogs => Set<SmsLog>();
+    public DbSet<WhatsappLog> WhatsappLogs => Set<WhatsappLog>();
+    public DbSet<MobilBildirimLog> MobilBildirimLogs => Set<MobilBildirimLog>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<AidatKalemi> AidatKalemleri => Set<AidatKalemi>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
@@ -155,6 +160,7 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.Brand).HasMaxLength(50);
             e.Property(x => x.Model).HasMaxLength(50);
             e.Property(x => x.Color).HasMaxLength(30);
+            e.Property(x => x.HgsNo).HasMaxLength(30);
             e.HasOne(x => x.Unit)
                 .WithMany(u => u.Vehicles)
                 .HasForeignKey(x => x.UnitId)
@@ -180,6 +186,68 @@ public class SharedTenantDbContext : DbContext
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => x.UnitId);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<PersonUnitHistory>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.PersonUserId).IsRequired();
+            e.Property(x => x.Role).HasConversion<int>();
+            e.Property(x => x.ContactPerson).HasMaxLength(200);
+            e.Property(x => x.Notes).HasMaxLength(500);
+            e.Property(x => x.BankPaymentCode).HasMaxLength(50);
+            e.HasOne(x => x.Unit).WithMany().HasForeignKey(x => x.UnitId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.SiteId, x.UnitId });
+            e.HasIndex(x => new { x.SiteId, x.PersonUserId });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<EmailLog>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.UserId).IsRequired();
+            e.Property(x => x.RecipientEmail).HasMaxLength(256).IsRequired();
+            e.Property(x => x.Subject).HasMaxLength(300).IsRequired();
+            e.Property(x => x.Status).HasMaxLength(50).IsRequired();
+            e.HasIndex(x => new { x.SiteId, x.UserId });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<SmsLog>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.UserId).IsRequired();
+            e.Property(x => x.PhoneNumber).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Message).HasMaxLength(500).IsRequired();
+            e.Property(x => x.Status).HasMaxLength(50).IsRequired();
+            e.HasIndex(x => new { x.SiteId, x.UserId });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<WhatsappLog>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.UserId).IsRequired();
+            e.Property(x => x.PhoneNumber).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Message).HasMaxLength(500).IsRequired();
+            e.Property(x => x.Status).HasMaxLength(50).IsRequired();
+            e.HasIndex(x => new { x.SiteId, x.UserId });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<MobilBildirimLog>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.UserId).IsRequired();
+            e.Property(x => x.Message).HasMaxLength(500).IsRequired();
+            e.Property(x => x.Status).HasMaxLength(50).IsRequired();
+            e.HasIndex(x => new { x.SiteId, x.UserId });
             e.HasQueryFilter(x => !x.IsDeleted);
         });
 

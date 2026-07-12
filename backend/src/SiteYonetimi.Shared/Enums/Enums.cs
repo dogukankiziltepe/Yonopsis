@@ -209,3 +209,36 @@ public enum FaturaOdemeDurumu
     Odendi = 1
 }
 
+public enum EducationStatus
+{
+    Ilkokul = 0,
+    Ortaokul = 1,
+    Lise = 2,
+    OnLisans = 3,
+    Lisans = 4,
+    YuksekLisans = 5,
+    Doktora = 6,
+    Belirtilmemis = 7
+}
+
+public enum Nationality
+{
+    TC = 0,
+    Yabanci = 1
+}
+
+public enum MaritalStatus
+{
+    Evli = 0,
+    Bekar = 1
+}
+
+public enum PetType
+{
+    Yok = 0,
+    Kedi = 1,
+    Kopek = 2,
+    Kus = 3,
+    Diger = 4
+}
+

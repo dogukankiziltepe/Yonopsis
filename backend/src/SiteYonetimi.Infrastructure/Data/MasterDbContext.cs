@@ -19,6 +19,7 @@ public class MasterDbContext : DbContext
     public DbSet<SubscriptionPlanModule> SubscriptionPlanModules => Set<SubscriptionPlanModule>();
     public DbSet<SiteSubscription> SiteSubscriptions => Set<SiteSubscription>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<PersonPhone> PersonPhones => Set<PersonPhone>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -142,6 +143,15 @@ public class MasterDbContext : DbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.Token).HasMaxLength(100).IsRequired();
             e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<PersonPhone>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.PhoneNumber).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Label).HasMaxLength(50);
+            e.HasOne(x => x.UserSite).WithMany(x => x.Phones).HasForeignKey(x => x.UserSiteId).OnDelete(DeleteBehavior.Cascade);
             e.HasQueryFilter(x => !x.IsDeleted);
         });
     }

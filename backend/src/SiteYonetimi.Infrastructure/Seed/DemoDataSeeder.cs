@@ -88,10 +88,20 @@ public static class DemoDataSeeder
         };
         masterDb.Users.AddRange(s1Owners);
         masterDb.Users.AddRange(s1Tenants);
-        foreach (var u in s1Owners)
-            masterDb.UserSites.Add(MakeUserSite(u.Id, site1.Id, UserType.Owner));
-        foreach (var u in s1Tenants)
-            masterDb.UserSites.Add(MakeUserSite(u.Id, site1.Id, UserType.Renter));
+        var s1OwnerSites = s1Owners.Select(u => MakeUserSite(u.Id, site1.Id, UserType.Owner)).ToList();
+        var s1TenantSites = s1Tenants.Select(u => MakeUserSite(u.Id, site1.Id, UserType.Renter)).ToList();
+        masterDb.UserSites.AddRange(s1OwnerSites);
+        masterDb.UserSites.AddRange(s1TenantSites);
+        EnrichPersonDetails(s1Owners[0], s1OwnerSites[0], Gender.Male, EducationStatus.Lisans, "Marmara Üniversitesi", "Mühendis",
+            Nationality.TC, "İstanbul", new DateTime(1985, 4, 12), MaritalStatus.Evli, "Ahmet", "Sevgi",
+            "Kadıköy V.D.", "Moda Cad. No:12 Kadıköy/İstanbul");
+        EnrichPersonDetails(s1Tenants[0], s1TenantSites[0], Gender.Female, EducationStatus.YuksekLisans, "Boğaziçi Üniversitesi", "Öğretmen",
+            Nationality.TC, "Ankara", new DateTime(1990, 8, 23), MaritalStatus.Bekar, "Hasan", "Nur",
+            "Kadıköy V.D.", "Bahariye Cad. No:7 Kadıköy/İstanbul");
+        masterDb.PersonPhones.AddRange(
+            new PersonPhone { UserSiteId = s1OwnerSites[0].Id, PhoneNumber = "0532 101 0001", Label = "Cep" },
+            new PersonPhone { UserSiteId = s1OwnerSites[0].Id, PhoneNumber = "0216 555 44 33", Label = "İş" },
+            new PersonPhone { UserSiteId = s1TenantSites[0].Id, PhoneNumber = "0543 201 0001", Label = "Cep" });
 
         // ── People — Site 2 ──────────────────────────────────────────────────
         var s2Owners = new[]
@@ -125,10 +135,19 @@ public static class DemoDataSeeder
         };
         masterDb.Users.AddRange(s2Owners);
         masterDb.Users.AddRange(s2Tenants);
-        foreach (var u in s2Owners)
-            masterDb.UserSites.Add(MakeUserSite(u.Id, site2.Id, UserType.Owner));
-        foreach (var u in s2Tenants)
-            masterDb.UserSites.Add(MakeUserSite(u.Id, site2.Id, UserType.Renter));
+        var s2OwnerSites = s2Owners.Select(u => MakeUserSite(u.Id, site2.Id, UserType.Owner)).ToList();
+        var s2TenantSites = s2Tenants.Select(u => MakeUserSite(u.Id, site2.Id, UserType.Renter)).ToList();
+        masterDb.UserSites.AddRange(s2OwnerSites);
+        masterDb.UserSites.AddRange(s2TenantSites);
+        EnrichPersonDetails(s2Owners[0], s2OwnerSites[0], Gender.Male, EducationStatus.Lise, null, "Esnaf",
+            Nationality.TC, "Trabzon", new DateTime(1978, 11, 2), MaritalStatus.Evli, "İsmail", "Fatma",
+            "Beşiktaş V.D.", "Barbaros Blv. No:8 Beşiktaş/İstanbul");
+        EnrichPersonDetails(s2Tenants[0], s2TenantSites[0], Gender.Female, EducationStatus.OnLisans, "Anadolu Üniversitesi", "Muhasebeci",
+            Nationality.Yabanci, "Baku", new DateTime(1993, 2, 17), MaritalStatus.Bekar, "Elvin", "Gunay",
+            "Beşiktaş V.D.", "Levent Cad. No:3 Beşiktaş/İstanbul");
+        masterDb.PersonPhones.AddRange(
+            new PersonPhone { UserSiteId = s2OwnerSites[0].Id, PhoneNumber = "0532 202 0001", Label = "Cep" },
+            new PersonPhone { UserSiteId = s2TenantSites[0].Id, PhoneNumber = "0543 302 0001", Label = "Cep" });
 
         await masterDb.SaveChangesAsync();
 
@@ -141,6 +160,10 @@ public static class DemoDataSeeder
         // ── SharedDB data ────────────────────────────────────────────────────
         await SeedSite1SharedAsync(sharedDb, site1.Id, s1Owners, s1Tenants);
         await SeedSite2SharedAsync(sharedDb, site2.Id, s2Owners, s2Tenants);
+
+        // ── İletişim Geçmişi tabı — demo log kayıtları ───────────────────────
+        await SeedContactHistoryAsync(sharedDb, site1.Id, s1Owners[0], s1Tenants[0]);
+        await SeedContactHistoryAsync(sharedDb, site2.Id, s2Owners[0], s2Tenants[0]);
 
         // ── Accounting ───────────────────────────────────────────────────────
         await MuhasebeSeeder.SeedForSiteAsync(sharedDb, site1.Id);
@@ -212,6 +235,22 @@ public static class DemoDataSeeder
         };
         db.Units.AddRange(units);
         await db.SaveChangesAsync();
+
+        // Daireler tabı — kişi/daire geçmişi (güncel atamalar için açık kayıt)
+        db.PersonUnitHistories.AddRange(MakeUnitHistoryRows(siteId, units));
+        // Örnek kapanmış geçmiş kaydı — daha önce başka bir kiracı yaşamış (Daireler tabı çeşitliliği)
+        db.PersonUnitHistories.Add(new PersonUnitHistory
+        {
+            SiteId = siteId,
+            UnitId = units[1].Id,
+            PersonUserId = tenants[3].Id,
+            Role = UserType.Renter,
+            EntryDate = DateTime.UtcNow.AddYears(-2),
+            ExitDate = DateTime.UtcNow.AddMonths(-7),
+            ContactPerson = "Yönetim Ofisi",
+            Notes = "Kira sözleşmesi sona erdi.",
+            BankPaymentCode = "BPK-GS-0002"
+        });
 
         // Vehicles — one per occupied/rented unit
         var occupiedUnits = units.Where(u => u.Status != UnitStatus.Bos).ToList();
@@ -330,6 +369,21 @@ public static class DemoDataSeeder
         db.Units.AddRange(units);
         await db.SaveChangesAsync();
 
+        // Daireler tabı — kişi/daire geçmişi (güncel atamalar için açık kayıt)
+        db.PersonUnitHistories.AddRange(MakeUnitHistoryRows(siteId, units));
+        db.PersonUnitHistories.Add(new PersonUnitHistory
+        {
+            SiteId = siteId,
+            UnitId = units[1].Id,
+            PersonUserId = tenants[3].Id,
+            Role = UserType.Renter,
+            EntryDate = DateTime.UtcNow.AddYears(-2),
+            ExitDate = DateTime.UtcNow.AddMonths(-9),
+            ContactPerson = "Yönetim Ofisi",
+            Notes = "Kira sözleşmesi sona erdi.",
+            BankPaymentCode = "BPK-MK-0002"
+        });
+
         var occupiedUnits = units.Where(u => u.Status != UnitStatus.Bos).ToList();
 
         var vehicles = new[]
@@ -384,6 +438,47 @@ public static class DemoDataSeeder
             }
         }
         db.Payments.AddRange(payments);
+        await db.SaveChangesAsync();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // İletişim Geçmişi — demo Email/SMS/WhatsApp/Mobil Bildirim log kayıtları
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private static async Task SeedContactHistoryAsync(SharedTenantDbContext db, Guid siteId, params User[] persons)
+    {
+        var now = DateTime.UtcNow;
+        foreach (var person in persons)
+        {
+            var fullName = $"{person.FirstName} {person.LastName}";
+
+            db.EmailLogs.AddRange(
+                new EmailLog
+                {
+                    SiteId = siteId, UserId = person.Id, SentAt = now.AddDays(-2), DeliveredAt = now.AddDays(-2).AddMinutes(1),
+                    ReadAt = now.AddDays(-2).AddHours(3), RecipientEmail = person.Email, Subject = "Aidat Hatırlatması",
+                    Body = $"Sayın {fullName}, bu ayki aidat ödemenizin son tarihi yaklaşmaktadır.", Status = "Okundu"
+                },
+                new EmailLog
+                {
+                    SiteId = siteId, UserId = person.Id, SentAt = now.AddDays(-10), DeliveredAt = now.AddDays(-10).AddMinutes(2),
+                    ReadAt = null, RecipientEmail = person.Email, Subject = "Su Kesintisi Bildirimi",
+                    Body = "Yarın 09:00-13:00 arası planlı su kesintisi yapılacaktır.", Status = "İletildi"
+                });
+
+            db.SmsLogs.AddRange(
+                new SmsLog { SiteId = siteId, UserId = person.Id, SentAt = now.AddDays(-2), PhoneNumber = person.PhoneNumber ?? "-", Message = "Aidat ödemenizin son tarihi yaklaşıyor.", Status = "Teslim Edildi" },
+                new SmsLog { SiteId = siteId, UserId = person.Id, SentAt = now.AddDays(-15), PhoneNumber = person.PhoneNumber ?? "-", Message = "Genel kurul toplantımız önümüzdeki hafta yapılacaktır.", Status = "Teslim Edildi" });
+
+            db.WhatsappLogs.AddRange(
+                new WhatsappLog { SiteId = siteId, UserId = person.Id, SentAt = now.AddDays(-5), PhoneNumber = person.PhoneNumber ?? "-", Message = "Asansör bakımı nedeniyle kısa süreli kesinti olacaktır.", Status = "Okundu" },
+                new WhatsappLog { SiteId = siteId, UserId = person.Id, SentAt = now.AddDays(-20), PhoneNumber = person.PhoneNumber ?? "-", Message = "Bahçe düzenleme çalışmaları başlıyor.", Status = "Teslim Edildi" });
+
+            db.MobilBildirimLogs.AddRange(
+                new MobilBildirimLog { SiteId = siteId, UserId = person.Id, SentAt = now.AddDays(-1), Message = "Yeni duyuru: Ortak alan kullanım kuralları güncellendi.", Status = "Gönderildi" },
+                new MobilBildirimLog { SiteId = siteId, UserId = person.Id, SentAt = now.AddDays(-8), Message = "Aidat ödemeniz alınmıştır, teşekkür ederiz.", Status = "Gönderildi" });
+        }
+
         await db.SaveChangesAsync();
     }
 
@@ -738,6 +833,44 @@ public static class DemoDataSeeder
         RoleTypeId = roleId, Status = UserSiteStatus.Approved, CreatedAt = DateTime.UtcNow
     };
 
+    /// <summary>Fills in the Kişi Detay tabs (Genel/Detay/Kimlik) for a handful of demo persons
+    /// so every tab has non-empty data when manually testing the person detail page.</summary>
+    private static void EnrichPersonDetails(
+        User user, UserSite us, Gender gender, EducationStatus education, string? school, string profession,
+        Nationality nationality, string birthPlace, DateTime birthDate, MaritalStatus maritalStatus,
+        string fatherName, string motherName, string taxOffice, string address)
+    {
+        user.Gender = gender;
+
+        us.TaxOffice = taxOffice;
+        us.SecondaryEmail = $"ikincil.{user.FirstName.ToLowerInvariant()}@mail.com";
+        us.Address = address;
+
+        us.Description = "Demo verisi — kişi detay sayfası test kaydı.";
+        us.EducationStatus = education;
+        us.SchoolOrInstitution = school;
+        us.Profession = profession;
+        us.HasPrivateInsurance = true;
+        us.IsMartyrOrVeteranRelative = false;
+        us.PetType = PetType.Kedi;
+        us.PetDetail = "Tekir, 3 yaşında";
+
+        us.Nationality = nationality;
+        us.IdentitySeriNo = "A12";
+        us.IdentitySiraNo = "345678";
+        us.PassportNo = nationality == Nationality.Yabanci ? "U1234567" : null;
+        us.FatherName = fatherName;
+        us.MotherName = motherName;
+        us.BirthPlace = birthPlace;
+        us.BirthDate = birthDate;
+        us.MaritalStatus = maritalStatus;
+        us.RegisteredCity = birthPlace;
+        us.RegisteredDistrict = "Merkez";
+        us.RegisteredNeighborhood = "Cumhuriyet Mah.";
+        us.FamilySiraNo = "12";
+        us.KayitSiraNo = "3";
+    }
+
     private static SiteSubscription MakeSub(Guid siteId, Guid planId) => new()
     {
         SiteId = siteId, SubscriptionPlanId = planId,
@@ -785,8 +918,49 @@ public static class DemoDataSeeder
         UnitId = unitId,
         OwnerUserId = ownerUserId,
         Plate = plate, Brand = brand, Model = model, Color = color, Year = year,
+        HgsNo = $"HGS-{plate.Replace(" ", "")}",
         IsActive = true, CreatedAt = DateTime.UtcNow
     };
+
+    private static List<PersonUnitHistory> MakeUnitHistoryRows(Guid siteId, List<Unit> units)
+    {
+        var rows = new List<PersonUnitHistory>();
+        foreach (var u in units)
+        {
+            if (u.OwnerUserId.HasValue)
+            {
+                rows.Add(new PersonUnitHistory
+                {
+                    SiteId = siteId,
+                    UnitId = u.Id,
+                    PersonUserId = u.OwnerUserId.Value,
+                    Role = UserType.Owner,
+                    EntryDate = DateTime.UtcNow.AddYears(-2),
+                    ExitDate = null,
+                    ContactPerson = null,
+                    Notes = "Demo verisi",
+                    BankPaymentCode = $"BPK-{u.DoorNumber}-OWN"
+                });
+            }
+
+            if (u.TenantUserId.HasValue)
+            {
+                rows.Add(new PersonUnitHistory
+                {
+                    SiteId = siteId,
+                    UnitId = u.Id,
+                    PersonUserId = u.TenantUserId.Value,
+                    Role = UserType.Renter,
+                    EntryDate = DateTime.UtcNow.AddMonths(-6),
+                    ExitDate = null,
+                    ContactPerson = null,
+                    Notes = "Demo verisi",
+                    BankPaymentCode = $"BPK-{u.DoorNumber}-TEN"
+                });
+            }
+        }
+        return rows;
+    }
 
     private static AccessCard MakeAccessCard(Guid siteId, Guid userId, Guid unitId, string cardNumber) => new()
     {

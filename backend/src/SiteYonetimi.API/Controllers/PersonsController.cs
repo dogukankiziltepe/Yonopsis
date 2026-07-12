@@ -30,6 +30,30 @@ public class PersonsController : BaseController
         return Handle(await Mediator.Send(new GetPersonByIdQuery(id, CurrentSiteId)));
     }
 
+    [HttpGet("{id:guid}/detail")]
+    public async Task<IActionResult> GetFullDetail(Guid id)
+    {
+        return Handle(await Mediator.Send(new GetPersonFullDetailQuery(id, CurrentSiteId)));
+    }
+
+    [HttpPut("{id:guid}/general")]
+    public async Task<IActionResult> UpdateGeneral(Guid id, [FromBody] UpdatePersonGeneralInfoDto dto)
+    {
+        return Handle(await Mediator.Send(new UpdatePersonGeneralInfoCommand(id, CurrentSiteId, dto)));
+    }
+
+    [HttpPut("{id:guid}/detail-info")]
+    public async Task<IActionResult> UpdateDetailInfo(Guid id, [FromBody] UpdatePersonDetailInfoDto dto)
+    {
+        return Handle(await Mediator.Send(new UpdatePersonDetailInfoCommand(id, CurrentSiteId, dto)));
+    }
+
+    [HttpPut("{id:guid}/identity")]
+    public async Task<IActionResult> UpdateIdentity(Guid id, [FromBody] UpdatePersonIdentityInfoDto dto)
+    {
+        return Handle(await Mediator.Send(new UpdatePersonIdentityInfoCommand(id, CurrentSiteId, dto)));
+    }
+
     [HttpPost]
     public async Task<IActionResult> Invite([FromBody] InvitePersonDto dto)
     {
