@@ -10,9 +10,9 @@ interface Option {
 }
 
 const OPTIONS: Option[] = [
-  { type: 'buildings', label: 'Binalar', description: 'Toplu bina ekle', icon: Building2 },
-  { type: 'units',     label: 'Daireler', description: 'Toplu daire ekle', icon: Home },
-  { type: 'users',     label: 'Kullanıcılar', description: 'Toplu kullanıcı ekle', icon: Users },
+  { type: 'buildings', label: 'Buildings', description: 'Bulk add buildings', icon: Building2 },
+  { type: 'units',     label: 'Units',     description: 'Bulk add units',      icon: Home },
+  { type: 'users',     label: 'Users',     description: 'Bulk add users',      icon: Users },
 ]
 
 interface Props {

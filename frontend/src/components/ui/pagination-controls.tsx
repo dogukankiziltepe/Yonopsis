@@ -23,7 +23,7 @@ export function PaginationControls({
   search,
   onPageChange,
   onSearchChange,
-  searchPlaceholder = 'Ara...',
+  searchPlaceholder = 'Search...',
 }: PaginationControlsProps) {
   const start = totalCount === 0 ? 0 : (page - 1) * pageSize + 1
   const end = Math.min(page * pageSize, totalCount)
@@ -37,7 +37,7 @@ export function PaginationControls({
         className="max-w-xs h-8 text-sm"
       />
       <div className="flex items-center gap-3 text-sm text-muted-foreground">
-        <span>{totalCount > 0 ? `${start}–${end} / ${totalCount}` : '0 kayıt'}</span>
+        <span>{totalCount > 0 ? `${start}–${end} / ${totalCount}` : '0 records'}</span>
         <div className="flex items-center gap-1">
           <Button
             variant="outline"

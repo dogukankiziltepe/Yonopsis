@@ -12,7 +12,7 @@ export function ComingSoon({ title }: ComingSoonProps) {
       </div>
       <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground border rounded-lg">
         <Construction className="h-8 w-8" />
-        <p className="text-sm">Bu sayfa yakında hizmete girecek.</p>
+        <p className="text-sm">This page is coming soon.</p>
       </div>
     </div>
   )

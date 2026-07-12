@@ -120,6 +120,35 @@ public class GetUserPagesQueryHandler : IRequestHandler<GetUserPagesQuery, Resul
             });
         }
 
+        // Bir child sayfası sonuçlara girdiyse ama parent menü grubu sonuçta yoksa otomatik ekle.
+        // Menü grupları sadece UI container'ıdır (route="#"), explicit permission gerektirmez.
+        var includedIds = result.Select(p => p.Id).ToHashSet();
+        var missingParentIds = result
+            .Where(p => p.ParentId.HasValue && !includedIds.Contains(p.ParentId.Value))
+            .Select(p => p.ParentId!.Value)
+            .Distinct()
+            .ToList();
+
+        if (missingParentIds.Count > 0)
+        {
+            var pageById = pages.ToDictionary(p => p.Id);
+            foreach (var parentId in missingParentIds)
+            {
+                if (!pageById.TryGetValue(parentId, out var parent)) continue;
+                result.Add(new PageDto
+                {
+                    Id = parent.Id,
+                    Name = parent.Name,
+                    Label = parent.Label,
+                    Icon = parent.Icon,
+                    Route = parent.Route,
+                    Order = parent.OrderIndex,
+                    ParentId = parent.ParentPageId,
+                    UserPermission = PermissionLevel.ReadOnly
+                });
+            }
+        }
+
         result = result.OrderBy(p => p.Order).ToList();
 
         _cache.Set(cacheKey, result, TimeSpan.FromMinutes(2));
