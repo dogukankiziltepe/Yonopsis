@@ -29,13 +29,13 @@ export function ImportPreviewTable({ importType, rows }: Props) {
         <thead>
           <tr className="border-b bg-muted/50">
             <th className="px-3 py-2 text-left font-medium text-muted-foreground w-10">#</th>
-            <th className="px-3 py-2 text-left font-medium text-muted-foreground w-10">Durum</th>
+            <th className="px-3 py-2 text-left font-medium text-muted-foreground w-10">Status</th>
             {columns.map((col) => (
               <th key={col} className="px-3 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">
                 {col}
               </th>
             ))}
-            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Hatalar</th>
+            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Errors</th>
           </tr>
         </thead>
         <tbody>

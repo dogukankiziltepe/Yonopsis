@@ -46,7 +46,7 @@ export function FileUpload({
     if (!files || files.length === 0) return
     const file = files[0]
     if (file.size > MAX_SIZE) {
-      showError('Dosya boyutu 10 MB\'ı geçemez.')
+      showError('File size cannot exceed 10 MB.')
       return
     }
     setUploading(true)
@@ -55,7 +55,7 @@ export function FileUpload({
       onUploaded?.(res.data)
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string } } }
-      showError(err?.response?.data?.message ?? 'Dosya yüklenemedi.')
+      showError(err?.response?.data?.message ?? 'File could not be uploaded.')
     } finally {
       setUploading(false)
       if (inputRef.current) inputRef.current.value = ''
@@ -82,15 +82,15 @@ export function FileUpload({
         {uploading ? (
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Yükleniyor...
+            Uploading...
           </div>
         ) : (
           <div className="flex flex-col items-center gap-1">
             <Upload className="h-6 w-6 text-muted-foreground/60" />
             <p className="text-sm text-muted-foreground">
-              Dosya sürükleyin veya <span className="text-primary font-medium">seçin</span>
+              Drag a file or <span className="text-primary font-medium">select</span>
             </p>
-            <p className="text-xs text-muted-foreground/60">Maks. 10 MB</p>
+            <p className="text-xs text-muted-foreground/60">Max. 10 MB</p>
           </div>
         )}
       </div>

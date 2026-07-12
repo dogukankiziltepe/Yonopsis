@@ -37,7 +37,7 @@ export function TenantSidebar({ mobileOpen = false, onMobileClose }: TenantSideb
         mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       )}>
         <div className="flex h-14 items-center justify-between border-b px-4">
-          <span className="font-semibold text-sidebar-foreground">Kiracı Paneli</span>
+          <span className="font-semibold text-sidebar-foreground">Tenant Panel</span>
           <button
             className="md:hidden p-1 rounded text-sidebar-foreground/60 hover:text-sidebar-foreground"
             onClick={onMobileClose}
@@ -70,7 +70,7 @@ export function TenantSidebar({ mobileOpen = false, onMobileClose }: TenantSideb
               onClick={handleLogout}
             >
               <LogOut className="h-4 w-4 mr-2" />
-              Çıkış Yap
+              Log Out
             </Button>
             <ThemeToggle className="text-sidebar-foreground/70 hover:text-sidebar-foreground" />
           </div>

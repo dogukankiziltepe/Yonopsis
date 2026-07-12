@@ -15,7 +15,7 @@ export function FileUploadZone({ onFile, disabled }: Props) {
 
   const handle = (file: File) => {
     if (!file.name.endsWith('.xlsx')) {
-      alert('Yalnızca .xlsx dosyaları kabul edilmektedir.')
+      alert('Only .xlsx files are accepted.')
       return
     }
     onFile(file)
@@ -43,12 +43,12 @@ export function FileUploadZone({ onFile, disabled }: Props) {
         <FileSpreadsheet className="h-6 w-6 text-muted-foreground" />
       </div>
       <div className="text-center">
-        <p className="text-sm font-medium">Excel dosyasını sürükle veya tıkla</p>
-        <p className="text-xs text-muted-foreground mt-1">Yalnızca .xlsx — maks 5 MB</p>
+        <p className="text-sm font-medium">Drag or click to upload an Excel file</p>
+        <p className="text-xs text-muted-foreground mt-1">Only .xlsx — max 5 MB</p>
       </div>
       <div className="flex items-center gap-1.5 text-xs text-primary">
         <Upload className="h-3.5 w-3.5" />
-        Dosya seç
+        Select file
       </div>
       <input
         ref={inputRef}

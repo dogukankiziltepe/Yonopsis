@@ -15,7 +15,7 @@ export function ConfirmImportButton({ validCount, loading, onConfirm }: Props) {
       className="gap-2"
     >
       <Save className="h-4 w-4" />
-      {loading ? 'Kaydediliyor…' : `${validCount} Geçerli Satırı Kaydet`}
+      {loading ? 'Saving…' : `Save ${validCount} Valid Rows`}
     </Button>
   )
 }

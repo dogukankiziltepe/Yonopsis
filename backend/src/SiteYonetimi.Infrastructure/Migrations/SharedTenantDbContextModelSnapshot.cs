@@ -111,6 +111,222 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.ToTable("AidatKalemleri");
                 });
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.AjandaEtkinlik", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("BaslangicTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Baslik")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime?>("BitisTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Konum")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Renk")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("TumGun")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "BaslangicTarihi");
+
+                    b.ToTable("AjandaEtkinlikleri");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.AnaSayac", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Ad")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Marka")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("SeriNo")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("TakimTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Tip")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Tip");
+
+                    b.ToTable("AnaSayaclar");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.AnaSayfaAyar", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Adres")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IletisimEmail")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("IletisimTelefon")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("KapakFotoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("KisaAciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("SiteAdi")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Slogan")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("AnaSayfaAyarlari");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Anket", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("BaslangicTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Baslik")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime?>("BitisTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Durum")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Durum");
+
+                    b.ToTable("Anketler");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Announcement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -156,6 +372,234 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.ToTable("Announcements");
                 });
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.AracGirisCikis", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("AracTipi")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CikisSaati")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("GirisSaati")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Plaka")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SuruculAdi")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("UnitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Plaka");
+
+                    b.HasIndex("UnitId");
+
+                    b.HasIndex("SiteId", "GirisSaati");
+
+                    b.ToTable("AracGirisCikislar");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.BankaHareketi", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Durum")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("EslestirmeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("KasaBankaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ReferansNo")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Tarih")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Tutar")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KasaBankaId");
+
+                    b.HasIndex("SiteId", "KasaBankaId", "Tarih");
+
+                    b.ToTable("BankaHareketleri");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.BirimFiyat", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("BaslangicTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Birim")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("BitisTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Fiyat")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Tip")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Tip", "BaslangicTarihi");
+
+                    b.ToTable("BirimFiyatlar");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.BorcMakbuzu", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("BorcluAdi")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Donem")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("EvrakNo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("GecikmeTutari")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<Guid?>("GelirTanimiId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("IslemTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("OdenenTutar")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("SonOdemeTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Tutar")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("UnitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GelirTanimiId");
+
+                    b.HasIndex("UnitId");
+
+                    b.HasIndex("SiteId", "EvrakNo")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("BorcMakbuzlari");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Building", b =>
                 {
                     b.Property<Guid>("Id")
@@ -196,6 +640,443 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Buildings");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.DaireSayac", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("AnaSayacId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Marka")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("SeriNo")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("TakimTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Tip")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UnitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnaSayacId");
+
+                    b.HasIndex("UnitId");
+
+                    b.HasIndex("SiteId", "UnitId", "Tip");
+
+                    b.ToTable("DaireSayaclar");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Departman", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Ad")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Ad")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("Departmanlar");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.EpostaSablonu", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Ad")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IcerikHtml")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IcerikText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Kategori")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Konu")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Ad");
+
+                    b.ToTable("EpostaSablonlari");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Fatura", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("CariAdi")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EvrakNo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("FaturaTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("GelirTanimiId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("GiderTanimiId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("IslemTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OdemeDurumu")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("SonOdemeTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Tip")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("ToplamTutar")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GelirTanimiId");
+
+                    b.HasIndex("GiderTanimiId");
+
+                    b.HasIndex("SiteId", "Tip", "EvrakNo")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("Faturalar");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.FotografGalerisi", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Baslik")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Sira")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Sira");
+
+                    b.ToTable("FotografGalerisi");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.GelirGrubu", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GelirGruplari");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.GelirTanimi", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("GelirGrubuId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GelirGrubuId");
+
+                    b.ToTable("GelirTanimlari");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.GiderGrubu", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GiderGruplari");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.GiderTanimi", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("GiderGrubuId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GiderGrubuId");
+
+                    b.ToTable("GiderTanimlari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.HesapPlani", b =>
@@ -273,6 +1154,240 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.HasIndex("SiteId", "PersonId");
 
                     b.ToTable("HesapPlani");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.IsEmri", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
+                    b.Property<string>("AtananKisiAdi")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("AtananKisiId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Baslik")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DepartmanId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Durum")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("IslemBaslangic")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("IslemBitis")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notlar")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("Oncelik")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("OrtakAlanId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TalepTipiId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("UnitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DepartmanId");
+
+                    b.HasIndex("OrtakAlanId");
+
+                    b.HasIndex("TalepTipiId");
+
+                    b.HasIndex("UnitId");
+
+                    b.HasIndex("SiteId", "CreatedAt");
+
+                    b.HasIndex("SiteId", "Durum");
+
+                    b.ToTable("IsEmirleri");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.KasaBanka", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BankaAdi")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("HesapNo")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("IBAN")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SubeAdi")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Tip")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("KasaBanka");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.KayipEsya", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("BulunanTarih")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("BulunanYer")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Durum")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EsyaAdi")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SahipAdi")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("SahipIletisim")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "BulunanTarih");
+
+                    b.HasIndex("SiteId", "Durum");
+
+                    b.ToTable("KayipEsyalar");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.MobilBildirimSablonu", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Ad")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Baslik")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Icerik")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Kategori")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Ad");
+
+                    b.ToTable("MobilBildirimSablonlari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.MuhasebeDonem", b =>
@@ -518,6 +1633,159 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.ToTable("MuhasebeParametreler");
                 });
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Olay", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .IsRequired()
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
+                    b.Property<string>("Baslik")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Durum")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Konum")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("OlayTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Tip")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("UnitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UnitId");
+
+                    b.HasIndex("SiteId", "Durum");
+
+                    b.HasIndex("SiteId", "OlayTarihi");
+
+                    b.ToTable("Olaylar");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.OrtakAlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Ad")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Konum")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OrtakAlanlar");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.OtomatikBildirim", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("EpostaAktif")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("EpostaSablonuId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("MobilAktif")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("MobilSablonuId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("OlayTipi")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("SmsAktif")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("SmsSablonuId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EpostaSablonuId");
+
+                    b.HasIndex("MobilSablonuId");
+
+                    b.HasIndex("SmsSablonuId");
+
+                    b.HasIndex("SiteId", "OlayTipi")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("OtomatikBildirimler");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Payment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -564,6 +1832,253 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.HasIndex("UnitId");
 
                     b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Personel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Department")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Name");
+
+                    b.ToTable("Personeller");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Rezervasyon", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Durum")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid?>("PersonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("TesisId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TesisId");
+
+                    b.HasIndex("SiteId", "StartDate");
+
+                    b.HasIndex("SiteId", "TesisId", "StartDate");
+
+                    b.ToTable("Rezervasyonlar");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SayacOkuma", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("AnaSayacId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DaireSayacId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("OkumaTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("OncekiEndeks")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("SonEndeks")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnaSayacId");
+
+                    b.HasIndex("DaireSayacId");
+
+                    b.HasIndex("SiteId", "OkumaTarihi");
+
+                    b.ToTable("SayacOkumalar");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SiteTemasi", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccentColor")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FaviconUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("FontFamily")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PrimaryColor")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("SecondaryColor")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("SiteTemalari");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SmsSablonu", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Ad")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Icerik")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Kategori")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Ad");
+
+                    b.ToTable("SmsSablonlari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SupportRequest", b =>
@@ -647,6 +2162,331 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.HasIndex("RequestId");
 
                     b.ToTable("SupportRequestComments");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.TahsilatMakbuzu", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("BorcMakbuzuId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BorcluAdi")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EvrakNo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("IslemTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("KasaBankaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("OdemeTipi")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("OdemeTutari")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BorcMakbuzuId");
+
+                    b.HasIndex("KasaBankaId");
+
+                    b.HasIndex("SiteId", "EvrakNo")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("TahsilatMakbuzlari");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.TalepTipi", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Ad")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TalepTipleri");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Teklif", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Baslik")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Durum")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("GecerlilikTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notlar")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TedarikciAdi")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("TeklifTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("Tutar")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Durum");
+
+                    b.HasIndex("SiteId", "TeklifTarihi");
+
+                    b.ToTable("Teklifler");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.TelefonRehberi", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Ad")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Dahili")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Departman")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Telefon")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Unvan")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Ad");
+
+                    b.ToTable("TelefonRehberi");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Tesis", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("Kapasite")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tesisler");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Toplanti", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Baslik")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Durum")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Gundem")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Kararlar")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
+                    b.Property<string>("Katilimcilar")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Konum")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ToplamtiTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Durum");
+
+                    b.HasIndex("SiteId", "ToplamtiTarihi");
+
+                    b.ToTable("Toplantilar");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Unit", b =>
@@ -869,6 +2709,115 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.ToTable("Vehicles");
                 });
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.YapilacakIs", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("AtananKisi")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Baslik")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Durum")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Oncelik")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("TamamlanmaTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Durum");
+
+                    b.ToTable("YapilacakIsler");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.ZiyaretciGirisCikis", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("CikisSaati")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GeldigiKisi")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("GelensAdi")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("GirisSaati")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Plaka")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("UnitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ZiyaretAmaci")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UnitId");
+
+                    b.HasIndex("SiteId", "GirisSaati");
+
+                    b.ToTable("ZiyaretciGirisCikislar");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.AccessCard", b =>
                 {
                     b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.Unit", "Unit")
@@ -879,6 +2828,100 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.Navigation("Unit");
                 });
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.AracGirisCikis", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.Unit", "Unit")
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Unit");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.BankaHareketi", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.KasaBanka", "KasaBanka")
+                        .WithMany()
+                        .HasForeignKey("KasaBankaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("KasaBanka");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.BorcMakbuzu", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.GelirTanimi", "GelirTanimi")
+                        .WithMany()
+                        .HasForeignKey("GelirTanimiId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.Unit", "Unit")
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("GelirTanimi");
+
+                    b.Navigation("Unit");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.DaireSayac", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.AnaSayac", "AnaSayac")
+                        .WithMany("DaireSayaclari")
+                        .HasForeignKey("AnaSayacId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.Unit", "Unit")
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AnaSayac");
+
+                    b.Navigation("Unit");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Fatura", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.GelirTanimi", "GelirTanimi")
+                        .WithMany()
+                        .HasForeignKey("GelirTanimiId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.GiderTanimi", "GiderTanimi")
+                        .WithMany()
+                        .HasForeignKey("GiderTanimiId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("GelirTanimi");
+
+                    b.Navigation("GiderTanimi");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.GelirTanimi", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.GelirGrubu", "GelirGrubu")
+                        .WithMany("GelirTanimlari")
+                        .HasForeignKey("GelirGrubuId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("GelirGrubu");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.GiderTanimi", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.GiderGrubu", "GiderGrubu")
+                        .WithMany("GiderTanimlari")
+                        .HasForeignKey("GiderGrubuId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("GiderGrubu");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.HesapPlani", b =>
                 {
                     b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.HesapPlani", "Parent")
@@ -887,6 +2930,37 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.IsEmri", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.Departman", "Departman")
+                        .WithMany("IsEmirleri")
+                        .HasForeignKey("DepartmanId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.OrtakAlan", "OrtakAlan")
+                        .WithMany()
+                        .HasForeignKey("OrtakAlanId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.TalepTipi", "TalepTipi")
+                        .WithMany()
+                        .HasForeignKey("TalepTipiId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.Unit", "Unit")
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Departman");
+
+                    b.Navigation("OrtakAlan");
+
+                    b.Navigation("TalepTipi");
+
+                    b.Navigation("Unit");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.MuhasebeFisi", b =>
@@ -911,6 +2985,40 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.Navigation("Fis");
                 });
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Olay", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.Unit", "Unit")
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Unit");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.OtomatikBildirim", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.EpostaSablonu", "EpostaSablonu")
+                        .WithMany()
+                        .HasForeignKey("EpostaSablonuId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.MobilBildirimSablonu", "MobilSablonu")
+                        .WithMany()
+                        .HasForeignKey("MobilSablonuId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.SmsSablonu", "SmsSablonu")
+                        .WithMany()
+                        .HasForeignKey("SmsSablonuId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("EpostaSablonu");
+
+                    b.Navigation("MobilSablonu");
+
+                    b.Navigation("SmsSablonu");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Payment", b =>
                 {
                     b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.Unit", "Unit")
@@ -920,6 +3028,33 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Unit");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Rezervasyon", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.Tesis", "Tesis")
+                        .WithMany()
+                        .HasForeignKey("TesisId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Tesis");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SayacOkuma", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.AnaSayac", "AnaSayac")
+                        .WithMany("Okumalar")
+                        .HasForeignKey("AnaSayacId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.DaireSayac", "DaireSayac")
+                        .WithMany("Okumalar")
+                        .HasForeignKey("DaireSayacId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("AnaSayac");
+
+                    b.Navigation("DaireSayac");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SupportRequest", b =>
@@ -942,6 +3077,23 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Request");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.TahsilatMakbuzu", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.BorcMakbuzu", "BorcMakbuzu")
+                        .WithMany()
+                        .HasForeignKey("BorcMakbuzuId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.KasaBanka", "KasaBanka")
+                        .WithMany()
+                        .HasForeignKey("KasaBankaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("BorcMakbuzu");
+
+                    b.Navigation("KasaBanka");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Unit", b =>
@@ -972,9 +3124,46 @@ namespace SiteYonetimi.Infrastructure.Migrations
                     b.Navigation("Unit");
                 });
 
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.ZiyaretciGirisCikis", b =>
+                {
+                    b.HasOne("SiteYonetimi.Infrastructure.Entities.Shared.Unit", "Unit")
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Unit");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.AnaSayac", b =>
+                {
+                    b.Navigation("DaireSayaclari");
+
+                    b.Navigation("Okumalar");
+                });
+
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Building", b =>
                 {
                     b.Navigation("Units");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.DaireSayac", b =>
+                {
+                    b.Navigation("Okumalar");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Departman", b =>
+                {
+                    b.Navigation("IsEmirleri");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.GelirGrubu", b =>
+                {
+                    b.Navigation("GelirTanimlari");
+                });
+
+            modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.GiderGrubu", b =>
+                {
+                    b.Navigation("GiderTanimlari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.HesapPlani", b =>

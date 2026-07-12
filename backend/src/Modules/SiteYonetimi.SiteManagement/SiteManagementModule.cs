@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using SiteYonetimi.SiteManagement.Import.Services;
+using SiteYonetimi.SiteManagement.Report.Services;
 
 namespace SiteYonetimi.SiteManagement;
 
@@ -13,6 +14,7 @@ public static class SiteManagementModule
         services.AddValidatorsFromAssembly(typeof(SiteManagementModule).Assembly);
         services.AddScoped<IImportService, ImportService>();
         services.AddScoped<ExcelTemplateService>();
+        services.AddScoped<IReportService, ReportService>();
         return services;
     }
 }

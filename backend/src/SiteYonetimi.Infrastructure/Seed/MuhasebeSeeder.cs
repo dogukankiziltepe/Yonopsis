@@ -6,19 +6,19 @@ using SiteYonetimi.Shared.Enums;
 namespace SiteYonetimi.Infrastructure.Seed;
 
 /// <summary>
-/// Muhasebe modülü için tenant (site) bazlı seed iskeleti.
-/// Yeni bir site oluşturulduğunda varsayılan (site yönetimine özel,
-/// sadeleştirilmiş TDHP) hesap planı ile mali dönem seed edilir.
+/// Per-tenant (site) seed skeleton for the accounting module.
+/// When a new site is created, the default (site-management-specific,
+/// simplified uniform chart of accounts) and the open fiscal period are seeded.
 ///
-/// NOT (Faz 1): Bu seeder iskelettir. Site oluşturma akışına bağlanması
-/// (CreateSiteCommand içinde çağrılması) ileriki fazlarda yapılacaktır.
-/// Çağrı idempotenttir: ilgili site için hesap planı zaten varsa atlanır.
+/// NOTE (Phase 1): This seeder is a skeleton. Wiring it to the site-creation
+/// flow (calling it from CreateSiteCommand) will be done in later phases.
+/// The call is idempotent: skipped if a chart of accounts already exists for the site.
 /// </summary>
 public static class MuhasebeSeeder
 {
     /// <summary>
-    /// Bir site için varsayılan hesap planını ve açık mali dönemi seed eder.
-    /// SaveChanges çağırır.
+    /// Seeds the default chart of accounts and the open fiscal period for a site.
+    /// Calls SaveChanges.
     /// </summary>
     public static async Task SeedForSiteAsync(SharedTenantDbContext db, Guid siteId, int? yil = null)
     {
@@ -28,53 +28,53 @@ public static class MuhasebeSeeder
     }
 
     /// <summary>
-    /// Varsayılan hesap planını seed eder. Hesaplar arası hiyerarşi (ParentId),
-    /// seviye ve "fiş kesilebilir" (yaprak hesap) bilgisi otomatik hesaplanır.
+    /// Seeds the default chart of accounts. The hierarchy (ParentId),
+    /// level, and "voucher-eligible" (leaf account) flag are computed automatically.
     /// </summary>
     public static async Task SeedHesapPlaniAsync(SharedTenantDbContext db, Guid siteId)
     {
-        var zatenVar = await db.HesapPlani.IgnoreQueryFilters()
+        var alreadyExists = await db.HesapPlani.IgnoreQueryFilters()
             .AnyAsync(h => h.SiteId == siteId);
-        if (zatenVar) return;
+        if (alreadyExists) return;
 
-        // Kod, Ad, Kategori, Normal bakiye yönü — hiyerarşi koddan türetilir.
-        var tanimlar = VarsayilanPlan();
+        // Code, Name, Category, Normal balance direction — hierarchy derived from code.
+        var definitions = VarsayilanPlan();
 
-        // Kod -> tanım sözlüğü (parent çözümü için)
-        var kodSet = tanimlar.Select(t => t.Kod).ToHashSet();
+        // Code -> definition dictionary (for resolving parents)
+        var codeSet = definitions.Select(t => t.Kod).ToHashSet();
 
-        // Bir kodun en uzun (gerçek) önek-üst kodunu bul (örn. "770.01" -> "770", "100" -> "10").
-        string? ParentKodBul(string kod)
+        // Find the longest (closest) parent prefix code for a given code (e.g. "770.01" -> "770", "100" -> "10").
+        string? FindParentCode(string code)
         {
-            string? enUygun = null;
-            foreach (var aday in kodSet)
+            string? best = null;
+            foreach (var candidate in codeSet)
             {
-                if (aday == kod) continue;
-                if (kod.StartsWith(aday) && (enUygun is null || aday.Length > enUygun.Length))
-                    enUygun = aday;
+                if (candidate == code) continue;
+                if (code.StartsWith(candidate) && (best is null || candidate.Length > best.Length))
+                    best = candidate;
             }
-            return enUygun;
+            return best;
         }
 
-        // Yaprak (alt hesabı olmayan) hesaplara fiş kesilebilir.
-        bool YaprakMi(string kod) => !kodSet.Any(a => a != kod && a.StartsWith(kod));
+        // Leaf accounts (no children) are voucher-eligible.
+        bool IsLeaf(string code) => !codeSet.Any(a => a != code && a.StartsWith(code));
 
-        // Kod -> oluşturulan entity (ParentId ataması için)
-        var olusturulan = new Dictionary<string, HesapPlani>();
+        // Code -> created entity (for ParentId assignment)
+        var created = new Dictionary<string, HesapPlani>();
 
-        // Seviye = üst zincir uzunluğu + 1; üstler önce işlensin diye koda göre sırala.
-        foreach (var t in tanimlar.OrderBy(t => t.Kod, StringComparer.Ordinal))
+        // Level = ancestor chain length + 1; sort by code so parents are processed first.
+        foreach (var t in definitions.OrderBy(t => t.Kod, StringComparer.Ordinal))
         {
-            var parentKod = ParentKodBul(t.Kod);
-            var seviye = 1;
-            var p = parentKod;
+            var parentCode = FindParentCode(t.Kod);
+            var level = 1;
+            var p = parentCode;
             while (p is not null)
             {
-                seviye++;
-                p = ParentKodBul(p);
+                level++;
+                p = FindParentCode(p);
             }
 
-            var hesap = new HesapPlani
+            var account = new HesapPlani
             {
                 SiteId = siteId,
                 HesapKodu = t.Kod,
@@ -82,31 +82,31 @@ public static class MuhasebeSeeder
                 HesapTipi = HesapTipi.Tekduzen,
                 HesapKategorisi = t.Kategori,
                 NormalBakiye = t.Bakiye,
-                Seviye = seviye,
-                ParentId = parentKod is not null && olusturulan.TryGetValue(parentKod, out var pe) ? pe.Id : null,
-                FisKesilebilirMi = YaprakMi(t.Kod),
+                Seviye = level,
+                ParentId = parentCode is not null && created.TryGetValue(parentCode, out var pe) ? pe.Id : null,
+                FisKesilebilirMi = IsLeaf(t.Kod),
                 AktifMi = true
             };
 
-            olusturulan[t.Kod] = hesap;
-            db.HesapPlani.Add(hesap);
+            created[t.Kod] = account;
+            db.HesapPlani.Add(account);
         }
     }
 
     /// <summary>
-    /// İlgili yıl için açık mali dönem yoksa oluşturur.
+    /// Creates an open fiscal period for the given year if one does not already exist.
     /// </summary>
     public static async Task SeedAcikDonemAsync(SharedTenantDbContext db, Guid siteId, int yil)
     {
-        var zatenVar = await db.MuhasebeDonemler.IgnoreQueryFilters()
+        var alreadyExists = await db.MuhasebeDonemler.IgnoreQueryFilters()
             .AnyAsync(d => d.SiteId == siteId && d.Yil == yil);
-        if (zatenVar) return;
+        if (alreadyExists) return;
 
         db.MuhasebeDonemler.Add(new MuhasebeDonem
         {
             SiteId = siteId,
             Yil = yil,
-            Ad = $"{yil} Mali Yılı",
+            Ad = $"{yil} Fiscal Year",
             BaslangicTarihi = new DateOnly(yil, 1, 1),
             BitisTarihi = new DateOnly(yil, 12, 31),
             Durum = DonemDurumu.Acik,
@@ -117,48 +117,48 @@ public static class MuhasebeSeeder
     private record HesapTanim(string Kod, string Ad, HesapKategorisi Kategori, NormalBakiye Bakiye);
 
     /// <summary>
-    /// Site yönetimine özel, sadeleştirilmiş varsayılan hesap planı (bkz. görev §11).
-    /// Mali müşavir ile gözden geçirilip tenant bazında özelleştirilebilir.
+    /// Site-management-specific simplified default chart of accounts (see task §11).
+    /// Can be reviewed with a financial advisor and customized per tenant.
     /// </summary>
     private static List<HesapTanim> VarsayilanPlan() => new()
     {
-        // 1 — DÖNEN VARLIKLAR
-        new("1",   "DÖNEN VARLIKLAR",                 HesapKategorisi.Aktif,  NormalBakiye.Borc),
-        new("10",  "HAZIR DEĞERLER",                  HesapKategorisi.Aktif,  NormalBakiye.Borc),
-        new("100", "KASA",                            HesapKategorisi.Aktif,  NormalBakiye.Borc),
-        new("102", "BANKALAR",                        HesapKategorisi.Aktif,  NormalBakiye.Borc),
-        new("12",  "TİCARİ ALACAKLAR",                HesapKategorisi.Aktif,  NormalBakiye.Borc),
-        new("120", "ALICILAR (AİDAT ALACAKLARI)",     HesapKategorisi.Aktif,  NormalBakiye.Borc),
-        new("126", "VERİLEN DEPOZİTO VE TEMİNATLAR",  HesapKategorisi.Aktif,  NormalBakiye.Borc),
+        // 1 — CURRENT ASSETS
+        new("1",   "CURRENT ASSETS",                          HesapKategorisi.Aktif,  NormalBakiye.Borc),
+        new("10",  "LIQUID ASSETS",                           HesapKategorisi.Aktif,  NormalBakiye.Borc),
+        new("100", "CASH",                                    HesapKategorisi.Aktif,  NormalBakiye.Borc),
+        new("102", "BANKS",                                   HesapKategorisi.Aktif,  NormalBakiye.Borc),
+        new("12",  "TRADE RECEIVABLES",                       HesapKategorisi.Aktif,  NormalBakiye.Borc),
+        new("120", "BUYERS (DUES RECEIVABLES)",               HesapKategorisi.Aktif,  NormalBakiye.Borc),
+        new("126", "DEPOSITS AND GUARANTEES GIVEN",           HesapKategorisi.Aktif,  NormalBakiye.Borc),
 
-        // 3 — KISA VADELİ YABANCI KAYNAKLAR
-        new("3",   "KISA VADELİ YABANCI KAYNAKLAR",   HesapKategorisi.Pasif,  NormalBakiye.Alacak),
-        new("32",  "TİCARİ BORÇLAR",                  HesapKategorisi.Pasif,  NormalBakiye.Alacak),
-        new("320", "SATICILAR (TEDARİKÇİLER)",        HesapKategorisi.Pasif,  NormalBakiye.Alacak),
-        new("326", "ALINAN DEPOZİTO VE TEMİNATLAR",   HesapKategorisi.Pasif,  NormalBakiye.Alacak),
-        new("335", "PERSONELE BORÇLAR",               HesapKategorisi.Pasif,  NormalBakiye.Alacak),
-        new("360", "ÖDENECEK VERGİ VE FONLAR",        HesapKategorisi.Pasif,  NormalBakiye.Alacak),
+        // 3 — SHORT-TERM LIABILITIES
+        new("3",   "SHORT-TERM LIABILITIES",                  HesapKategorisi.Pasif,  NormalBakiye.Alacak),
+        new("32",  "TRADE PAYABLES",                          HesapKategorisi.Pasif,  NormalBakiye.Alacak),
+        new("320", "SUPPLIERS (VENDORS)",                     HesapKategorisi.Pasif,  NormalBakiye.Alacak),
+        new("326", "DEPOSITS AND GUARANTEES RECEIVED",        HesapKategorisi.Pasif,  NormalBakiye.Alacak),
+        new("335", "PAYABLES TO STAFF",                       HesapKategorisi.Pasif,  NormalBakiye.Alacak),
+        new("360", "TAXES AND FUNDS PAYABLE",                 HesapKategorisi.Pasif,  NormalBakiye.Alacak),
 
-        // 6 — GELİR TABLOSU HESAPLARI
-        new("6",   "GELİR TABLOSU HESAPLARI",         HesapKategorisi.Gelir,  NormalBakiye.Alacak),
-        new("60",  "BRÜT SATIŞLAR / GELİRLER",        HesapKategorisi.Gelir,  NormalBakiye.Alacak),
-        new("600", "AİDAT VE ORTAK GİDER GELİRLERİ",  HesapKategorisi.Gelir,  NormalBakiye.Alacak),
-        new("642", "GECİKME FAİZİ GELİRLERİ",         HesapKategorisi.Gelir,  NormalBakiye.Alacak),
+        // 6 — INCOME STATEMENT ACCOUNTS
+        new("6",   "INCOME STATEMENT ACCOUNTS",               HesapKategorisi.Gelir,  NormalBakiye.Alacak),
+        new("60",  "GROSS SALES / REVENUES",                  HesapKategorisi.Gelir,  NormalBakiye.Alacak),
+        new("600", "DUES AND COMMON EXPENSE REVENUES",        HesapKategorisi.Gelir,  NormalBakiye.Alacak),
+        new("642", "LATE PAYMENT INTEREST REVENUES",          HesapKategorisi.Gelir,  NormalBakiye.Alacak),
 
-        // 7 — MALİYET / GİDER HESAPLARI
-        new("7",      "MALİYET HESAPLARI",            HesapKategorisi.Gider,  NormalBakiye.Borc),
-        new("77",     "GENEL YÖNETİM GİDERLERİ",      HesapKategorisi.Gider,  NormalBakiye.Borc),
-        new("770",    "GENEL YÖNETİM GİDERLERİ",      HesapKategorisi.Gider,  NormalBakiye.Borc),
-        new("770.01", "Elektrik",                     HesapKategorisi.Gider,  NormalBakiye.Borc),
-        new("770.02", "Su",                           HesapKategorisi.Gider,  NormalBakiye.Borc),
-        new("770.03", "Doğalgaz",                     HesapKategorisi.Gider,  NormalBakiye.Borc),
-        new("770.04", "Asansör Bakım",                HesapKategorisi.Gider,  NormalBakiye.Borc),
-        new("770.05", "Temizlik",                     HesapKategorisi.Gider,  NormalBakiye.Borc),
-        new("770.06", "Güvenlik",                     HesapKategorisi.Gider,  NormalBakiye.Borc),
-        new("770.07", "Peyzaj/Bahçe",                 HesapKategorisi.Gider,  NormalBakiye.Borc),
-        new("770.08", "Sigorta",                      HesapKategorisi.Gider,  NormalBakiye.Borc),
-        new("770.09", "Personel Maaş",                HesapKategorisi.Gider,  NormalBakiye.Borc),
-        new("770.10", "Ortak Alan Bakım/Onarım",      HesapKategorisi.Gider,  NormalBakiye.Borc),
-        new("770.99", "Diğer Giderler",               HesapKategorisi.Gider,  NormalBakiye.Borc),
+        // 7 — COST / EXPENSE ACCOUNTS
+        new("7",      "COST ACCOUNTS",                        HesapKategorisi.Gider,  NormalBakiye.Borc),
+        new("77",     "GENERAL ADMINISTRATIVE EXPENSES",      HesapKategorisi.Gider,  NormalBakiye.Borc),
+        new("770",    "GENERAL ADMINISTRATIVE EXPENSES",      HesapKategorisi.Gider,  NormalBakiye.Borc),
+        new("770.01", "Electricity",                          HesapKategorisi.Gider,  NormalBakiye.Borc),
+        new("770.02", "Water",                                HesapKategorisi.Gider,  NormalBakiye.Borc),
+        new("770.03", "Natural Gas",                          HesapKategorisi.Gider,  NormalBakiye.Borc),
+        new("770.04", "Elevator Maintenance",                 HesapKategorisi.Gider,  NormalBakiye.Borc),
+        new("770.05", "Cleaning",                             HesapKategorisi.Gider,  NormalBakiye.Borc),
+        new("770.06", "Security",                             HesapKategorisi.Gider,  NormalBakiye.Borc),
+        new("770.07", "Landscaping/Garden",                   HesapKategorisi.Gider,  NormalBakiye.Borc),
+        new("770.08", "Insurance",                            HesapKategorisi.Gider,  NormalBakiye.Borc),
+        new("770.09", "Staff Salaries",                       HesapKategorisi.Gider,  NormalBakiye.Borc),
+        new("770.10", "Common Area Maintenance/Repair",       HesapKategorisi.Gider,  NormalBakiye.Borc),
+        new("770.99", "Other Expenses",                       HesapKategorisi.Gider,  NormalBakiye.Borc),
     };
 }
