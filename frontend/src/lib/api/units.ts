@@ -1,5 +1,6 @@
 import { siteApi } from './client'
 import { UnitSummary, UnitDetail, CreateUnitDto, UpdateUnitDto } from '@/types/unit'
+import { UnitFullDetailDto } from '@/types/unitDetail'
 
 export const unitsApi = {
   getAll: (buildingId?: string) =>
@@ -7,6 +8,9 @@ export const unitsApi = {
 
   getById: (id: string) =>
     siteApi.get<UnitDetail>(`/api/units/${id}`),
+
+  getFullDetail: (id: string) =>
+    siteApi.get<UnitFullDetailDto>(`/api/units/${id}/detail`),
 
   create: (data: CreateUnitDto) =>
     siteApi.post<{ id: string }>('/api/units', data),

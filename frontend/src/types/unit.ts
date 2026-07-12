@@ -54,6 +54,9 @@ export interface UnitDetail {
   tenantUserId?: string
   tenantFullName?: string
   description?: string
+  code2?: string
+  code3?: string
+  deliveryDate?: string
   createdAt: string
   updatedAt: string
 }
@@ -74,6 +77,9 @@ export interface CreateUnitDto {
   internet?: string
   hasDask: boolean
   description?: string
+  code2?: string
+  code3?: string
+  deliveryDate?: string
 }
 
 export interface UpdateUnitDto extends CreateUnitDto {}

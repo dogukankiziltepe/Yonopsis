@@ -38,6 +38,9 @@ public class CreateUnitCommandHandler : IRequestHandler<CreateUnitCommand, Resul
             Internet = request.Dto.Internet,
             HasDask = request.Dto.HasDask,
             Description = request.Dto.Description,
+            Code2 = request.Dto.Code2,
+            Code3 = request.Dto.Code3,
+            DeliveryDate = request.Dto.DeliveryDate,
         };
 
         _db.Units.Add(unit);
@@ -57,5 +60,7 @@ public class CreateUnitDtoValidator : AbstractValidator<CreateUnitDto>
         RuleFor(x => x.Floor).MaximumLength(50);
         RuleFor(x => x.Internet).MaximumLength(100);
         RuleFor(x => x.Description).MaximumLength(500);
+        RuleFor(x => x.Code2).MaximumLength(20);
+        RuleFor(x => x.Code3).MaximumLength(20);
     }
 }

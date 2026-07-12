@@ -23,6 +23,9 @@ public class Unit
     public Guid? OwnerUserId { get; set; }
     public Guid? TenantUserId { get; set; }
     public string? Description { get; set; }
+    public string? Code2 { get; set; }
+    public string? Code3 { get; set; }
+    public DateTime? DeliveryDate { get; set; }
     public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

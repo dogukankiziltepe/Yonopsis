@@ -17,7 +17,10 @@ public record CreateUnitDto(
     UnitDirection? Direction,
     string? Internet,
     bool HasDask,
-    string? Description);
+    string? Description,
+    string? Code2,
+    string? Code3,
+    DateTime? DeliveryDate);
 
 public record UpdateUnitDto(
     Guid BuildingId,
@@ -34,7 +37,10 @@ public record UpdateUnitDto(
     UnitDirection? Direction,
     string? Internet,
     bool HasDask,
-    string? Description);
+    string? Description,
+    string? Code2,
+    string? Code3,
+    DateTime? DeliveryDate);
 
 public record UnitSummaryDto(
     Guid Id,
@@ -74,6 +80,9 @@ public record UnitDetailDto(
     Guid? TenantUserId,
     string? TenantFullName,
     string? Description,
+    string? Code2,
+    string? Code3,
+    DateTime? DeliveryDate,
     DateTime CreatedAt,
     DateTime UpdatedAt);
 
