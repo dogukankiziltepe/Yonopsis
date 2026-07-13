@@ -16,6 +16,7 @@ public class PersonUnitHistory
     public string? ContactPerson { get; set; }
     public string? Notes { get; set; }
     public string? BankPaymentCode { get; set; }
+    public decimal? SharePercentage { get; set; }
     public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

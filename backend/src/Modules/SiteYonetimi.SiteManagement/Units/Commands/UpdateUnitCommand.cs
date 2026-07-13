@@ -39,6 +39,9 @@ public class UpdateUnitCommandHandler : IRequestHandler<UpdateUnitCommand, Resul
         unit.Internet = request.Dto.Internet;
         unit.HasDask = request.Dto.HasDask;
         unit.Description = request.Dto.Description;
+        unit.Code2 = request.Dto.Code2;
+        unit.Code3 = request.Dto.Code3;
+        unit.DeliveryDate = request.Dto.DeliveryDate;
         unit.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(cancellationToken);
@@ -56,5 +59,7 @@ public class UpdateUnitDtoValidator : AbstractValidator<UpdateUnitDto>
         RuleFor(x => x.Floor).MaximumLength(50);
         RuleFor(x => x.Internet).MaximumLength(100);
         RuleFor(x => x.Description).MaximumLength(500);
+        RuleFor(x => x.Code2).MaximumLength(20);
+        RuleFor(x => x.Code3).MaximumLength(20);
     }
 }

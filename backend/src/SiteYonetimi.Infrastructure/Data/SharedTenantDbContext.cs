@@ -124,6 +124,8 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.MonthlyFee).HasPrecision(18, 2);
             e.Property(x => x.Internet).HasMaxLength(100);
             e.Property(x => x.Description).HasMaxLength(500);
+            e.Property(x => x.Code2).HasMaxLength(20);
+            e.Property(x => x.Code3).HasMaxLength(20);
             e.HasOne(x => x.UnitType).WithMany().HasForeignKey(x => x.UnitTypeId).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
             e.HasQueryFilter(x => !x.IsDeleted);
         });
@@ -204,6 +206,7 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.ContactPerson).HasMaxLength(200);
             e.Property(x => x.Notes).HasMaxLength(500);
             e.Property(x => x.BankPaymentCode).HasMaxLength(50);
+            e.Property(x => x.SharePercentage).HasPrecision(5, 2);
             e.HasOne(x => x.Unit).WithMany().HasForeignKey(x => x.UnitId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => new { x.SiteId, x.UnitId });
             e.HasIndex(x => new { x.SiteId, x.PersonUserId });

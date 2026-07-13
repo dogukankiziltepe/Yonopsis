@@ -102,6 +102,9 @@ public class GetMyUnitAsTenantQueryHandler : IRequestHandler<GetMyUnitAsTenantQu
             unit.TenantUserId,
             tenantFullName,
             unit.Description,
+            unit.Code2,
+            unit.Code3,
+            unit.DeliveryDate,
             unit.CreatedAt,
             unit.UpdatedAt);
 

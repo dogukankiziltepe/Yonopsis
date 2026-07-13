@@ -1,10 +1,9 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Plus,
-  ChevronLeft,
-  ChevronRight,
   X,
   Home,
   AlertCircle,
@@ -19,11 +18,8 @@ import {
   UnitStatus,
   UnitStatusLabel,
   CreateUnitDto,
-  UpdateUnitDto,
 } from '@/types/unit'
 import { Building } from '@/types/building'
-
-type PanelMode = 'create' | 'edit'
 
 const emptyForm = (): CreateUnitDto => ({
   buildingId: '',
@@ -33,16 +29,14 @@ const emptyForm = (): CreateUnitDto => ({
 })
 
 export default function UnitsPage() {
+  const router = useRouter()
   const [units, setUnits] = useState<UnitSummary[]>([])
   const [buildings, setBuildings] = useState<Building[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Panel state
+  // Panel state (create only)
   const [panelOpen, setPanelOpen] = useState(false)
-  const [panelMode, setPanelMode] = useState<PanelMode>('create')
-  const [selectedUnit, setSelectedUnit] = useState<UnitSummary | null>(null)
-  const [panelIndex, setPanelIndex] = useState(0)
 
   // Form state
   const [form, setForm] = useState<CreateUnitDto>(emptyForm())
@@ -77,34 +71,8 @@ export default function UnitsPage() {
   }
 
   const openCreate = () => {
-    setPanelMode('create')
-    setSelectedUnit(null)
     resetForm()
     setPanelOpen(true)
-  }
-
-  const openEdit = (unit: UnitSummary, index: number) => {
-    setPanelMode('edit')
-    setSelectedUnit(unit)
-    setPanelIndex(index)
-    setForm({
-      buildingId: unit.buildingId,
-      doorNumber: unit.doorNumber,
-      code: unit.code,
-      floor: unit.floor,
-      status: unit.status,
-      monthlyFee: unit.monthlyFee,
-      hasDask: unit.hasDask,
-    })
-    setFormErrors({})
-    setPanelOpen(true)
-  }
-
-  const navigatePanel = (dir: 'prev' | 'next') => {
-    const newIndex = dir === 'prev' ? panelIndex - 1 : panelIndex + 1
-    if (newIndex >= 0 && newIndex < units.length) {
-      openEdit(units[newIndex], newIndex)
-    }
   }
 
   const validateForm = () => {
@@ -119,28 +87,13 @@ export default function UnitsPage() {
     if (!validateForm()) return
     setSaving(true)
     try {
-      if (panelMode === 'create') {
-        await unitsApi.create(form)
-      } else if (selectedUnit) {
-        await unitsApi.update(selectedUnit.id, form as UpdateUnitDto)
-      }
+      await unitsApi.create(form)
       setPanelOpen(false)
       load()
     } catch {
       setError('Kaydetme işlemi başarısız.')
     } finally {
       setSaving(false)
-    }
-  }
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Bu daireyi silmek istediğinize emin misiniz?')) return
-    try {
-      await unitsApi.delete(id)
-      if (selectedUnit?.id === id) setPanelOpen(false)
-      load()
-    } catch {
-      setError('Silme işlemi başarısız.')
     }
   }
 
@@ -197,15 +150,11 @@ export default function UnitsPage() {
                 </td>
               </tr>
             ) : (
-              units.map((u, index) => (
+              units.map((u) => (
                 <tr
                   key={u.id}
-                  onClick={() => openEdit(u, index)}
-                  className={`border-b last:border-0 cursor-pointer transition-colors ${
-                    selectedUnit?.id === u.id && panelOpen
-                      ? 'bg-accent'
-                      : 'hover:bg-muted/30'
-                  }`}
+                  onClick={() => router.push(`/units/${u.id}`)}
+                  className="border-b last:border-0 cursor-pointer transition-colors hover:bg-muted/30"
                 >
                   <td className="px-3 py-2.5 font-medium">{u.doorNumber}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{u.buildingName ?? '-'}</td>
@@ -219,45 +168,21 @@ export default function UnitsPage() {
         </table>
       </div>
 
-      {/* Side Panel */}
+      {/* Side Panel (create only) */}
       {panelOpen && (
         <div className="fixed right-0 top-0 h-screen w-[420px] bg-background border-l shadow-2xl flex flex-col z-50">
           {/* Panel header */}
           <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-            <h2 className="text-sm font-semibold">
-              {panelMode === 'create' ? 'Yeni Daire' : 'Daire Düzenle'}
-            </h2>
-            <div className="flex items-center gap-0.5">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                disabled={panelMode === 'create' || panelIndex <= 0}
-                onClick={() => navigatePanel('prev')}
-                title="Önceki kayıt"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                disabled={panelMode === 'create' || panelIndex >= units.length - 1}
-                onClick={() => navigatePanel('next')}
-                title="Sonraki kayıt"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => setPanelOpen(false)}
-                title="Kapat"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <h2 className="text-sm font-semibold">Yeni Daire</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setPanelOpen(false)}
+              title="Kapat"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Form */}
@@ -363,15 +288,6 @@ export default function UnitsPage() {
               <Button size="sm" onClick={handleSave} disabled={saving} className="flex-1">
                 {saving ? 'Kaydediliyor...' : 'Kaydet'}
               </Button>
-              {panelMode === 'edit' && selectedUnit && (
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => handleDelete(selectedUnit.id)}
-                >
-                  Sil
-                </Button>
-              )}
             </div>
           </div>
         </div>

@@ -76,6 +76,9 @@ public class GetUnitByIdQueryHandler : IRequestHandler<GetUnitByIdQuery, Result<
             unit.TenantUserId,
             tenantFullName,
             unit.Description,
+            unit.Code2,
+            unit.Code3,
+            unit.DeliveryDate,
             unit.CreatedAt,
             unit.UpdatedAt
         );
