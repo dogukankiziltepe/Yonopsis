@@ -206,3 +206,212 @@ export interface TopluBorclandirmaSonuc {
   batchId: string
   olusturulanSayisi: number
 }
+
+// ── Cari Hesap Picker ────────────────────────────────────────────────────────
+export enum CariTuru { Kiraci = 0, EvSahibi = 1, Tedarikci = 2, Personel = 3, Diger = 4 }
+export const CariTuruLabel: Record<CariTuru, string> = {
+  [CariTuru.Kiraci]: 'Kiracı',
+  [CariTuru.EvSahibi]: 'Ev Sahibi',
+  [CariTuru.Tedarikci]: 'Tedarikçi',
+  [CariTuru.Personel]: 'Personel',
+  [CariTuru.Diger]: 'Diğer',
+}
+export interface CariHesapPicker {
+  id: string
+  hesapKodu: string
+  hesapAdi: string
+  cariTuru?: CariTuru
+}
+
+// ── Ödeme Makbuzu ────────────────────────────────────────────────────────────
+export interface OdemeMakbuzu {
+  id: string
+  evrakNo: string
+  islemTarihi: string
+  tarih: string
+  cariHesapId: string
+  cariHesapAdi?: string
+  kasaBankaId: string
+  kasaBankaAdi?: string
+  giderTanimiId: string
+  giderTanimiAdi?: string
+  tutar: number
+  aciklama?: string
+  dagitimYapilacak: boolean
+  createdAt: string
+}
+export interface CreateOdemeMakbuzuDto {
+  tarih: string
+  cariHesapId: string
+  kasaBankaId: string
+  giderTanimiId: string
+  tutar: number
+  aciklama?: string
+  dagitimYapilacak: boolean
+}
+export type UpdateOdemeMakbuzuDto = CreateOdemeMakbuzuDto
+
+// ── Gelir Tahsilat Makbuzu (Ödeme Makbuzu'nun ikizi — bağımsız gelir kaydı) ──
+export interface GelirTahsilatMakbuzu {
+  id: string
+  evrakNo: string
+  islemTarihi: string
+  tarih: string
+  cariHesapId: string
+  cariHesapAdi?: string
+  kasaBankaId: string
+  kasaBankaAdi?: string
+  gelirTanimiId: string
+  gelirTanimiAdi?: string
+  tutar: number
+  aciklama?: string
+  dagitimYapilacak: boolean
+  createdAt: string
+}
+export interface CreateGelirTahsilatMakbuzuDto {
+  tarih: string
+  cariHesapId: string
+  kasaBankaId: string
+  gelirTanimiId: string
+  tutar: number
+  aciklama?: string
+  dagitimYapilacak: boolean
+}
+export type UpdateGelirTahsilatMakbuzuDto = CreateGelirTahsilatMakbuzuDto
+
+// ── Devir Bakiye ─────────────────────────────────────────────────────────────
+export interface DevirBakiye {
+  id: string
+  evrakNo: string
+  tarih: string
+  unitId?: string
+  unitDoorNumber?: string
+  borcluUserId?: string
+  borcluAdSoyad?: string
+  borcluRol?: UserType
+  tutar: number
+  aciklama?: string
+  createdAt: string
+}
+export interface CreateDevirBakiyeDto {
+  tarih: string
+  unitId?: string
+  borcluUserId?: string
+  borcluRol?: UserType
+  tutar: number
+  aciklama?: string
+}
+export type UpdateDevirBakiyeDto = CreateDevirBakiyeDto
+
+// ── İade Makbuzu ─────────────────────────────────────────────────────────────
+export interface IadeMakbuzu {
+  id: string
+  evrakNo: string
+  tarih: string
+  borcluUserId?: string
+  borcluAdSoyad?: string
+  borcluRol?: UserType
+  kasaBankaId?: string
+  kasaBankaAdi?: string
+  tutar: number
+  aciklama?: string
+  createdAt: string
+}
+export interface CreateIadeMakbuzuDto {
+  tarih: string
+  borcluUserId?: string
+  borcluRol?: UserType
+  kasaBankaId?: string
+  tutar: number
+  aciklama?: string
+}
+export type UpdateIadeMakbuzuDto = CreateIadeMakbuzuDto
+
+// ── Kişilere Göre Finansal Durum ─────────────────────────────────────────────
+export interface KisiFinansalDurumSatiri {
+  personUserId: string
+  adSoyad: string
+  borcTutari: number
+  gecikme: number
+  iadeEdilen: number
+  odenen: number
+  borc: number
+  alacak: number
+  bakiye: number
+  ba: string // "B" | "A"
+}
+
+export interface KisiOzet {
+  personUserId: string
+  adSoyad: string
+  email?: string
+  telefon?: string
+}
+
+export interface FinansalHareket {
+  id: string
+  kaynak: string // "Borc" | "Tahsilat" | "Devir"
+  evrakTarihi: string
+  sonOdemeTarihi?: string
+  aciklama?: string
+  borc: number
+  tazminat: number
+  alacak: number
+  yurudakiBakiye: number
+}
+
+export interface GelirGrubuFinansal {
+  gelirGrubuId?: string
+  grupAdi: string
+  borc: number
+  tazminat: number
+  alacak: number
+  bakiye: number
+  hareketler: FinansalHareket[]
+}
+
+export interface DaireFinansal {
+  unitId?: string
+  doorNumber: string
+  borc: number
+  tazminat: number
+  alacak: number
+  bakiye: number
+  kategoriler: GelirGrubuFinansal[]
+}
+
+export interface KisiFinansalDetay {
+  kisi: KisiOzet
+  toplamBorc: number
+  toplamAlacak: number
+  toplamBakiye: number
+  daireler: DaireFinansal[]
+}
+
+// ── Banka Hareketi Excel İçe Aktarma ─────────────────────────────────────────
+export interface BankaHareketiImportRow {
+  rowIndex: number
+  tarih?: string
+  aciklama?: string
+  referansNo?: string
+  tutar?: number
+  isValid: boolean
+  hatalar: string[]
+}
+export interface BankaHareketiImportPreview {
+  toplamSatir: number
+  gecerliSatir: number
+  satirlar: BankaHareketiImportRow[]
+}
+export interface BankaHareketiImportConfirmItem {
+  tarih: string
+  aciklama: string
+  referansNo?: string
+  tutar: number
+}
+export interface BankaHareketiImportConfirmRequest {
+  items: BankaHareketiImportConfirmItem[]
+}
+export interface BankaHareketiImportSonuc {
+  olusturulanSayisi: number
+}

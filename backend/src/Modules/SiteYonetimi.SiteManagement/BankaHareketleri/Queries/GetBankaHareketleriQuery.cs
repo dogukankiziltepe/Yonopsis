@@ -2,11 +2,12 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SiteYonetimi.Infrastructure.Data;
 using SiteYonetimi.Shared.Common;
+using SiteYonetimi.Shared.Enums;
 using SiteYonetimi.SiteManagement.BankaHareketleri.DTOs;
 
 namespace SiteYonetimi.SiteManagement.BankaHareketleri.Queries;
 
-public record GetBankaHareketleriQuery(Guid SiteId, Guid? KasaBankaId = null, int Page = 1, int PageSize = 20)
+public record GetBankaHareketleriQuery(Guid SiteId, Guid? KasaBankaId = null, BankaHareketiDurum? Durum = null, int Page = 1, int PageSize = 20)
     : IRequest<Result<PaginatedResult<BankaHareketiDto>>>;
 
 public class GetBankaHareketleriQueryHandler : IRequestHandler<GetBankaHareketleriQuery, Result<PaginatedResult<BankaHareketiDto>>>
@@ -22,6 +23,9 @@ public class GetBankaHareketleriQueryHandler : IRequestHandler<GetBankaHareketle
 
         if (request.KasaBankaId.HasValue)
             query = query.Where(x => x.KasaBankaId == request.KasaBankaId.Value);
+
+        if (request.Durum.HasValue)
+            query = query.Where(x => x.Durum == request.Durum.Value);
 
         var total = await query.CountAsync(cancellationToken);
         var items = await query

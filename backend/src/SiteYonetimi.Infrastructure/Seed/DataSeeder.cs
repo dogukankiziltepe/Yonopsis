@@ -230,35 +230,31 @@ public static class DataSeeder
             new { Name = "OnayBekleyenGuncellemeler",     Label = "Pending Updates",                 Route = "/persons/onay-bekleyen-guncellemeler",          Icon = (string?)"user-check",       Order = 3 },
             new { Name = "Personel",                      Label = "Staff",                           Route = "/personel",                                     Icon = (string?)"circle-user",      Order = 4 },
             // --- FinansGroup ---
-            new { Name = "BankaHareketleri",      Label = "Bank Transactions",          Route = "/finans/banka-hareketleri",         Icon = (string?)"landmark",       Order = 3  },
-            new { Name = "BorcMakbuzu",           Label = "Debt Receipt",               Route = "/finans/borc-makbuzu",              Icon = (string?)"file",           Order = 4  },
-            new { Name = "TahsilatMakbuzu",       Label = "Collection Receipt",         Route = "/finans/tahsilat-makbuzu",          Icon = (string?)"receipt",        Order = 5  },
+            new { Name = "KisiFinansalDurum",     Label = "Financial Status by Person", Route = "/finans/kisi-finansal-durum",       Icon = (string?)"pie-chart",      Order = 1  },
+            new { Name = "BankaHareketleri",      Label = "Bank Transactions",          Route = "/finans/banka-hareketleri",         Icon = (string?)"landmark",       Order = 2  },
+            new { Name = "BorclandirmaVeTahsilatGroup", Label = "Charging & Collection", Route = "#",                                 Icon = (string?)"credit-card",    Order = 3  },
+            new { Name = "GiderGroup",            Label = "Expense",                    Route = "#",                                 Icon = (string?)"trending-down",  Order = 4  },
+            new { Name = "GelirGroup",            Label = "Income",                     Route = "#",                                 Icon = (string?)"trending-up",    Order = 5  },
+            // --- BorclandirmaVeTahsilatGroup ---
+            new { Name = "BorcMakbuzu",           Label = "Debt Receipt",               Route = "/finans/borc-makbuzu",              Icon = (string?)"file",           Order = 1  },
+            new { Name = "TahsilatMakbuzu",       Label = "Collection Receipt",         Route = "/finans/tahsilat-makbuzu",          Icon = (string?)"receipt",        Order = 2  },
+            new { Name = "DetayliTahsilat",       Label = "Detailed Collection Entry",  Route = "/finans/detayli-tahsilat",          Icon = (string?)"receipt",        Order = 3  },
+            new { Name = "IadeMakbuzu",           Label = "Refund Receipt",             Route = "/finans/iade-makbuzu",              Icon = (string?)"receipt",        Order = 4  },
+            new { Name = "DevirBakiye",           Label = "Opening Balance Entry",      Route = "/finans/devir-bakiye",              Icon = (string?)"arrow-left-right", Order = 5  },
             new { Name = "TopluBorclandirma",     Label = "Bulk Charging",              Route = "/finans/toplu-borclandirma",        Icon = (string?)"credit-card",    Order = 6  },
-            new { Name = "TopluTahsilat",         Label = "Bulk Collection",            Route = "/finans/toplu-tahsilat",            Icon = (string?)"credit-card",    Order = 7  },
-            new { Name = "DetayliTahsilat",       Label = "Detailed Collection Entry",  Route = "/finans/detayli-tahsilat",          Icon = (string?)"receipt",        Order = 8  },
-            new { Name = "OtomatikBorclandirma",  Label = "Automatic Charging",         Route = "/finans/otomatik-borclandirma",     Icon = (string?)"calendar-check", Order = 9  },
-            new { Name = "GelirFaturalari",       Label = "Income Invoices",            Route = "/finans/gelir/faturalar",           Icon = (string?)"file-text",      Order = 10 },
-            new { Name = "GelirFisi",             Label = "Income Voucher",             Route = "/finans/gelir/fis",                 Icon = (string?)"file",           Order = 11 },
-            new { Name = "GelirDagitimi",         Label = "Income Distribution",        Route = "/finans/gelir-dagitimi",            Icon = (string?)"trending-up",    Order = 12 },
-            new { Name = "TahsilatMakbuzlariGelir", Label = "Collection Receipts",      Route = "/finans/gelir/tahsilat-makbuzlari", Icon = (string?)"receipt",        Order = 13 },
-            new { Name = "GiderFaturalari",       Label = "Expense Invoices",           Route = "/finans/gider/faturalar",           Icon = (string?)"file-text",      Order = 14 },
-            new { Name = "GiderFisi",             Label = "Expense Voucher",            Route = "/finans/gider/fis",                 Icon = (string?)"file",           Order = 15 },
-            new { Name = "GiderDagitimi",         Label = "Expense Distribution",       Route = "/finans/gider-dagitimi",            Icon = (string?)"trending-down",  Order = 16 },
-            new { Name = "IadeMakbuzu",           Label = "Refund Receipt",             Route = "/finans/iade-makbuzu",              Icon = (string?)"receipt",        Order = 17 },
-            new { Name = "HesaplarArasiVirman",   Label = "Inter-Account Transfer",     Route = "/finans/virman",                    Icon = (string?)"arrow-left-right", Order = 18 },
-            new { Name = "VirmanFisDetaylari",    Label = "Transfer Voucher Details",   Route = "/finans/virman-fis-detaylari",      Icon = (string?)"file",           Order = 19 },
-            new { Name = "KasaTransfer",          Label = "Cash Transfer Voucher",      Route = "/finans/kasa-transfer",             Icon = (string?)"arrow-left-right", Order = 20 },
-            new { Name = "DevirBakiye",           Label = "Opening Balance Entry",      Route = "/finans/devir-bakiye",              Icon = (string?)"arrow-left-right", Order = 21 },
-            new { Name = "CariHesapAcilisFisi",   Label = "Receivable Opening Voucher", Route = "/finans/acilis-fisleri/cari-hesap", Icon = (string?)"file",           Order = 22 },
-            new { Name = "KasaAcilisFisi",        Label = "Cash Opening Voucher",       Route = "/finans/acilis-fisleri/kasa",       Icon = (string?)"file",           Order = 23 },
-            new { Name = "PersonelAcilisFisi",    Label = "Staff Opening Voucher",      Route = "/finans/acilis-fisleri/personel",   Icon = (string?)"file",           Order = 24 },
-            new { Name = "IsletmeProjesi",        Label = "Operating Budget",           Route = "/finans/isletme-projesi",           Icon = (string?)"bar-chart3",     Order = 25 },
-            new { Name = "TekrarlananEvraklar",   Label = "Recurring Documents",        Route = "/finans/tekrarlanan-evraklar",      Icon = (string?)"calendar",       Order = 26 },
-            new { Name = "ExcelBanka",            Label = "Excel Bank Import",          Route = "/finans/excel-banka",               Icon = (string?)"file-spreadsheet", Order = 27 },
-            new { Name = "IcraListesi",           Label = "Enforcement List",           Route = "/finans/icra/icra-listesi",         Icon = (string?)"gavel",          Order = 28 },
-            new { Name = "TakibeGonder",          Label = "Send to Collection",         Route = "/finans/icra/takibe-gonder",        Icon = (string?)"gavel",          Order = 29 },
-            new { Name = "TakipListesi",          Label = "Collection List",            Route = "/finans/icra/takip-listesi",        Icon = (string?)"list",           Order = 30 },
-            new { Name = "KisiFinansalDurum",     Label = "Financial Status by Person", Route = "/finans/kisi-finansal-durum",       Icon = (string?)"pie-chart",      Order = 31 },
+            new { Name = "OtomatikBorclandirma",  Label = "Automatic Charging",         Route = "/finans/otomatik-borclandirma",     Icon = (string?)"calendar-check", Order = 7  },
+            new { Name = "GiderDagitimi",         Label = "Expense Distribution",       Route = "/finans/gider-dagitimi",            Icon = (string?)"trending-down",  Order = 8  },
+            new { Name = "GelirDagitimi",         Label = "Income Distribution",        Route = "/finans/gelir-dagitimi",            Icon = (string?)"trending-up",    Order = 9  },
+            new { Name = "ExcelBanka",            Label = "Excel Bank Import",          Route = "/finans/excel-banka",               Icon = (string?)"file-spreadsheet", Order = 10 },
+            new { Name = "TopluTahsilat",         Label = "Bulk Collection",            Route = "/finans/toplu-tahsilat",            Icon = (string?)"credit-card",    Order = 11 },
+            // --- GiderGroup ---
+            new { Name = "GiderFaturalari",       Label = "Expense Invoices",           Route = "/finans/gider/faturalar",           Icon = (string?)"file-text",      Order = 1  },
+            new { Name = "OdemeMakbuzu",          Label = "Payment Voucher",            Route = "/finans/gider/odeme-makbuzu",       Icon = (string?)"file",           Order = 2  },
+            new { Name = "GiderFisi",             Label = "Expense Voucher",            Route = "/finans/gider/fis",                 Icon = (string?)"file",           Order = 3  },
+            // --- GelirGroup ---
+            new { Name = "GelirFaturalari",       Label = "Income Invoices",            Route = "/finans/gelir/faturalar",           Icon = (string?)"file-text",      Order = 1  },
+            new { Name = "TahsilatMakbuzlariGelir", Label = "Collection Receipts",      Route = "/finans/gelir/tahsilat-makbuzlari", Icon = (string?)"receipt",        Order = 2  },
+            new { Name = "GelirFisi",             Label = "Income Voucher",             Route = "/finans/gelir/fis",                 Icon = (string?)"file",           Order = 3  },
             // --- GuvenlikGroup ---
             new { Name = "Araclar",              Label = "Vehicles",                Route = "/vehicles",                        Icon = (string?)"car",          Order = 1  },
             new { Name = "GirisKartlari",        Label = "Access Cards",            Route = "/access-cards",                    Icon = (string?)"key",          Order = 2  },
@@ -414,6 +410,9 @@ public static class DataSeeder
         // Eski Aidat sistemi kaldırıldı — daha önce deploy edilmiş sitelerde kalan Page kayıtlarını temizle
         await CleanupObsoleteAidatPagesAsync(db);
 
+        // Finans sekmesi yeniden yapılandırıldı — kaldırılan 11 sayfanın kalıntılarını temizle
+        await CleanupObsoleteFinansPagesAsync(db);
+
         // Parent–child relationship assignment
         await AssignPageParentsAsync(db);
 
@@ -453,6 +452,31 @@ public static class DataSeeder
     }
 
     /// <summary>
+    /// Finans sekmesi yeniden yapılandırıldı (Faz 2) — kullanıcıyla netleşen kapsam dışı
+    /// kalan 11 sayfa kaldırıldı. Daha önce deploy edilmiş sitelerde DB'de kalan bu Page
+    /// kayıtlarını soft-delete eder (idempotent).
+    /// </summary>
+    private static async Task CleanupObsoleteFinansPagesAsync(MasterDbContext db)
+    {
+        var obsoleteNames = new[]
+        {
+            "HesaplarArasiVirman", "VirmanFisDetaylari", "KasaTransfer",
+            "CariHesapAcilisFisi", "KasaAcilisFisi", "PersonelAcilisFisi",
+            "IsletmeProjesi", "TekrarlananEvraklar",
+            "IcraListesi", "TakibeGonder", "TakipListesi",
+        };
+        var pages = await db.Pages.IgnoreQueryFilters()
+            .Where(p => obsoleteNames.Contains(p.Name) && !p.IsDeleted)
+            .ToListAsync();
+        foreach (var p in pages)
+        {
+            p.IsDeleted = true;
+            p.UpdatedAt = DateTime.UtcNow;
+        }
+        if (pages.Count > 0) await db.SaveChangesAsync();
+    }
+
+    /// <summary>
     /// Assigns each child page's ParentPageId to the corresponding top menu group.
     /// Works safely on existing installations (idempotent).
     /// </summary>
@@ -471,36 +495,32 @@ public static class DataSeeder
             { "OnayBekleyenKisiler",          "KisilerGroup"    },
             { "OnayBekleyenGuncellemeler",    "KisilerGroup"    },
             { "Personel",                     "KisilerGroup"    },
-            // FinansGroup
-            { "BankaHareketleri",             "FinansGroup"     },
-            { "BorcMakbuzu",                  "FinansGroup"     },
-            { "TahsilatMakbuzu",              "FinansGroup"     },
-            { "TopluBorclandirma",            "FinansGroup"     },
-            { "TopluTahsilat",                "FinansGroup"     },
-            { "DetayliTahsilat",              "FinansGroup"     },
-            { "OtomatikBorclandirma",         "FinansGroup"     },
-            { "GelirFaturalari",              "FinansGroup"     },
-            { "GelirFisi",                    "FinansGroup"     },
-            { "GelirDagitimi",                "FinansGroup"     },
-            { "TahsilatMakbuzlariGelir",      "FinansGroup"     },
-            { "GiderFaturalari",              "FinansGroup"     },
-            { "GiderFisi",                    "FinansGroup"     },
-            { "GiderDagitimi",                "FinansGroup"     },
-            { "IadeMakbuzu",                  "FinansGroup"     },
-            { "HesaplarArasiVirman",          "FinansGroup"     },
-            { "VirmanFisDetaylari",           "FinansGroup"     },
-            { "KasaTransfer",                 "FinansGroup"     },
-            { "DevirBakiye",                  "FinansGroup"     },
-            { "CariHesapAcilisFisi",          "FinansGroup"     },
-            { "KasaAcilisFisi",               "FinansGroup"     },
-            { "PersonelAcilisFisi",           "FinansGroup"     },
-            { "IsletmeProjesi",               "FinansGroup"     },
-            { "TekrarlananEvraklar",          "FinansGroup"     },
-            { "ExcelBanka",                   "FinansGroup"     },
-            { "IcraListesi",                  "FinansGroup"     },
-            { "TakibeGonder",                 "FinansGroup"     },
-            { "TakipListesi",                 "FinansGroup"     },
+            // FinansGroup — doğrudan çocuklar + 3 ara-grup
             { "KisiFinansalDurum",            "FinansGroup"     },
+            { "BankaHareketleri",             "FinansGroup"     },
+            { "BorclandirmaVeTahsilatGroup",  "FinansGroup"     },
+            { "GiderGroup",                   "FinansGroup"     },
+            { "GelirGroup",                   "FinansGroup"     },
+            // BorclandirmaVeTahsilatGroup çocukları
+            { "BorcMakbuzu",                  "BorclandirmaVeTahsilatGroup" },
+            { "TahsilatMakbuzu",              "BorclandirmaVeTahsilatGroup" },
+            { "DetayliTahsilat",              "BorclandirmaVeTahsilatGroup" },
+            { "IadeMakbuzu",                  "BorclandirmaVeTahsilatGroup" },
+            { "DevirBakiye",                  "BorclandirmaVeTahsilatGroup" },
+            { "TopluBorclandirma",            "BorclandirmaVeTahsilatGroup" },
+            { "OtomatikBorclandirma",         "BorclandirmaVeTahsilatGroup" },
+            { "GiderDagitimi",                "BorclandirmaVeTahsilatGroup" },
+            { "GelirDagitimi",                "BorclandirmaVeTahsilatGroup" },
+            { "ExcelBanka",                   "BorclandirmaVeTahsilatGroup" },
+            { "TopluTahsilat",                "BorclandirmaVeTahsilatGroup" },
+            // GiderGroup çocukları
+            { "GiderFaturalari",              "GiderGroup"      },
+            { "OdemeMakbuzu",                 "GiderGroup"      },
+            { "GiderFisi",                    "GiderGroup"      },
+            // GelirGroup çocukları
+            { "GelirFaturalari",              "GelirGroup"      },
+            { "TahsilatMakbuzlariGelir",      "GelirGroup"      },
+            { "GelirFisi",                    "GelirGroup"      },
             // GuvenlikGroup
             { "Araclar",                      "GuvenlikGroup"   },
             { "GirisKartlari",                "GuvenlikGroup"   },

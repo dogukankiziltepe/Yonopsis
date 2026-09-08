@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using SiteYonetimi.SiteManagement.BankaHareketleri.ExcelImport.Services;
 using SiteYonetimi.SiteManagement.BorcMakbuzlari.TopluBorclandirma.Services;
 using SiteYonetimi.SiteManagement.Import.Services;
 using SiteYonetimi.SiteManagement.Report.Services;
@@ -19,6 +20,7 @@ public static class SiteManagementModule
         services.AddScoped<IReportService, ReportService>();
         services.AddScoped<IPersonUnitHistoryService, PersonUnitHistoryService>();
         services.AddScoped<ITopluBorclandirmaService, TopluBorclandirmaService>();
+        services.AddScoped<IBankaHareketiExcelImportService, BankaHareketiExcelImportService>();
         return services;
     }
 }

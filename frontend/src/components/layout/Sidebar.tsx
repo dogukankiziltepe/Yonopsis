@@ -130,15 +130,29 @@ function PageIcon({ name }: { name?: string }) {
 
 interface NavItemProps {
   page: PageDto
+  allPages: PageDto[]
   pathname: string
-  children?: PageDto[]
 }
 
-function NavItem({ page, pathname, children = [] }: NavItemProps) {
-  const selfActive = page.route === '/'
-    ? pathname === '/'
-    : pathname.startsWith(page.route)
-  const childActive = children.some((c) => pathname.startsWith(c.route))
+function isRouteActive(route: string, pathname: string) {
+  if (route === '#') return false
+  return route === '/' ? pathname === '/' : pathname.startsWith(route)
+}
+
+function hasActiveDescendant(page: PageDto, allPages: PageDto[], pathname: string): boolean {
+  const children = allPages.filter((p) => p.parentId === page.id)
+  return children.some((c) => isRouteActive(c.route, pathname) || hasActiveDescendant(c, allPages, pathname))
+}
+
+// Recursive — bir grup sayfasının çocukları da grup olabilir (Finans → Borçlandırma
+// ve Tahsilat → Borç Makbuzu gibi 3+ seviye), bu yüzden NavItem kendini çağırır.
+function NavItem({ page, allPages, pathname }: NavItemProps) {
+  const children = allPages
+    .filter((p) => p.parentId === page.id)
+    .sort((a, b) => a.order - b.order)
+
+  const selfActive = isRouteActive(page.route, pathname)
+  const childActive = hasActiveDescendant(page, allPages, pathname)
   const active = selfActive || childActive
 
   const [manualOpen, setManualOpen] = useState(false)
@@ -169,25 +183,9 @@ function NavItem({ page, pathname, children = [] }: NavItemProps) {
 
         {open && (
           <div className="ml-4 mt-0.5 space-y-0.5 border-l border-sidebar-accent/30 pl-3">
-            {children.map((child) => {
-              const isActive = pathname.startsWith(child.route)
-              return (
-                <Link
-                  key={child.name}
-                  href={child.route}
-                  data-permission={child.userPermission}
-                  className={cn(
-                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
-                  )}
-                >
-                  <PageIcon name={child.icon} />
-                  {child.label}
-                </Link>
-              )
-            })}
+            {children.map((child) => (
+              <NavItem key={child.name} page={child} allPages={allPages} pathname={pathname} />
+            ))}
           </div>
         )}
       </div>
@@ -231,14 +229,6 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
     .filter((p) => !p.parentId)
     .sort((a, b) => a.order - b.order)
 
-  const childrenByParent = pages
-    .filter((p) => !!p.parentId)
-    .reduce<Record<string, PageDto[]>>((acc, p) => {
-      const key = p.parentId!
-      acc[key] = acc[key] ? [...acc[key], p] : [p]
-      return acc
-    }, {})
-
   return (
     <>
       {mobileOpen && (
@@ -271,12 +261,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             </div>
           ) : (
             topLevel.map((page) => (
-              <NavItem
-                key={page.name}
-                page={page}
-                pathname={pathname}
-                children={(childrenByParent[page.id] ?? []).sort((a, b) => a.order - b.order)}
-              />
+              <NavItem key={page.name} page={page} allPages={pages} pathname={pathname} />
             ))
           )}
         </nav>

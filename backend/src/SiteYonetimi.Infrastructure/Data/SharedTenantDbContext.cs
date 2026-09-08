@@ -39,6 +39,10 @@ public class SharedTenantDbContext : DbContext
     public DbSet<TahsilatMakbuzu> TahsilatMakbuzlari => Set<TahsilatMakbuzu>();
     public DbSet<Fatura> Faturalar => Set<Fatura>();
     public DbSet<BankaHareketi> BankaHareketleri => Set<BankaHareketi>();
+    public DbSet<OdemeMakbuzu> OdemeMakbuzlari => Set<OdemeMakbuzu>();
+    public DbSet<GelirTahsilatMakbuzu> GelirTahsilatMakbuzlari => Set<GelirTahsilatMakbuzu>();
+    public DbSet<DevirBakiye> DevirBakiyeleri => Set<DevirBakiye>();
+    public DbSet<IadeMakbuzu> IadeMakbuzlari => Set<IadeMakbuzu>();
 
     // Güvenlik modülü
     public DbSet<ZiyaretciGirisCikis> ZiyaretciGirisCikislar => Set<ZiyaretciGirisCikis>();
@@ -497,6 +501,65 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.Durum).HasConversion<int>();
             e.HasOne(x => x.KasaBanka).WithMany().HasForeignKey(x => x.KasaBankaId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => new { x.SiteId, x.KasaBankaId, x.Tarih });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<OdemeMakbuzu>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.EvrakNo).HasMaxLength(30).IsRequired();
+            e.Property(x => x.Tutar).HasPrecision(18, 2).IsRequired();
+            e.Property(x => x.Aciklama).HasMaxLength(500);
+            e.HasOne(x => x.KasaBanka).WithMany().HasForeignKey(x => x.KasaBankaId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.GiderTanimi).WithMany().HasForeignKey(x => x.GiderTanimiId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.SiteId, x.EvrakNo }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.CariHesapId });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<GelirTahsilatMakbuzu>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.EvrakNo).HasMaxLength(30).IsRequired();
+            e.Property(x => x.Tutar).HasPrecision(18, 2).IsRequired();
+            e.Property(x => x.Aciklama).HasMaxLength(500);
+            e.HasOne(x => x.KasaBanka).WithMany().HasForeignKey(x => x.KasaBankaId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.GelirTanimi).WithMany().HasForeignKey(x => x.GelirTanimiId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.SiteId, x.EvrakNo }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.CariHesapId });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<DevirBakiye>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.EvrakNo).HasMaxLength(30).IsRequired();
+            e.Property(x => x.BorcluRol).HasConversion<int>();
+            e.Property(x => x.BorcluAdiSnapshot).HasMaxLength(200);
+            e.Property(x => x.Tutar).HasPrecision(18, 2).IsRequired();
+            e.Property(x => x.Aciklama).HasMaxLength(500);
+            e.HasOne(x => x.Unit).WithMany().HasForeignKey(x => x.UnitId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.SiteId, x.EvrakNo }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.UnitId });
+            e.HasIndex(x => new { x.SiteId, x.BorcluUserId });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<IadeMakbuzu>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.EvrakNo).HasMaxLength(30).IsRequired();
+            e.Property(x => x.BorcluRol).HasConversion<int>();
+            e.Property(x => x.BorcluAdiSnapshot).HasMaxLength(200);
+            e.Property(x => x.Tutar).HasPrecision(18, 2).IsRequired();
+            e.Property(x => x.Aciklama).HasMaxLength(500);
+            e.HasOne(x => x.KasaBanka).WithMany().HasForeignKey(x => x.KasaBankaId).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
+            e.HasIndex(x => new { x.SiteId, x.EvrakNo }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.BorcluUserId });
             e.HasQueryFilter(x => !x.IsDeleted);
         });
 
