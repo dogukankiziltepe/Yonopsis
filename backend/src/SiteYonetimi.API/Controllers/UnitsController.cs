@@ -28,6 +28,12 @@ public class UnitsController : BaseController
         return Handle(await Mediator.Send(new GetUnitFullDetailQuery(id, CurrentSiteId)));
     }
 
+    [HttpGet("{id:guid}/borclu-onerisi")]
+    public async Task<IActionResult> GetBorcluOnerisi(Guid id)
+    {
+        return Handle(await Mediator.Send(new GetUnitBorcluOnerisiQuery(id, CurrentSiteId)));
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateUnitDto dto)
     {

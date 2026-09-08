@@ -43,7 +43,7 @@ export default function DetayliBorcListesiPage() {
   const filtered = allItems.filter(item => {
     if (search) {
       const q = search.toLowerCase()
-      const ad = (item.borcluAdi ?? item.unitDoorNumber ?? '').toLowerCase()
+      const ad = (item.borcluAdSoyad ?? item.unitDoorNumber ?? '').toLowerCase()
       if (!ad.includes(q) && !item.evrakNo.toLowerCase().includes(q)) return false
     }
     if (filterDurum === 'bekleyen' && item.kalanTutar <= 0) return false
@@ -54,7 +54,7 @@ export default function DetayliBorcListesiPage() {
 
   const groups = new Map<string, PersonGroup>()
   for (const b of filtered) {
-    const key = b.borcluAdi ?? b.unitDoorNumber ?? '(Bilinmiyor)'
+    const key = b.borcluAdSoyad ?? b.unitDoorNumber ?? '(Bilinmiyor)'
     const g = groups.get(key) ?? { ad: key, borclar: [], toplamBorc: 0, toplamOdenen: 0, toplamKalan: 0 }
     g.borclar.push(b)
     g.toplamBorc += b.tutar

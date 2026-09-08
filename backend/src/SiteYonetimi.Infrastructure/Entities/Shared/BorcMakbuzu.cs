@@ -11,12 +11,15 @@ public class BorcMakbuzu
     public string? Donem { get; set; }           // e.g. "2026-06"
     public DateTime? SonOdemeTarihi { get; set; }
     public Guid? UnitId { get; set; }
-    public string? BorcluAdi { get; set; }
+    public Guid? BorcluUserId { get; set; }      // cross-context soft ref -> MasterDb User.Id
+    public UserType? BorcluRol { get; set; }     // borçlandırma anındaki rol (Owner/Renter), donmuş
+    public string? BorcluAdiSnapshot { get; set; } // borçlandırma anındaki ad-soyad
     public Guid? GelirTanimiId { get; set; }
     public decimal Tutar { get; set; }
     public decimal GecikmeTutari { get; set; } = 0;
     public decimal OdenenTutar { get; set; } = 0;
     public string? Aciklama { get; set; }
+    public Guid? TopluBorclandirmaBatchId { get; set; }
     public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

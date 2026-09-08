@@ -16,6 +16,9 @@ public class GetBorcMakbuzlariQueryHandler : IRequestHandler<GetBorcMakbuzlariQu
 
     public async Task<Result<PaginatedResult<BorcMakbuzuDto>>> Handle(GetBorcMakbuzlariQuery request, CancellationToken cancellationToken)
     {
+        // BorcluAdiSnapshot denormalize saklandığı için (kişi silinse/adı değişse bile
+        // tarihsel doğru isim görünür), arama da bu alan üzerinden yapılır — MasterDb'ye
+        // gitmeye gerek kalmaz.
         var query = _db.BorcMakbuzlari
             .Include(x => x.Unit)
             .Include(x => x.GelirTanimi)
@@ -26,7 +29,7 @@ public class GetBorcMakbuzlariQueryHandler : IRequestHandler<GetBorcMakbuzlariQu
             var term = request.Search.ToLower();
             query = query.Where(x =>
                 x.EvrakNo.ToLower().Contains(term) ||
-                (x.BorcluAdi != null && x.BorcluAdi.ToLower().Contains(term)) ||
+                (x.BorcluAdiSnapshot != null && x.BorcluAdiSnapshot.ToLower().Contains(term)) ||
                 (x.Unit != null && x.Unit.DoorNumber.ToLower().Contains(term)));
         }
 
@@ -38,7 +41,7 @@ public class GetBorcMakbuzlariQueryHandler : IRequestHandler<GetBorcMakbuzlariQu
             .Select(x => new BorcMakbuzuDto(
                 x.Id, x.EvrakNo, x.IslemTarihi, x.Donem, x.SonOdemeTarihi,
                 x.UnitId, x.Unit != null ? x.Unit.DoorNumber : null,
-                x.BorcluAdi,
+                x.BorcluUserId, x.BorcluAdiSnapshot, x.BorcluRol,
                 x.GelirTanimi != null ? x.GelirTanimi.Name : null,
                 x.Tutar, x.GecikmeTutari, x.OdenenTutar,
                 x.Tutar + x.GecikmeTutari - x.OdenenTutar,

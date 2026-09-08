@@ -60,13 +60,6 @@ public enum SupportRequestStatus
     Resolved = 2
 }
 
-public enum PaymentStatus
-{
-    Pending = 0,
-    Paid = 1,
-    Overdue = 2
-}
-
 public enum IsEmriOncelik
 {
     Dusuk = 1,

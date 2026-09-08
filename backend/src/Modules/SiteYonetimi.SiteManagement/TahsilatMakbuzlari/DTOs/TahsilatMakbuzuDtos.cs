@@ -6,18 +6,20 @@ public record TahsilatMakbuzuDto(
     Guid Id,
     string EvrakNo,
     DateTime IslemTarihi,
-    string? BorcluAdi,
+    Guid? BorcluUserId,
+    string? BorcluAdSoyad,
     Guid? KasaBankaId,
     string? KasaBankaAdi,
     Guid? BorcMakbuzuId,
     string? BorcMakbuzuEvrakNo,
+    decimal? BorcMakbuzuKalanTutar,
     decimal OdemeTutari,
     OdemeTipi OdemeTipi,
     string? Aciklama,
     DateTime CreatedAt);
 
 public record CreateTahsilatMakbuzuDto(
-    string? BorcluAdi,
+    Guid? BorcluUserId,
     Guid? KasaBankaId,
     Guid? BorcMakbuzuId,
     decimal OdemeTutari,
@@ -25,7 +27,7 @@ public record CreateTahsilatMakbuzuDto(
     string? Aciklama);
 
 public record UpdateTahsilatMakbuzuDto(
-    string? BorcluAdi,
+    Guid? BorcluUserId,
     Guid? KasaBankaId,
     Guid? BorcMakbuzuId,
     decimal OdemeTutari,

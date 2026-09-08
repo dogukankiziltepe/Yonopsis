@@ -13,7 +13,12 @@ public record CreateBorcMakbuzuCommand(Guid SiteId, CreateBorcMakbuzuDto Dto) : 
 public class CreateBorcMakbuzuCommandHandler : IRequestHandler<CreateBorcMakbuzuCommand, Result<Guid>>
 {
     private readonly SharedTenantDbContext _db;
-    public CreateBorcMakbuzuCommandHandler(SharedTenantDbContext db) => _db = db;
+    private readonly MasterDbContext _masterDb;
+    public CreateBorcMakbuzuCommandHandler(SharedTenantDbContext db, MasterDbContext masterDb)
+    {
+        _db = db;
+        _masterDb = masterDb;
+    }
 
     public async Task<Result<Guid>> Handle(CreateBorcMakbuzuCommand request, CancellationToken cancellationToken)
     {
@@ -24,6 +29,16 @@ public class CreateBorcMakbuzuCommandHandler : IRequestHandler<CreateBorcMakbuzu
             .CountAsync(x => x.SiteId == request.SiteId, cancellationToken);
         var evrakNo = $"BM-{request.SiteId.ToString()[..8].ToUpper()}-{count + 1:D5}";
 
+        string? borcluAdiSnapshot = null;
+        if (request.Dto.BorcluUserId is Guid borcluUserId)
+        {
+            var user = await _masterDb.Users
+                .Where(u => u.Id == borcluUserId)
+                .Select(u => new { u.FirstName, u.LastName })
+                .FirstOrDefaultAsync(cancellationToken);
+            if (user is not null) borcluAdiSnapshot = $"{user.FirstName} {user.LastName}";
+        }
+
         var entity = new BorcMakbuzu
         {
             SiteId = request.SiteId,
@@ -32,7 +47,9 @@ public class CreateBorcMakbuzuCommandHandler : IRequestHandler<CreateBorcMakbuzu
             Donem = request.Dto.Donem,
             SonOdemeTarihi = request.Dto.SonOdemeTarihi,
             UnitId = request.Dto.UnitId,
-            BorcluAdi = request.Dto.BorcluAdi,
+            BorcluUserId = request.Dto.BorcluUserId,
+            BorcluRol = request.Dto.BorcluRol,
+            BorcluAdiSnapshot = borcluAdiSnapshot,
             GelirTanimiId = request.Dto.GelirTanimiId,
             Tutar = request.Dto.Tutar,
             Aciklama = request.Dto.Aciklama
@@ -50,7 +67,12 @@ public record UpdateBorcMakbuzuCommand(Guid Id, Guid SiteId, UpdateBorcMakbuzuDt
 public class UpdateBorcMakbuzuCommandHandler : IRequestHandler<UpdateBorcMakbuzuCommand, Result>
 {
     private readonly SharedTenantDbContext _db;
-    public UpdateBorcMakbuzuCommandHandler(SharedTenantDbContext db) => _db = db;
+    private readonly MasterDbContext _masterDb;
+    public UpdateBorcMakbuzuCommandHandler(SharedTenantDbContext db, MasterDbContext masterDb)
+    {
+        _db = db;
+        _masterDb = masterDb;
+    }
 
     public async Task<Result> Handle(UpdateBorcMakbuzuCommand request, CancellationToken cancellationToken)
     {
@@ -58,10 +80,26 @@ public class UpdateBorcMakbuzuCommandHandler : IRequestHandler<UpdateBorcMakbuzu
             .FirstOrDefaultAsync(x => x.Id == request.Id && x.SiteId == request.SiteId, cancellationToken);
         if (entity is null) return Result.Failure("Borç makbuzu bulunamadı.");
 
+        string? borcluAdiSnapshot = entity.BorcluAdiSnapshot;
+        if (request.Dto.BorcluUserId != entity.BorcluUserId)
+        {
+            borcluAdiSnapshot = null;
+            if (request.Dto.BorcluUserId is Guid borcluUserId)
+            {
+                var user = await _masterDb.Users
+                    .Where(u => u.Id == borcluUserId)
+                    .Select(u => new { u.FirstName, u.LastName })
+                    .FirstOrDefaultAsync(cancellationToken);
+                if (user is not null) borcluAdiSnapshot = $"{user.FirstName} {user.LastName}";
+            }
+        }
+
         entity.Donem = request.Dto.Donem;
         entity.SonOdemeTarihi = request.Dto.SonOdemeTarihi;
         entity.UnitId = request.Dto.UnitId;
-        entity.BorcluAdi = request.Dto.BorcluAdi;
+        entity.BorcluUserId = request.Dto.BorcluUserId;
+        entity.BorcluRol = request.Dto.BorcluRol;
+        entity.BorcluAdiSnapshot = borcluAdiSnapshot;
         entity.GelirTanimiId = request.Dto.GelirTanimiId;
         entity.Tutar = request.Dto.Tutar;
         entity.GecikmeTutari = request.Dto.GecikmeTutari;

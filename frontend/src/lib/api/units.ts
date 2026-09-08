@@ -1,6 +1,7 @@
 import { siteApi } from './client'
 import { UnitSummary, UnitDetail, CreateUnitDto, UpdateUnitDto } from '@/types/unit'
 import { UnitFullDetailDto } from '@/types/unitDetail'
+import { UnitBorcluOnerisi } from '@/types/unitBorcluOnerisi'
 
 export const unitsApi = {
   getAll: (buildingId?: string) =>
@@ -11,6 +12,9 @@ export const unitsApi = {
 
   getFullDetail: (id: string) =>
     siteApi.get<UnitFullDetailDto>(`/api/units/${id}/detail`),
+
+  getBorcluOnerisi: (id: string) =>
+    siteApi.get<UnitBorcluOnerisi>(`/api/units/${id}/borclu-onerisi`),
 
   create: (data: CreateUnitDto) =>
     siteApi.post<{ id: string }>('/api/units', data),

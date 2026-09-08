@@ -26,7 +26,7 @@ public class GetTahsilatMakbuzlariQueryHandler : IRequestHandler<GetTahsilatMakb
             var term = request.Search.ToLower();
             query = query.Where(x =>
                 x.EvrakNo.ToLower().Contains(term) ||
-                (x.BorcluAdi != null && x.BorcluAdi.ToLower().Contains(term)));
+                (x.BorcluAdiSnapshot != null && x.BorcluAdiSnapshot.ToLower().Contains(term)));
         }
 
         var total = await query.CountAsync(cancellationToken);
@@ -35,9 +35,10 @@ public class GetTahsilatMakbuzlariQueryHandler : IRequestHandler<GetTahsilatMakb
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
             .Select(x => new TahsilatMakbuzuDto(
-                x.Id, x.EvrakNo, x.IslemTarihi, x.BorcluAdi,
+                x.Id, x.EvrakNo, x.IslemTarihi, x.BorcluUserId, x.BorcluAdiSnapshot,
                 x.KasaBankaId, x.KasaBanka != null ? x.KasaBanka.Name : null,
                 x.BorcMakbuzuId, x.BorcMakbuzu != null ? x.BorcMakbuzu.EvrakNo : null,
+                x.BorcMakbuzu != null ? x.BorcMakbuzu.Tutar + x.BorcMakbuzu.GecikmeTutari - x.BorcMakbuzu.OdenenTutar : (decimal?)null,
                 x.OdemeTutari, x.OdemeTipi, x.Aciklama, x.CreatedAt))
             .ToListAsync(cancellationToken);
 

@@ -23,8 +23,6 @@ public class SharedTenantDbContext : DbContext
     public DbSet<SmsLog> SmsLogs => Set<SmsLog>();
     public DbSet<WhatsappLog> WhatsappLogs => Set<WhatsappLog>();
     public DbSet<MobilBildirimLog> MobilBildirimLogs => Set<MobilBildirimLog>();
-    public DbSet<Payment> Payments => Set<Payment>();
-    public DbSet<AidatKalemi> AidatKalemleri => Set<AidatKalemi>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<UploadedFile> UploadedFiles => Set<UploadedFile>();
 
@@ -41,6 +39,10 @@ public class SharedTenantDbContext : DbContext
     public DbSet<TahsilatMakbuzu> TahsilatMakbuzlari => Set<TahsilatMakbuzu>();
     public DbSet<Fatura> Faturalar => Set<Fatura>();
     public DbSet<BankaHareketi> BankaHareketleri => Set<BankaHareketi>();
+    public DbSet<OdemeMakbuzu> OdemeMakbuzlari => Set<OdemeMakbuzu>();
+    public DbSet<GelirTahsilatMakbuzu> GelirTahsilatMakbuzlari => Set<GelirTahsilatMakbuzu>();
+    public DbSet<DevirBakiye> DevirBakiyeleri => Set<DevirBakiye>();
+    public DbSet<IadeMakbuzu> IadeMakbuzlari => Set<IadeMakbuzu>();
 
     // Güvenlik modülü
     public DbSet<ZiyaretciGirisCikis> ZiyaretciGirisCikislar => Set<ZiyaretciGirisCikis>();
@@ -260,26 +262,6 @@ public class SharedTenantDbContext : DbContext
             e.HasQueryFilter(x => !x.IsDeleted);
         });
 
-        modelBuilder.Entity<Payment>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.SiteId).IsRequired();
-            e.Property(x => x.Amount).HasPrecision(18, 2).IsRequired();
-            e.Property(x => x.Description).HasMaxLength(500);
-            e.HasOne(x => x.Unit).WithMany().HasForeignKey(x => x.UnitId).OnDelete(DeleteBehavior.Restrict);
-            e.HasQueryFilter(x => !x.IsDeleted);
-        });
-
-        modelBuilder.Entity<AidatKalemi>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.SiteId).IsRequired();
-            e.Property(x => x.Name).HasMaxLength(100).IsRequired();
-            e.Property(x => x.Description).HasMaxLength(500);
-            e.Property(x => x.IsActive).HasDefaultValue(true);
-            e.HasQueryFilter(x => !x.IsDeleted);
-        });
-
         modelBuilder.Entity<Announcement>(e =>
         {
             e.HasKey(x => x.Id);
@@ -461,7 +443,8 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.SiteId).IsRequired();
             e.Property(x => x.EvrakNo).HasMaxLength(30).IsRequired();
             e.Property(x => x.Donem).HasMaxLength(10);
-            e.Property(x => x.BorcluAdi).HasMaxLength(200);
+            e.Property(x => x.BorcluRol).HasConversion<int>();
+            e.Property(x => x.BorcluAdiSnapshot).HasMaxLength(200);
             e.Property(x => x.Tutar).HasPrecision(18, 2).IsRequired();
             e.Property(x => x.GecikmeTutari).HasPrecision(18, 2).HasDefaultValue(0m);
             e.Property(x => x.OdenenTutar).HasPrecision(18, 2).HasDefaultValue(0m);
@@ -470,6 +453,8 @@ public class SharedTenantDbContext : DbContext
             e.HasOne(x => x.Unit).WithMany().HasForeignKey(x => x.UnitId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.GelirTanimi).WithMany().HasForeignKey(x => x.GelirTanimiId).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
             e.HasIndex(x => new { x.SiteId, x.EvrakNo }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.UnitId });
+            e.HasIndex(x => new { x.SiteId, x.BorcluUserId });
             e.HasQueryFilter(x => !x.IsDeleted);
         });
 
@@ -478,13 +463,14 @@ public class SharedTenantDbContext : DbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.SiteId).IsRequired();
             e.Property(x => x.EvrakNo).HasMaxLength(30).IsRequired();
-            e.Property(x => x.BorcluAdi).HasMaxLength(200);
+            e.Property(x => x.BorcluAdiSnapshot).HasMaxLength(200);
             e.Property(x => x.OdemeTutari).HasPrecision(18, 2).IsRequired();
             e.Property(x => x.OdemeTipi).HasConversion<int>();
             e.Property(x => x.Aciklama).HasMaxLength(500);
             e.HasOne(x => x.KasaBanka).WithMany().HasForeignKey(x => x.KasaBankaId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.BorcMakbuzu).WithMany().HasForeignKey(x => x.BorcMakbuzuId).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
             e.HasIndex(x => new { x.SiteId, x.EvrakNo }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.BorcluUserId });
             e.HasQueryFilter(x => !x.IsDeleted);
         });
 
@@ -515,6 +501,65 @@ public class SharedTenantDbContext : DbContext
             e.Property(x => x.Durum).HasConversion<int>();
             e.HasOne(x => x.KasaBanka).WithMany().HasForeignKey(x => x.KasaBankaId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => new { x.SiteId, x.KasaBankaId, x.Tarih });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<OdemeMakbuzu>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.EvrakNo).HasMaxLength(30).IsRequired();
+            e.Property(x => x.Tutar).HasPrecision(18, 2).IsRequired();
+            e.Property(x => x.Aciklama).HasMaxLength(500);
+            e.HasOne(x => x.KasaBanka).WithMany().HasForeignKey(x => x.KasaBankaId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.GiderTanimi).WithMany().HasForeignKey(x => x.GiderTanimiId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.SiteId, x.EvrakNo }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.CariHesapId });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<GelirTahsilatMakbuzu>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.EvrakNo).HasMaxLength(30).IsRequired();
+            e.Property(x => x.Tutar).HasPrecision(18, 2).IsRequired();
+            e.Property(x => x.Aciklama).HasMaxLength(500);
+            e.HasOne(x => x.KasaBanka).WithMany().HasForeignKey(x => x.KasaBankaId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.GelirTanimi).WithMany().HasForeignKey(x => x.GelirTanimiId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.SiteId, x.EvrakNo }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.CariHesapId });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<DevirBakiye>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.EvrakNo).HasMaxLength(30).IsRequired();
+            e.Property(x => x.BorcluRol).HasConversion<int>();
+            e.Property(x => x.BorcluAdiSnapshot).HasMaxLength(200);
+            e.Property(x => x.Tutar).HasPrecision(18, 2).IsRequired();
+            e.Property(x => x.Aciklama).HasMaxLength(500);
+            e.HasOne(x => x.Unit).WithMany().HasForeignKey(x => x.UnitId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.SiteId, x.EvrakNo }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.UnitId });
+            e.HasIndex(x => new { x.SiteId, x.BorcluUserId });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<IadeMakbuzu>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.EvrakNo).HasMaxLength(30).IsRequired();
+            e.Property(x => x.BorcluRol).HasConversion<int>();
+            e.Property(x => x.BorcluAdiSnapshot).HasMaxLength(200);
+            e.Property(x => x.Tutar).HasPrecision(18, 2).IsRequired();
+            e.Property(x => x.Aciklama).HasMaxLength(500);
+            e.HasOne(x => x.KasaBanka).WithMany().HasForeignKey(x => x.KasaBankaId).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
+            e.HasIndex(x => new { x.SiteId, x.EvrakNo }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.BorcluUserId });
             e.HasQueryFilter(x => !x.IsDeleted);
         });
 

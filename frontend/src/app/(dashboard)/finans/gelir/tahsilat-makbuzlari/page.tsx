@@ -1,118 +1,255 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Search, ChevronLeft, ChevronRight, Receipt, ExternalLink } from 'lucide-react'
-import Link from 'next/link'
+import { Plus, X, Receipt, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { tahsilatMakbuzlariApi } from '@/lib/api/finans'
-import type { TahsilatMakbuzu } from '@/types/finans'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import { gelirTahsilatMakbuzlariApi, cariHesaplariApi } from '@/lib/api/finans'
+import { gelirTanimlariApi, kasaBankaApi } from '@/lib/api/tanimlar'
+import type { GelirTahsilatMakbuzu, CreateGelirTahsilatMakbuzuDto, UpdateGelirTahsilatMakbuzuDto, CariHesapPicker } from '@/types/finans'
+import type { GelirTanimi, KasaBanka } from '@/types/tanimlar'
+import { showSuccess, showApiError } from '@/lib/toast'
 
 const PAGE_SIZE = 20
+const fmt = (n: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(n)
 
-export default function PageComponent() {
-  const [items, setItems] = useState<TahsilatMakbuzu[]>([])
+export default function GelirTahsilatMakbuzlariPage() {
+  const [items, setItems] = useState<GelirTahsilatMakbuzu[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(0)
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [inputVal, setInputVal] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
 
-  const load = useCallback(async (pg: number, q: string) => {
+  const [gelirTanimlari, setGelirTanimlari] = useState<GelirTanimi[]>([])
+  const [kasaBankalar, setKasaBankalar] = useState<KasaBanka[]>([])
+  const [cariArama, setCariArama] = useState('')
+  const [cariSonuclari, setCariSonuclari] = useState<CariHesapPicker[]>([])
+
+  const [panelOpen, setPanelOpen] = useState(false)
+  const [panelMode, setPanelMode] = useState<'create' | 'edit'>('create')
+  const [selected, setSelected] = useState<GelirTahsilatMakbuzu | null>(null)
+
+  const [formTarih, setFormTarih] = useState('')
+  const [formCariHesapId, setFormCariHesapId] = useState('')
+  const [formCariHesapAdi, setFormCariHesapAdi] = useState('')
+  const [formKasaBankaId, setFormKasaBankaId] = useState('')
+  const [formGelirTanimiId, setFormGelirTanimiId] = useState('')
+  const [formTutar, setFormTutar] = useState('')
+  const [formAciklama, setFormAciklama] = useState('')
+  const [formDagitim, setFormDagitim] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+
+  const load = useCallback(async () => {
     setLoading(true)
-    const r = await tahsilatMakbuzlariApi.getAll(pg, PAGE_SIZE, q || undefined)
-    if (r.success && r.data) {
-      setItems(r.data.items)
-      setTotal(r.data.totalCount)
-    }
-    setLoading(false)
-  }, [])
+    try {
+      const res = await gelirTahsilatMakbuzlariApi.getAll(page, PAGE_SIZE, search || undefined)
+      const d = res.data
+      setItems(d.items ?? [])
+      setTotal(d.totalCount ?? 0)
+      setTotalPages(d.totalPages ?? Math.ceil((d.totalCount ?? 0) / PAGE_SIZE))
+    } catch (e) { showApiError(e) }
+    finally { setLoading(false) }
+  }, [page, search])
 
-  useEffect(() => { load(page, search) }, [page, search, load])
+  useEffect(() => { load() }, [load])
+  useEffect(() => { gelirTanimlariApi.getAll().then(r => setGelirTanimlari(r.data.filter(g => g.isActive))) }, [])
+  useEffect(() => { kasaBankaApi.getAll().then(r => setKasaBankalar(r.data.filter(k => k.isActive))) }, [])
+  useEffect(() => { const t = setTimeout(() => setSearch(searchInput), 350); return () => clearTimeout(t) }, [searchInput])
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    setSearch(inputVal)
-    setPage(1)
+  useEffect(() => {
+    if (!cariArama.trim()) { setCariSonuclari([]); return }
+    const t = setTimeout(() => {
+      cariHesaplariApi.getAll(cariArama).then(r => setCariSonuclari(r.data)).catch(() => {})
+    }, 300)
+    return () => clearTimeout(t)
+  }, [cariArama])
+
+  const selectCari = (c: CariHesapPicker) => {
+    setFormCariHesapId(c.id); setFormCariHesapAdi(c.hesapAdi); setCariArama(''); setCariSonuclari([])
   }
 
-  const totalPages = Math.ceil(total / PAGE_SIZE)
+  const openCreate = () => {
+    setFormTarih(''); setFormCariHesapId(''); setFormCariHesapAdi(''); setCariArama(''); setCariSonuclari([])
+    setFormKasaBankaId(''); setFormGelirTanimiId(''); setFormTutar(''); setFormAciklama(''); setFormDagitim(false)
+    setSelected(null); setPanelMode('create'); setPanelOpen(true)
+  }
+  const openEdit = (item: GelirTahsilatMakbuzu) => {
+    setFormTarih(item.tarih.split('T')[0]); setFormCariHesapId(item.cariHesapId); setFormCariHesapAdi(item.cariHesapAdi ?? '')
+    setCariArama(''); setCariSonuclari([])
+    setFormKasaBankaId(item.kasaBankaId); setFormGelirTanimiId(item.gelirTanimiId); setFormTutar(String(item.tutar))
+    setFormAciklama(item.aciklama ?? ''); setFormDagitim(item.dagitimYapilacak)
+    setSelected(item); setPanelMode('edit'); setPanelOpen(true)
+  }
+  const closePanel = () => { setPanelOpen(false); setSelected(null); setDeleteConfirm(null) }
+
+  const handleSave = async () => {
+    if (!formTarih) { showApiError('Tarih zorunludur.'); return }
+    if (!formCariHesapId) { showApiError('Cari hesap seçilmelidir.'); return }
+    if (!formKasaBankaId) { showApiError('Kasa/Banka seçilmelidir.'); return }
+    if (!formGelirTanimiId) { showApiError('Gelir hesabı seçilmelidir.'); return }
+    if (!formTutar || parseFloat(formTutar) <= 0) { showApiError('Tutar sıfırdan büyük olmalıdır.'); return }
+    setSaving(true)
+    try {
+      const dto: CreateGelirTahsilatMakbuzuDto | UpdateGelirTahsilatMakbuzuDto = {
+        tarih: formTarih, cariHesapId: formCariHesapId, kasaBankaId: formKasaBankaId,
+        gelirTanimiId: formGelirTanimiId, tutar: parseFloat(formTutar), aciklama: formAciklama || undefined,
+        dagitimYapilacak: formDagitim,
+      }
+      if (panelMode === 'create') {
+        await gelirTahsilatMakbuzlariApi.create(dto); showSuccess('Tahsilat makbuzu oluşturuldu.')
+      } else if (selected) {
+        await gelirTahsilatMakbuzlariApi.update(selected.id, dto); showSuccess('Tahsilat makbuzu güncellendi.')
+      }
+      await load(); closePanel()
+    } catch (e) { showApiError(e) }
+    finally { setSaving(false) }
+  }
+
+  const handleDelete = async (id: string) => {
+    try { await gelirTahsilatMakbuzlariApi.delete(id); showSuccess('Silindi.'); await load(); setDeleteConfirm(null) }
+    catch (e) { showApiError(e) }
+  }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-col h-full gap-3">
+      <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Tahsilat Makbuzları</h1>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{total} kayıt</span>
-          <Button size="sm" variant="outline" asChild>
-            <Link href="/finans/tahsilat-makbuzu">
-              <ExternalLink className="h-4 w-4 mr-1" />Tam Ekran
-            </Link>
-          </Button>
-        </div>
+        <Button size="sm" onClick={openCreate}><Plus className="h-4 w-4 mr-1" />Yeni Makbuz</Button>
       </div>
 
-      <form onSubmit={handleSearch} className="flex gap-2 mb-4">
-        <Input
-          placeholder="Evrak no veya kişi ara..."
-          value={inputVal}
-          onChange={e => setInputVal(e.target.value)}
-          className="max-w-sm"
-        />
-        <Button type="submit" variant="outline" size="sm"><Search className="h-4 w-4" /></Button>
-        {search && (
-          <Button type="button" variant="ghost" size="sm" onClick={() => { setSearch(''); setInputVal(''); setPage(1) }}>
-            Temizle
-          </Button>
-        )}
-      </form>
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input className="pl-8" placeholder="Evrak no, cari ara..." value={searchInput} onChange={e => { setSearchInput(e.target.value); setPage(1) }} />
+        </div>
+        {total > 0 && <span className="text-sm text-muted-foreground">{total} kayıt</span>}
+      </div>
 
-      <div className="border rounded-lg overflow-auto flex-1">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
-            <tr>
-              <th className="text-left px-3 py-2 font-medium">Evrak No</th>
-              <th className="text-left px-3 py-2 font-medium">Tarih</th>
-              <th className="text-left px-3 py-2 font-medium">Kişi / Daire</th>
-              <th className="text-right px-3 py-2 font-medium">Tutar</th>
-              <th className="text-left px-3 py-2 font-medium">Açıklama</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={5} className="text-center py-10 text-muted-foreground">Yükleniyor...</td></tr>
-            ) : items.length === 0 ? (
+      <div className="border rounded-lg overflow-hidden flex-1 overflow-x-auto">
+        {loading ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">Yükleniyor...</div>
+        ) : items.length === 0 ? (
+          <div className="p-12 text-center"><Receipt className="h-8 w-8 mx-auto text-muted-foreground/40 mb-3" /><p className="text-muted-foreground text-sm">Tahsilat makbuzu bulunamadı.</p></div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 border-b">
               <tr>
-                <td colSpan={5} className="text-center py-16 text-muted-foreground">
-                  <Receipt className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                  <p>Tahsilat makbuzu bulunamadı</p>
-                </td>
+                <th className="text-left px-3 py-2 font-medium">Evrak No</th>
+                <th className="text-left px-3 py-2 font-medium hidden md:table-cell">İşlem Tarihi</th>
+                <th className="text-left px-3 py-2 font-medium hidden lg:table-cell">Tarih</th>
+                <th className="text-left px-3 py-2 font-medium">Gelir</th>
+                <th className="text-left px-3 py-2 font-medium">Cari</th>
+                <th className="text-left px-3 py-2 font-medium hidden lg:table-cell">Kasa</th>
+                <th className="text-right px-3 py-2 font-medium">Tutar</th>
+                <th className="w-20 px-3 py-2" />
               </tr>
-            ) : items.map(item => (
-              <tr key={item.id} className="border-t hover:bg-muted/30">
-                <td className="px-3 py-2 font-mono text-xs">{item.evrakNo}</td>
-                <td className="px-3 py-2 text-muted-foreground">{new Date(item.islemTarihi).toLocaleDateString('tr-TR')}</td>
-                <td className="px-3 py-2">{item.borcluAdi ?? item.kasaBankaAdi ?? '—'}</td>
-                <td className="px-3 py-2 text-right font-medium text-green-600">
-                  {item.odemeTutari.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                </td>
-                <td className="px-3 py-2 text-muted-foreground text-xs truncate max-w-xs">{item.aciklama ?? '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y">
+              {items.map(item => (
+                <tr key={item.id} className="hover:bg-muted/30">
+                  <td className="px-3 py-2.5 font-mono text-xs">{item.evrakNo}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground hidden md:table-cell text-xs">{new Date(item.islemTarihi).toLocaleDateString('tr-TR')}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell text-xs">{new Date(item.tarih).toLocaleDateString('tr-TR')}</td>
+                  <td className="px-3 py-2.5">{item.gelirTanimiAdi ?? '—'}</td>
+                  <td className="px-3 py-2.5">{item.cariHesapAdi ?? '—'}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{item.kasaBankaAdi ?? '—'}</td>
+                  <td className="px-3 py-2.5 text-right font-medium text-green-600">{fmt(item.tutar)}</td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex gap-1 justify-end">
+                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => openEdit(item)}>Düzenle</Button>
+                      {deleteConfirm === item.id
+                        ? <Button variant="destructive" size="sm" className="h-6 px-2 text-xs" onClick={() => handleDelete(item.id)}>Onayla</Button>
+                        : <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-destructive" onClick={() => setDeleteConfirm(item.id)}>Sil</Button>}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-3">
-          <span className="text-sm text-muted-foreground">Sayfa {page} / {totalPages}</span>
-          <div className="flex gap-1">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+        <div className="flex items-center justify-end gap-2 text-sm">
+          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Önceki</Button>
+          <span className="text-muted-foreground">{page} / {totalPages}</span>
+          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Sonraki</Button>
+        </div>
+      )}
+
+      {panelOpen && (
+        <div className="fixed inset-0 z-40 flex">
+          <div className="flex-1 bg-black/30" onClick={closePanel} />
+          <div className="w-full max-w-sm bg-background border-l shadow-xl flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <h2 className="font-semibold">{panelMode === 'create' ? 'Yeni Tahsilat Makbuzu' : 'Tahsilat Makbuzu Düzenle'}</h2>
+              <Button variant="ghost" size="icon" onClick={closePanel}><X className="h-4 w-4" /></Button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="tarih">Tarih <span className="text-destructive">*</span></Label>
+                <Input id="tarih" type="date" value={formTarih} onChange={e => setFormTarih(e.target.value)} />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Cari Hesap <span className="text-destructive">*</span></Label>
+                {formCariHesapAdi ? (
+                  <div className="flex items-center justify-between border rounded-md px-3 py-2 text-sm">
+                    {formCariHesapAdi}
+                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => { setFormCariHesapId(''); setFormCariHesapAdi('') }}>Kaldır</Button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <Input value={cariArama} onChange={e => setCariArama(e.target.value)} placeholder="Cari hesap ara..." />
+                    {cariSonuclari.length > 0 && (
+                      <div className="absolute z-10 w-full bg-background border rounded-md mt-1 shadow-lg max-h-48 overflow-y-auto">
+                        {cariSonuclari.map(c => (
+                          <button key={c.id} type="button" onClick={() => selectCari(c)} className="w-full text-left px-3 py-2 text-sm hover:bg-muted/50">
+                            {c.hesapAdi}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="kasaBanka">Kasa / Banka <span className="text-destructive">*</span></Label>
+                <select id="kasaBanka" value={formKasaBankaId} onChange={e => setFormKasaBankaId(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
+                  <option value="">— Seçilmedi —</option>
+                  {kasaBankalar.map(k => <option key={k.id} value={k.id}>{k.name}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="gelirTanimi">Gelir Hesabı <span className="text-destructive">*</span></Label>
+                <select id="gelirTanimi" value={formGelirTanimiId} onChange={e => setFormGelirTanimiId(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
+                  <option value="">— Seçilmedi —</option>
+                  {gelirTanimlari.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="tutar">Tutar (₺) <span className="text-destructive">*</span></Label>
+                <Input id="tutar" type="number" min={0} step="0.01" value={formTutar} onChange={e => setFormTutar(e.target.value)} placeholder="0.00" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="aciklama">Açıklama</Label>
+                <Input id="aciklama" value={formAciklama} onChange={e => setFormAciklama(e.target.value)} placeholder="Opsiyonel not" maxLength={500} />
+              </div>
+              <label className="flex items-center gap-2 text-sm cursor-not-allowed opacity-60" title="Bu özellik henüz aktif değil">
+                <Checkbox checked={formDagitim} onCheckedChange={v => setFormDagitim(!!v)} disabled />
+                Dağıtım Yapılacak (yakında)
+              </label>
+            </div>
+            <div className="border-t px-4 py-3 flex gap-2 justify-end">
+              <Button variant="outline" onClick={closePanel}>İptal</Button>
+              <Button onClick={handleSave} disabled={saving}>{saving ? 'Kaydediliyor...' : 'Kaydet'}</Button>
+            </div>
           </div>
         </div>
       )}

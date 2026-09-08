@@ -139,7 +139,7 @@ export default function RaporTahsilatMakbuzlariPage() {
                 <tr key={item.id} className="hover:bg-muted/30">
                   <td className="px-3 py-2.5 font-mono text-xs">{item.evrakNo}</td>
                   <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{fmtDate(item.islemTarihi)}</td>
-                  <td className="px-3 py-2.5">{item.borcluAdi ?? '-'}</td>
+                  <td className="px-3 py-2.5">{item.borcluAdSoyad ?? '-'}</td>
                   <td className="px-3 py-2.5 text-muted-foreground hidden md:table-cell">{item.kasaBankaAdi ?? '-'}</td>
                   <td className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{OdemeTipiLabel[item.odemeTipi]}</td>
                   <td className="px-3 py-2.5 text-right font-medium text-emerald-600">{fmt(item.odemeTutari)}</td>

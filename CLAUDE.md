@@ -14,6 +14,29 @@ git checkout -b refactor/<konu>
 
 ---
 
+## Subagent Kullanımı
+
+`.claude/agents/` altındaki subagent'lar, ilgili göreve girildiğinde kullanıcıdan onay istemeden otomatik olarak devreye alınır. Görev türüne göre eşleşme:
+
+| Görev | Agent |
+|---|---|
+| Ödeme/Aidat/BorcMakbuzu/Payments modülü değişiklikleri | `Payments & Billing Engineer` |
+| Auth, JWT, RolePermission, PermissionFilter, multi-tenant yetkilendirme | `Identity & Access Engineer` |
+| EF Core sorgu/migration optimizasyonu, index, DB performansı | `Database Optimizer` |
+| Tamamlanan bir diff/PR'ın gözden geçirilmesi | `Code Reviewer` |
+| Auth/izin sistemi veya genel güvenlik açığı taraması | `Application Security Engineer` |
+| E2E/entegrasyon test otomasyonu (Playwright/Cypress vb.) | `Test Automation Engineer` |
+| Dashboard UI/UX kararları, shadcn/Tailwind bileşen tasarımı | `UX Architect` |
+| Genel backend mimarisi (.NET, CQRS, modüler monolith) | `Backend Architect` |
+| Genel frontend geliştirme (Next.js, React) | `Frontend Developer` |
+| CI/CD, deployment, altyapı otomasyonu | `DevOps Automator` |
+| Prod izleme, SLO, incident, gözlemlenebilirlik | `SRE` |
+| API endpoint test/validasyonu | `API Tester` |
+
+Yeni bir görev bu tablodaki alanlardan birine girdiğinde, ilgili subagent'ı proaktif olarak (Agent tool ile) kullan; kullanıcıdan hangi agent'ı istediğini sormaya gerek yok.
+
+---
+
 ## Proje Yapısı
 
 ```

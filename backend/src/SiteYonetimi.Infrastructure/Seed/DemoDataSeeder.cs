@@ -285,30 +285,6 @@ public static class DemoDataSeeder
             allResidents.Add(MakeAccessCard(siteId, u.OwnerUserId!.Value, u.Id, $"GS-{allResidents.Count + 1:D4}"));
 
         db.AccessCards.AddRange(allResidents);
-
-        // Payments — dues for the last 3 months
-        var payments = new List<Payment>();
-        var now = DateTime.UtcNow;
-        foreach (var u in occupiedUnits)
-        {
-            for (var m = -2; m <= 0; m++)
-            {
-                var due = new DateTime(now.Year, now.Month, 1).AddMonths(m);
-                var isPaid = m < 0;
-                payments.Add(new Payment
-                {
-                    SiteId = siteId,
-                    UnitId = u.Id,
-                    Amount = u.MonthlyFee ?? 2000m,
-                    DueDate = due,
-                    PaidDate = isPaid ? due.AddDays(5) : null,
-                    Status = isPaid ? PaymentStatus.Paid : PaymentStatus.Pending,
-                    Description = $"{due:MMMM yyyy} Dues",
-                    CreatedAt = DateTime.UtcNow
-                });
-            }
-        }
-        db.Payments.AddRange(payments);
         await db.SaveChangesAsync();
     }
 
@@ -415,29 +391,6 @@ public static class DemoDataSeeder
             cards.Add(MakeAccessCard(siteId, u.OwnerUserId!.Value, u.Id, $"MK-{cards.Count + 1:D4}"));
 
         db.AccessCards.AddRange(cards);
-
-        var payments = new List<Payment>();
-        var now = DateTime.UtcNow;
-        foreach (var u in occupiedUnits)
-        {
-            for (var m = -2; m <= 0; m++)
-            {
-                var due = new DateTime(now.Year, now.Month, 1).AddMonths(m);
-                var isPaid = m < 0;
-                payments.Add(new Payment
-                {
-                    SiteId = siteId,
-                    UnitId = u.Id,
-                    Amount = u.MonthlyFee ?? 2100m,
-                    DueDate = due,
-                    PaidDate = isPaid ? due.AddDays(7) : null,
-                    Status = isPaid ? PaymentStatus.Paid : PaymentStatus.Pending,
-                    Description = $"{due:MMMM yyyy} Dues",
-                    CreatedAt = DateTime.UtcNow
-                });
-            }
-        }
-        db.Payments.AddRange(payments);
         await db.SaveChangesAsync();
     }
 
@@ -585,6 +538,8 @@ public static class DemoDataSeeder
     {
         if (await db.KasaBanka.IgnoreQueryFilters().AnyAsync(k => k.SiteId == siteId && k.Name == "Ana Kasa"))
             return;
+        if (await db.GiderTanimlari.IgnoreQueryFilters().AnyAsync(g => g.SiteId == siteId && g.GiderKodu == "G001"))
+            return;
 
         var units = await db.Units.IgnoreQueryFilters()
             .Where(u => u.SiteId == siteId && u.Status != UnitStatus.Bos)
@@ -613,17 +568,29 @@ public static class DemoDataSeeder
         var gecikmeTanimi = MakeGelirTanimi(siteId, "Gecikme Faizi", aidatGrubu.Id, 2);
         var kiraGeliriTanimi = MakeGelirTanimi(siteId, "Kira Geliri", digerGelirGrubu.Id, 1);
         var ortakAlanGeliriTanimi = MakeGelirTanimi(siteId, "Ortak Alan Geliri", digerGelirGrubu.Id, 2);
-        db.GelirTanimlari.AddRange(aidatTanimi, gecikmeTanimi, kiraGeliriTanimi, ortakAlanGeliriTanimi);
+        var demirbasTaksitiTanimi = MakeGelirTanimi(siteId, "Demirbaş Yatırım Taksidi", digerGelirGrubu.Id, 3);
+        db.GelirTanimlari.AddRange(aidatTanimi, gecikmeTanimi, kiraGeliriTanimi, ortakAlanGeliriTanimi, demirbasTaksitiTanimi);
 
-        var maasTanimi = MakeGiderTanimi(siteId, "Maaş", personelGrubu.Id, 1);
-        var sgkTanimi = MakeGiderTanimi(siteId, "SGK Primi", personelGrubu.Id, 2);
-        var asansorTanimi = MakeGiderTanimi(siteId, "Asansör Bakımı", bakimGrubu.Id, 1);
-        var temizlikTanimi = MakeGiderTanimi(siteId, "Temizlik", bakimGrubu.Id, 2);
-        var peyzajTanimi = MakeGiderTanimi(siteId, "Peyzaj", bakimGrubu.Id, 3);
-        var elektrikTanimi = MakeGiderTanimi(siteId, "Elektrik", faturaGrubu.Id, 1);
-        var suTanimi = MakeGiderTanimi(siteId, "Su", faturaGrubu.Id, 2);
-        var dogalgazTanimi = MakeGiderTanimi(siteId, "Doğalgaz", faturaGrubu.Id, 3);
+        var maasTanimi = MakeGiderTanimi(siteId, "G001", "Maaş", personelGrubu.Id, 1);
+        var sgkTanimi = MakeGiderTanimi(siteId, "G002", "SGK Primi", personelGrubu.Id, 2);
+        var asansorTanimi = MakeGiderTanimi(siteId, "G003", "Asansör Bakımı", bakimGrubu.Id, 1);
+        var temizlikTanimi = MakeGiderTanimi(siteId, "G004", "Temizlik", bakimGrubu.Id, 2);
+        var peyzajTanimi = MakeGiderTanimi(siteId, "G005", "Peyzaj", bakimGrubu.Id, 3);
+        var elektrikTanimi = MakeGiderTanimi(siteId, "G006", "Elektrik", faturaGrubu.Id, 1);
+        var suTanimi = MakeGiderTanimi(siteId, "G007", "Su", faturaGrubu.Id, 2);
+        var dogalgazTanimi = MakeGiderTanimi(siteId, "G008", "Doğalgaz", faturaGrubu.Id, 3);
         db.GiderTanimlari.AddRange(maasTanimi, sgkTanimi, asansorTanimi, temizlikTanimi, peyzajTanimi, elektrikTanimi, suTanimi, dogalgazTanimi);
+        await db.SaveChangesAsync();
+
+        // ── Personel ─────────────────────────────────────────────────────────
+        var personelKayitlari = new[]
+        {
+            MakePersonel(siteId, "335.001", "Ahmet Yılmaz", "Temizlik Görevlisi", null, "ahmet.yilmaz@example.com", DateOnly.FromDateTime(now.AddYears(-2))),
+            MakePersonel(siteId, "335.002", "Mehmet Demir", "Elektrik Teknikeri", null, "mehmet.demir@example.com", DateOnly.FromDateTime(now.AddYears(-1))),
+            MakePersonel(siteId, "P0001", "Ayşe Kaya", "İşletme Müdürü", "Aktif Yaşam A.Ş.", "ayse.kaya@aktifyasam.com", DateOnly.FromDateTime(now.AddYears(-3))),
+            MakePersonel(siteId, "P0002", "Fatma Şahin", "Muhasebe Sorumlusu", "Aktif Yaşam A.Ş.", "fatma.sahin@aktifyasam.com", DateOnly.FromDateTime(now.AddMonths(-8))),
+        };
+        db.Personeller.AddRange(personelKayitlari);
         await db.SaveChangesAsync();
 
         // ── Kasa/Banka ────────────────────────────────────────────────────────
@@ -651,7 +618,26 @@ public static class DemoDataSeeder
         db.BankaHareketleri.AddRange(hareketler);
         await db.SaveChangesAsync();
 
-        // ── Aidat borç makbuzları — son 12 ay ───────────────────────────────────
+        // ── Borçlu (Kişi) çözümlemesi — dairenin aktif kiracısı varsa kiracı, yoksa sahibi ──
+        var borcluIds = units
+            .SelectMany(u => new[] { u.OwnerUserId, u.TenantUserId })
+            .Where(id => id.HasValue).Select(id => id!.Value)
+            .Distinct().ToList();
+        var borcluKullanicilar = await masterDb.Users
+            .Where(u => borcluIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => $"{u.FirstName} {u.LastName}");
+
+        (Guid? UserId, UserType? Rol, string? AdSoyad) ResolveBorclu(Unit unit, bool tercihSahip = false)
+        {
+            var oncelikli = tercihSahip ? unit.OwnerUserId : (unit.TenantUserId ?? unit.OwnerUserId);
+            var rol = tercihSahip
+                ? (unit.OwnerUserId.HasValue ? UserType.Owner : (UserType?)null)
+                : (unit.TenantUserId.HasValue ? UserType.Renter : (unit.OwnerUserId.HasValue ? UserType.Owner : (UserType?)null));
+            var adSoyad = oncelikli.HasValue ? borcluKullanicilar.GetValueOrDefault(oncelikli.Value) : null;
+            return (oncelikli, rol, adSoyad);
+        }
+
+        // ── Aidat borç makbuzları — son 12 ay (kiracı varsa kiracıya, yoksa sahibine) ────
         var borclar = new List<BorcMakbuzu>();
         var bEvrakNo = 1;
         var siteIdPrefix = siteId.ToString()[..4];
@@ -659,6 +645,7 @@ public static class DemoDataSeeder
         {
             var unit = units[ui];
             var tutar = unit.MonthlyFee ?? 2000m;
+            var (borcluUserId, borcluRol, borcluAdSoyad) = ResolveBorclu(unit);
             for (var m = -11; m <= 0; m++)
             {
                 var donemTarihi = new DateTime(now.Year, now.Month, 1).AddMonths(m);
@@ -675,6 +662,9 @@ public static class DemoDataSeeder
                     Donem = donemTarihi.ToString("yyyy-MM"),
                     SonOdemeTarihi = donemTarihi.AddDays(10),
                     UnitId = unit.Id,
+                    BorcluUserId = borcluUserId,
+                    BorcluRol = borcluRol,
+                    BorcluAdiSnapshot = borcluAdSoyad,
                     GelirTanimiId = aidatTanimi.Id,
                     Tutar = tutar,
                     GecikmeTutari = 0m,
@@ -685,6 +675,35 @@ public static class DemoDataSeeder
                 bEvrakNo++;
             }
         }
+
+        // ── Demirbaş Yatırım Taksidi — sadece ev sahiplerine, tek seferlik örnek ─────────
+        var demirbasBatchId = Guid.NewGuid();
+        foreach (var unit in units.Where(u => u.OwnerUserId.HasValue).Take(5))
+        {
+            var (borcluUserId, borcluRol, borcluAdSoyad) = ResolveBorclu(unit, tercihSahip: true);
+            var donemTarihi = new DateTime(now.Year, now.Month, 1);
+            borclar.Add(new BorcMakbuzu
+            {
+                SiteId = siteId,
+                EvrakNo = $"OZT-BM-{siteIdPrefix}-{bEvrakNo:D5}",
+                IslemTarihi = donemTarihi,
+                Donem = donemTarihi.ToString("yyyy-MM"),
+                SonOdemeTarihi = donemTarihi.AddDays(15),
+                UnitId = unit.Id,
+                BorcluUserId = borcluUserId,
+                BorcluRol = borcluRol,
+                BorcluAdiSnapshot = borcluAdSoyad,
+                GelirTanimiId = demirbasTaksitiTanimi.Id,
+                Tutar = 3500m,
+                GecikmeTutari = 0m,
+                OdenenTutar = 0m,
+                Aciklama = "Ortak demirbaş yatırımı taksidi",
+                TopluBorclandirmaBatchId = demirbasBatchId,
+                CreatedAt = DateTime.UtcNow
+            });
+            bEvrakNo++;
+        }
+
         db.BorcMakbuzlari.AddRange(borclar);
         await db.SaveChangesAsync();
 
@@ -701,6 +720,8 @@ public static class DemoDataSeeder
                 SiteId = siteId,
                 EvrakNo = $"OZT-TM-{siteIdPrefix}-{tEvrakNo:D5}",
                 IslemTarihi = borc.IslemTarihi.AddDays(2),
+                BorcluUserId = borc.BorcluUserId,
+                BorcluAdiSnapshot = borc.BorcluAdiSnapshot,
                 KasaBankaId = kasa.Id,
                 BorcMakbuzuId = borc.Id,
                 OdemeTutari = borc.OdenenTutar,
@@ -989,9 +1010,15 @@ public static class DemoDataSeeder
         SiteId = siteId, Name = name, IsActive = true, Order = order, CreatedAt = DateTime.UtcNow
     };
 
-    private static GiderTanimi MakeGiderTanimi(Guid siteId, string name, Guid grubuId, int order) => new()
+    private static GiderTanimi MakeGiderTanimi(Guid siteId, string giderKodu, string name, Guid grubuId, int order) => new()
     {
-        SiteId = siteId, Name = name, GiderGrubuId = grubuId, IsActive = true, Order = order, CreatedAt = DateTime.UtcNow
+        SiteId = siteId, GiderKodu = giderKodu, Name = name, GiderGrubuId = grubuId, IsActive = true, Order = order, CreatedAt = DateTime.UtcNow
+    };
+
+    private static Personel MakePersonel(Guid siteId, string personelKodu, string name, string title, string? firma, string? email, DateOnly startDate) => new()
+    {
+        SiteId = siteId, PersonelKodu = personelKodu, Name = name, Title = title,
+        Firma = firma, Email = email, StartDate = startDate, IsActive = true, CreatedAt = DateTime.UtcNow
     };
 
     private static KasaBanka MakeKasaBanka(

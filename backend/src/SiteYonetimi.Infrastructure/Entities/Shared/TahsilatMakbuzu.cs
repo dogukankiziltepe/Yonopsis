@@ -8,7 +8,8 @@ public class TahsilatMakbuzu
     public Guid SiteId { get; set; }
     public string EvrakNo { get; set; } = string.Empty;
     public DateTime IslemTarihi { get; set; } = DateTime.UtcNow;
-    public string? BorcluAdi { get; set; }
+    public Guid? BorcluUserId { get; set; }
+    public string? BorcluAdiSnapshot { get; set; }
     public Guid? KasaBankaId { get; set; }
     public Guid? BorcMakbuzuId { get; set; }
     public decimal OdemeTutari { get; set; }
