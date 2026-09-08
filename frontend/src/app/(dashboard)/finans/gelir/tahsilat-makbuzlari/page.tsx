@@ -92,7 +92,7 @@ export default function PageComponent() {
               <tr key={item.id} className="border-t hover:bg-muted/30">
                 <td className="px-3 py-2 font-mono text-xs">{item.evrakNo}</td>
                 <td className="px-3 py-2 text-muted-foreground">{new Date(item.islemTarihi).toLocaleDateString('tr-TR')}</td>
-                <td className="px-3 py-2">{item.borcluAdi ?? item.kasaBankaAdi ?? '—'}</td>
+                <td className="px-3 py-2">{item.borcluAdSoyad ?? item.kasaBankaAdi ?? '—'}</td>
                 <td className="px-3 py-2 text-right font-medium text-green-600">
                   {item.odemeTutari.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                 </td>

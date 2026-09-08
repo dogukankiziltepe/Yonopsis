@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SiteYonetimi.Infrastructure.Data;
 
 #nullable disable
 
-namespace SiteYonetimi.Infrastructure.Migrations
+namespace SiteYonetimi.Infrastructure.Migrations.SharedTenantDb
 {
     [DbContext(typeof(SharedTenantDbContext))]
-    partial class SharedTenantDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260713200145_RedesignFinansModule")]
+    partial class RedesignFinansModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -68,7 +71,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("UnitId");
 
-                    b.ToTable("AccessCards", (string)null);
+                    b.ToTable("AccessCards");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.AjandaEtkinlik", b =>
@@ -124,7 +127,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "BaslangicTarihi");
 
-                    b.ToTable("AjandaEtkinlikleri", (string)null);
+                    b.ToTable("AjandaEtkinlikleri");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.AnaSayac", b =>
@@ -177,7 +180,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "Tip");
 
-                    b.ToTable("AnaSayaclar", (string)null);
+                    b.ToTable("AnaSayaclar");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.AnaSayfaAyar", b =>
@@ -236,7 +239,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("AnaSayfaAyarlari", (string)null);
+                    b.ToTable("AnaSayfaAyarlari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Anket", b =>
@@ -284,7 +287,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "Durum");
 
-                    b.ToTable("Anketler", (string)null);
+                    b.ToTable("Anketler");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Announcement", b =>
@@ -329,7 +332,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Announcements", (string)null);
+                    b.ToTable("Announcements");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.AracGirisCikis", b =>
@@ -383,7 +386,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "GirisSaati");
 
-                    b.ToTable("AracGirisCikislar", (string)null);
+                    b.ToTable("AracGirisCikislar");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.BankaHareketi", b =>
@@ -435,7 +438,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "KasaBankaId", "Tarih");
 
-                    b.ToTable("BankaHareketleri", (string)null);
+                    b.ToTable("BankaHareketleri");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.BirimFiyat", b =>
@@ -481,7 +484,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "Tip", "BaslangicTarihi");
 
-                    b.ToTable("BirimFiyatlar", (string)null);
+                    b.ToTable("BirimFiyatlar");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.BorcMakbuzu", b =>
@@ -570,7 +573,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "UnitId");
 
-                    b.ToTable("BorcMakbuzlari", (string)null);
+                    b.ToTable("BorcMakbuzlari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Building", b =>
@@ -612,7 +615,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Buildings", (string)null);
+                    b.ToTable("Buildings");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.DaireSayac", b =>
@@ -670,7 +673,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "UnitId", "Tip");
 
-                    b.ToTable("DaireSayaclar", (string)null);
+                    b.ToTable("DaireSayaclar");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Departman", b =>
@@ -711,7 +714,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("Departmanlar", (string)null);
+                    b.ToTable("Departmanlar");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.EmailLog", b =>
@@ -766,7 +769,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "UserId");
 
-                    b.ToTable("EmailLogs", (string)null);
+                    b.ToTable("EmailLogs");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.EpostaSablonu", b =>
@@ -817,7 +820,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "Ad");
 
-                    b.ToTable("EpostaSablonlari", (string)null);
+                    b.ToTable("EpostaSablonlari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Fatura", b =>
@@ -887,7 +890,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("Faturalar", (string)null);
+                    b.ToTable("Faturalar");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.FotografGalerisi", b =>
@@ -934,7 +937,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "Sira");
 
-                    b.ToTable("FotografGalerisi", (string)null);
+                    b.ToTable("FotografGalerisi");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.GelirGrubu", b =>
@@ -974,7 +977,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("GelirGruplari", (string)null);
+                    b.ToTable("GelirGruplari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.GelirTanimi", b =>
@@ -1019,7 +1022,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("GelirGrubuId");
 
-                    b.ToTable("GelirTanimlari", (string)null);
+                    b.ToTable("GelirTanimlari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.GiderGrubu", b =>
@@ -1059,7 +1062,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("GiderGruplari", (string)null);
+                    b.ToTable("GiderGruplari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.GiderTanimi", b =>
@@ -1129,7 +1132,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("GiderTanimlari", (string)null);
+                    b.ToTable("GiderTanimlari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.HesapPlani", b =>
@@ -1214,7 +1217,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "PersonId");
 
-                    b.ToTable("HesapPlani", (string)null);
+                    b.ToTable("HesapPlani");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.IsEmri", b =>
@@ -1293,7 +1296,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "Durum");
 
-                    b.ToTable("IsEmirleri", (string)null);
+                    b.ToTable("IsEmirleri");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.KasaBanka", b =>
@@ -1345,7 +1348,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("KasaBanka", (string)null);
+                    b.ToTable("KasaBanka");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.KayipEsya", b =>
@@ -1399,7 +1402,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "Durum");
 
-                    b.ToTable("KayipEsyalar", (string)null);
+                    b.ToTable("KayipEsyalar");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.MobilBildirimLog", b =>
@@ -1440,7 +1443,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "UserId");
 
-                    b.ToTable("MobilBildirimLogs", (string)null);
+                    b.ToTable("MobilBildirimLogs");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.MobilBildirimSablonu", b =>
@@ -1489,7 +1492,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "Ad");
 
-                    b.ToTable("MobilBildirimSablonlari", (string)null);
+                    b.ToTable("MobilBildirimSablonlari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.MuhasebeDonem", b =>
@@ -1536,7 +1539,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("MuhasebeDonemler", (string)null);
+                    b.ToTable("MuhasebeDonemler");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.MuhasebeFisi", b =>
@@ -1605,7 +1608,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "DonemId", "YevmiyeNo");
 
-                    b.ToTable("MuhasebeFisleri", (string)null);
+                    b.ToTable("MuhasebeFisleri");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.MuhasebeFisiDetay", b =>
@@ -1653,7 +1656,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "HesapId");
 
-                    b.ToTable("MuhasebeFisiDetaylari", (string)null);
+                    b.ToTable("MuhasebeFisiDetaylari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.MuhasebeParametre", b =>
@@ -1732,7 +1735,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("MuhasebeParametreler", (string)null);
+                    b.ToTable("MuhasebeParametreler");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Olay", b =>
@@ -1787,7 +1790,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "OlayTarihi");
 
-                    b.ToTable("Olaylar", (string)null);
+                    b.ToTable("Olaylar");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.OrtakAlan", b =>
@@ -1828,7 +1831,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OrtakAlanlar", (string)null);
+                    b.ToTable("OrtakAlanlar");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.OtomatikBildirim", b =>
@@ -1885,7 +1888,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("OtomatikBildirimler", (string)null);
+                    b.ToTable("OtomatikBildirimler");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.PersonUnitHistory", b =>
@@ -1945,7 +1948,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "UnitId");
 
-                    b.ToTable("PersonUnitHistories", (string)null);
+                    b.ToTable("PersonUnitHistories");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Personel", b =>
@@ -2062,7 +2065,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("Personeller", (string)null);
+                    b.ToTable("Personeller");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.PersonelAcilDurumKisi", b =>
@@ -2105,7 +2108,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "PersonelId");
 
-                    b.ToTable("PersonelAcilDurumKisileri", (string)null);
+                    b.ToTable("PersonelAcilDurumKisileri");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.PersonelEgitim", b =>
@@ -2158,7 +2161,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "PersonelId");
 
-                    b.ToTable("PersonelEgitimleri", (string)null);
+                    b.ToTable("PersonelEgitimleri");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.PersonelIzin", b =>
@@ -2201,7 +2204,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "PersonelId");
 
-                    b.ToTable("PersonelIzinleri", (string)null);
+                    b.ToTable("PersonelIzinleri");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.PersonelKimlikBilgisi", b =>
@@ -2304,7 +2307,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("PersonelKimlikBilgileri", (string)null);
+                    b.ToTable("PersonelKimlikBilgileri");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.PersonelMuhasebeEntegrasyon", b =>
@@ -2385,7 +2388,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("PersonelMuhasebeEntegrasyonlari", (string)null);
+                    b.ToTable("PersonelMuhasebeEntegrasyonlari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.PersonelTelefon", b =>
@@ -2424,7 +2427,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "PersonelId");
 
-                    b.ToTable("PersonelTelefonlari", (string)null);
+                    b.ToTable("PersonelTelefonlari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Rezervasyon", b =>
@@ -2472,7 +2475,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "TesisId", "StartDate");
 
-                    b.ToTable("Rezervasyonlar", (string)null);
+                    b.ToTable("Rezervasyonlar");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SayacOkuma", b =>
@@ -2522,7 +2525,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "OkumaTarihi");
 
-                    b.ToTable("SayacOkumalar", (string)null);
+                    b.ToTable("SayacOkumalar");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SiteTemasi", b =>
@@ -2573,7 +2576,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("SiteTemalari", (string)null);
+                    b.ToTable("SiteTemalari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SmsLog", b =>
@@ -2619,7 +2622,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "UserId");
 
-                    b.ToTable("SmsLogs", (string)null);
+                    b.ToTable("SmsLogs");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SmsSablonu", b =>
@@ -2663,7 +2666,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "Ad");
 
-                    b.ToTable("SmsSablonlari", (string)null);
+                    b.ToTable("SmsSablonlari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SupportRequest", b =>
@@ -2709,7 +2712,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("UnitId");
 
-                    b.ToTable("SupportRequests", (string)null);
+                    b.ToTable("SupportRequests");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.SupportRequestComment", b =>
@@ -2746,7 +2749,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("RequestId");
 
-                    b.ToTable("SupportRequestComments", (string)null);
+                    b.ToTable("SupportRequestComments");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.TahsilatMakbuzu", b =>
@@ -2811,7 +2814,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("TahsilatMakbuzlari", (string)null);
+                    b.ToTable("TahsilatMakbuzlari");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.TalepTipi", b =>
@@ -2848,7 +2851,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TalepTipleri", (string)null);
+                    b.ToTable("TalepTipleri");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Teklif", b =>
@@ -2910,7 +2913,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "TeklifTarihi");
 
-                    b.ToTable("Teklifler", (string)null);
+                    b.ToTable("Teklifler");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.TelefonRehberi", b =>
@@ -2970,7 +2973,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "Ad");
 
-                    b.ToTable("TelefonRehberi", (string)null);
+                    b.ToTable("TelefonRehberi");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Tesis", b =>
@@ -3013,7 +3016,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tesisler", (string)null);
+                    b.ToTable("Tesisler");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Toplanti", b =>
@@ -3076,7 +3079,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "ToplamtiTarihi");
 
-                    b.ToTable("Toplantilar", (string)null);
+                    b.ToTable("Toplantilar");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Unit", b =>
@@ -3175,7 +3178,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("UnitTypeId");
 
-                    b.ToTable("Units", (string)null);
+                    b.ToTable("Units");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.UnitType", b =>
@@ -3208,7 +3211,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UnitTypes", (string)null);
+                    b.ToTable("UnitTypes");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.UploadedFile", b =>
@@ -3249,7 +3252,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UploadedFiles", (string)null);
+                    b.ToTable("UploadedFiles");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.Vehicle", b =>
@@ -3311,7 +3314,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("Vehicles", (string)null);
+                    b.ToTable("Vehicles");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.WhatsappLog", b =>
@@ -3357,7 +3360,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "UserId");
 
-                    b.ToTable("WhatsappLogs", (string)null);
+                    b.ToTable("WhatsappLogs");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.YapilacakIs", b =>
@@ -3409,7 +3412,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "Durum");
 
-                    b.ToTable("YapilacakIsler", (string)null);
+                    b.ToTable("YapilacakIsler");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.ZiyaretciGirisCikis", b =>
@@ -3466,7 +3469,7 @@ namespace SiteYonetimi.Infrastructure.Migrations
 
                     b.HasIndex("SiteId", "GirisSaati");
 
-                    b.ToTable("ZiyaretciGirisCikislar", (string)null);
+                    b.ToTable("ZiyaretciGirisCikislar");
                 });
 
             modelBuilder.Entity("SiteYonetimi.Infrastructure.Entities.Shared.AccessCard", b =>

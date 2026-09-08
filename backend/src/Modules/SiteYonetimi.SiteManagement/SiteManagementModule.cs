@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using SiteYonetimi.SiteManagement.BorcMakbuzlari.TopluBorclandirma.Services;
 using SiteYonetimi.SiteManagement.Import.Services;
 using SiteYonetimi.SiteManagement.Report.Services;
 using SiteYonetimi.SiteManagement.Units.Services;
@@ -17,6 +18,7 @@ public static class SiteManagementModule
         services.AddScoped<ExcelTemplateService>();
         services.AddScoped<IReportService, ReportService>();
         services.AddScoped<IPersonUnitHistoryService, PersonUnitHistoryService>();
+        services.AddScoped<ITopluBorclandirmaService, TopluBorclandirmaService>();
         return services;
     }
 }

@@ -5,6 +5,8 @@ import type {
   TahsilatMakbuzu, CreateTahsilatMakbuzuDto, UpdateTahsilatMakbuzuDto,
   Fatura, CreateFaturaDto, UpdateFaturaDto,
   BankaHareketi, CreateBankaHareketiDto, UpdateBankaHareketiDto,
+  GelirTanimiSecim, TopluBorclandirmaTemplateRequest,
+  TopluBorclandirmaPreview, TopluBorclandirmaConfirmRequest, TopluBorclandirmaSonuc,
 } from '@/types/finans'
 
 export const borcMakbuzlariApi = {
@@ -16,6 +18,22 @@ export const borcMakbuzlariApi = {
     siteApi.put(`/api/borc-makbuzlari/${id}`, data),
   delete: (id: string) =>
     siteApi.delete(`/api/borc-makbuzlari/${id}`),
+
+  topluBorclandirma: {
+    getAktifGelirTanimlari: () =>
+      siteApi.get<GelirTanimiSecim[]>('/api/borc-makbuzlari/toplu-borclandirma/gelir-tanimlari-aktif'),
+    downloadTemplate: (data: TopluBorclandirmaTemplateRequest) =>
+      siteApi.post('/api/borc-makbuzlari/toplu-borclandirma/template', data, { responseType: 'blob' }),
+    preview: (file: File) => {
+      const form = new FormData()
+      form.append('file', file)
+      return siteApi.post<TopluBorclandirmaPreview>('/api/borc-makbuzlari/toplu-borclandirma/preview', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+    },
+    confirm: (data: TopluBorclandirmaConfirmRequest) =>
+      siteApi.post<TopluBorclandirmaSonuc>('/api/borc-makbuzlari/toplu-borclandirma/confirm', data),
+  },
 }
 
 export const tahsilatMakbuzlariApi = {

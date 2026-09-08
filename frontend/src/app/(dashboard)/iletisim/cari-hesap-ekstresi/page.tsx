@@ -49,8 +49,8 @@ export default function CariHesapEkstresiPage() {
 
   // Unique persons
   const persons = Array.from(new Set([
-    ...allBorclar.map(b => b.borcluAdi ?? b.unitDoorNumber ?? ''),
-    ...allTahsilat.map(t => t.borcluAdi ?? ''),
+    ...allBorclar.map(b => b.borcluAdSoyad ?? b.unitDoorNumber ?? ''),
+    ...allTahsilat.map(t => t.borcluAdSoyad ?? ''),
   ].filter(Boolean))).sort((a, b) => a.localeCompare(b, 'tr'))
 
   const filteredPersons = cariSearch
@@ -61,7 +61,7 @@ export default function CariHesapEkstresiPage() {
   const rows: EkstreRow[] = []
   if (cariAdi) {
     for (const b of allBorclar) {
-      const ad = b.borcluAdi ?? b.unitDoorNumber ?? ''
+      const ad = b.borcluAdSoyad ?? b.unitDoorNumber ?? ''
       if (ad !== cariAdi) continue
       if (filterBaslangic && b.islemTarihi < filterBaslangic) continue
       if (filterBitis && b.islemTarihi > filterBitis + 'T23:59:59') continue
@@ -76,7 +76,7 @@ export default function CariHesapEkstresiPage() {
       })
     }
     for (const t of allTahsilat) {
-      if ((t.borcluAdi ?? '') !== cariAdi) continue
+      if ((t.borcluAdSoyad ?? '') !== cariAdi) continue
       if (filterBaslangic && t.islemTarihi < filterBaslangic) continue
       if (filterBitis && t.islemTarihi > filterBitis + 'T23:59:59') continue
       rows.push({

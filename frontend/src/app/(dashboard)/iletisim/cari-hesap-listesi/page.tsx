@@ -41,7 +41,7 @@ export default function CariHesapListesiPage() {
         const map = new Map<string, CariEntry>()
 
         for (const b of borclar) {
-          const key = b.borcluAdi ?? b.unitDoorNumber ?? '(Bilinmiyor)'
+          const key = b.borcluAdSoyad ?? b.unitDoorNumber ?? '(Bilinmiyor)'
           const e = map.get(key) ?? { ad: key, toplamBorc: 0, toplamOdenen: 0, toplamKalan: 0, borcSayisi: 0, tahsilatSayisi: 0 }
           e.toplamBorc += b.tutar
           e.toplamOdenen += b.odenenTutar
@@ -51,7 +51,7 @@ export default function CariHesapListesiPage() {
         }
 
         for (const t of tahsilat) {
-          const key = t.borcluAdi ?? '(Bilinmiyor)'
+          const key = t.borcluAdSoyad ?? '(Bilinmiyor)'
           if (!map.has(key)) {
             map.set(key, { ad: key, toplamBorc: 0, toplamOdenen: t.odemeTutari, toplamKalan: -t.odemeTutari, borcSayisi: 0, tahsilatSayisi: 1 })
           } else {

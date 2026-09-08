@@ -1,3 +1,5 @@
+import type { UserType } from './person'
+
 // ── Enums ───────────────────────────────────────────────────────────────────
 export enum OdemeTipi { Nakit = 1, KrediKarti = 2, HavaleEft = 3, Diger = 4 }
 export enum BankaHareketiDurum { Bekleyen = 0, Eslestis = 1 }
@@ -30,7 +32,9 @@ export interface BorcMakbuzu {
   sonOdemeTarihi?: string
   unitId?: string
   unitDoorNumber?: string
-  borcluAdi?: string
+  borcluUserId?: string
+  borcluAdSoyad?: string
+  borcluRol?: UserType
   gelirTanimiAdi?: string
   tutar: number
   gecikmeTutari: number
@@ -43,7 +47,8 @@ export interface CreateBorcMakbuzuDto {
   donem?: string
   sonOdemeTarihi?: string
   unitId?: string
-  borcluAdi?: string
+  borcluUserId?: string
+  borcluRol?: UserType
   gelirTanimiId?: string
   tutar: number
   aciklama?: string
@@ -58,18 +63,20 @@ export interface TahsilatMakbuzu {
   id: string
   evrakNo: string
   islemTarihi: string
-  borcluAdi?: string
+  borcluUserId?: string
+  borcluAdSoyad?: string
   kasaBankaId?: string
   kasaBankaAdi?: string
   borcMakbuzuId?: string
   borcMakbuzuEvrakNo?: string
+  borcMakbuzuKalanTutar?: number
   odemeTutari: number
   odemeTipi: OdemeTipi
   aciklama?: string
   createdAt: string
 }
 export interface CreateTahsilatMakbuzuDto {
-  borcluAdi?: string
+  borcluUserId?: string
   kasaBankaId?: string
   borcMakbuzuId?: string
   odemeTutari: number
@@ -140,4 +147,62 @@ export interface CreateBankaHareketiDto {
 export interface UpdateBankaHareketiDto extends CreateBankaHareketiDto {
   durum: BankaHareketiDurum
   eslestirmeId?: string
+}
+
+// ── Toplu Borçlandırma ───────────────────────────────────────────────────────
+export interface GelirTanimiSecim {
+  id: string
+  name: string
+}
+
+export interface TopluBorclandirmaTemplateRequest {
+  gelirTanimiIds: string[]
+  borcluRolTercihi: UserType // 2=Sahip, 3=Kiracı
+  donem?: string
+  sonOdemeTarihi?: string
+}
+
+export interface TopluBorclandirmaPreviewItem {
+  unitId: string
+  unitDoorNumber: string
+  buildingName?: string
+  gelirTanimiId: string
+  gelirTanimiAdi: string
+  tutar: number
+  aciklama?: string
+  borcluUserId?: string
+  borcluAdSoyad?: string
+  borcluRol?: UserType
+  mukerrer: boolean
+  uyarilar: string[]
+}
+
+export interface TopluBorclandirmaPreview {
+  toplamKombinasyon: number
+  toplamTutar: number
+  mukerrerSayisi: number
+  donem?: string
+  sonOdemeTarihi?: string
+  items: TopluBorclandirmaPreviewItem[]
+  satirHatalari: string[]
+}
+
+export interface TopluBorclandirmaConfirmItem {
+  unitId: string
+  gelirTanimiId: string
+  tutar: number
+  aciklama?: string
+  borcluUserId?: string
+  borcluRol?: UserType
+}
+
+export interface TopluBorclandirmaConfirmRequest {
+  donem?: string
+  sonOdemeTarihi?: string
+  items: TopluBorclandirmaConfirmItem[]
+}
+
+export interface TopluBorclandirmaSonuc {
+  batchId: string
+  olusturulanSayisi: number
 }

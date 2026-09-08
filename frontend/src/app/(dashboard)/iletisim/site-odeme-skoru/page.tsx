@@ -56,7 +56,7 @@ export default function SiteOdemeSkoruPage() {
 
         const map = new Map<string, SkorEntry>()
         for (const b of borclar) {
-          const key = b.borcluAdi ?? b.unitDoorNumber ?? '(Bilinmiyor)'
+          const key = b.borcluAdSoyad ?? b.unitDoorNumber ?? '(Bilinmiyor)'
           const e = map.get(key) ?? {
             ad: key,
             toplamBorc: 0, toplamOdenen: 0, toplamKalan: 0,

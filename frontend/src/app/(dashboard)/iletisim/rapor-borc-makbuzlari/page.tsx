@@ -125,7 +125,7 @@ export default function RaporBorcMakbuzlariPage() {
                   <td className="px-3 py-2.5 font-mono text-xs">{item.evrakNo}</td>
                   <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{fmtDate(item.islemTarihi)}</td>
                   <td className="px-3 py-2.5 text-xs text-muted-foreground hidden md:table-cell">{item.donem ?? '-'}</td>
-                  <td className="px-3 py-2.5">{item.borcluAdi ?? item.unitDoorNumber ?? '-'}</td>
+                  <td className="px-3 py-2.5">{item.borcluAdSoyad ?? item.unitDoorNumber ?? '-'}</td>
                   <td className="px-3 py-2.5 text-right">{fmt(item.tutar)}</td>
                   <td className="px-3 py-2.5 text-right text-muted-foreground hidden md:table-cell">{fmt(item.odenenTutar)}</td>
                   <td className="px-3 py-2.5 text-right font-medium">{fmt(item.kalanTutar)}</td>

@@ -1,3 +1,5 @@
+using SiteYonetimi.Shared.Enums;
+
 namespace SiteYonetimi.SiteManagement.BorcMakbuzlari.DTOs;
 
 public record BorcMakbuzuDto(
@@ -8,7 +10,9 @@ public record BorcMakbuzuDto(
     DateTime? SonOdemeTarihi,
     Guid? UnitId,
     string? UnitDoorNumber,
-    string? BorcluAdi,
+    Guid? BorcluUserId,
+    string? BorcluAdSoyad,
+    UserType? BorcluRol,
     string? GelirTanimiAdi,
     decimal Tutar,
     decimal GecikmeTutari,
@@ -21,7 +25,8 @@ public record CreateBorcMakbuzuDto(
     string? Donem,
     DateTime? SonOdemeTarihi,
     Guid? UnitId,
-    string? BorcluAdi,
+    Guid? BorcluUserId,
+    UserType? BorcluRol,
     Guid? GelirTanimiId,
     decimal Tutar,
     string? Aciklama);
@@ -30,7 +35,8 @@ public record UpdateBorcMakbuzuDto(
     string? Donem,
     DateTime? SonOdemeTarihi,
     Guid? UnitId,
-    string? BorcluAdi,
+    Guid? BorcluUserId,
+    UserType? BorcluRol,
     Guid? GelirTanimiId,
     decimal Tutar,
     decimal GecikmeTutari,

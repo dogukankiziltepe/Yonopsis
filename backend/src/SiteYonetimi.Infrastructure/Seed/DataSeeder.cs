@@ -230,8 +230,6 @@ public static class DataSeeder
             new { Name = "OnayBekleyenGuncellemeler",     Label = "Pending Updates",                 Route = "/persons/onay-bekleyen-guncellemeler",          Icon = (string?)"user-check",       Order = 3 },
             new { Name = "Personel",                      Label = "Staff",                           Route = "/personel",                                     Icon = (string?)"circle-user",      Order = 4 },
             // --- FinansGroup ---
-            new { Name = "Aidatlar",              Label = "Dues",                       Route = "/aidatlar",                         Icon = (string?)"credit-card",    Order = 1  },
-            new { Name = "AidatKalemleri",        Label = "Dues Items",                 Route = "/aidat-kalemleri",                  Icon = (string?)"list",           Order = 2  },
             new { Name = "BankaHareketleri",      Label = "Bank Transactions",          Route = "/finans/banka-hareketleri",         Icon = (string?)"landmark",       Order = 3  },
             new { Name = "BorcMakbuzu",           Label = "Debt Receipt",               Route = "/finans/borc-makbuzu",              Icon = (string?)"file",           Order = 4  },
             new { Name = "TahsilatMakbuzu",       Label = "Collection Receipt",         Route = "/finans/tahsilat-makbuzu",          Icon = (string?)"receipt",        Order = 5  },
@@ -413,13 +411,8 @@ public static class DataSeeder
         }
         await db.SaveChangesAsync();
 
-        // "Aidatlar" page route updated from "/payments" to "/aidatlar"
-        var aidatlarPage = await db.Pages.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Name == "Aidatlar" && p.Route == "/payments");
-        if (aidatlarPage != null)
-        {
-            aidatlarPage.Route = "/aidatlar";
-            await db.SaveChangesAsync();
-        }
+        // Eski Aidat sistemi kaldırıldı — daha önce deploy edilmiş sitelerde kalan Page kayıtlarını temizle
+        await CleanupObsoleteAidatPagesAsync(db);
 
         // Parent–child relationship assignment
         await AssignPageParentsAsync(db);
@@ -442,6 +435,24 @@ public static class DataSeeder
     }
 
     /// <summary>
+    /// Eski Aidat sistemi kaldırıldığında, daha önce deploy edilmiş sitelerde DB'de kalmış
+    /// "Aidatlar"/"AidatKalemleri" Page kayıtlarını soft-delete eder (idempotent, seed sadece ekler/siler değil).
+    /// </summary>
+    private static async Task CleanupObsoleteAidatPagesAsync(MasterDbContext db)
+    {
+        var obsoleteNames = new[] { "Aidatlar", "AidatKalemleri" };
+        var pages = await db.Pages.IgnoreQueryFilters()
+            .Where(p => obsoleteNames.Contains(p.Name) && !p.IsDeleted)
+            .ToListAsync();
+        foreach (var p in pages)
+        {
+            p.IsDeleted = true;
+            p.UpdatedAt = DateTime.UtcNow;
+        }
+        if (pages.Count > 0) await db.SaveChangesAsync();
+    }
+
+    /// <summary>
     /// Assigns each child page's ParentPageId to the corresponding top menu group.
     /// Works safely on existing installations (idempotent).
     /// </summary>
@@ -461,8 +472,6 @@ public static class DataSeeder
             { "OnayBekleyenGuncellemeler",    "KisilerGroup"    },
             { "Personel",                     "KisilerGroup"    },
             // FinansGroup
-            { "Aidatlar",                     "FinansGroup"     },
-            { "AidatKalemleri",               "FinansGroup"     },
             { "BankaHareketleri",             "FinansGroup"     },
             { "BorcMakbuzu",                  "FinansGroup"     },
             { "TahsilatMakbuzu",              "FinansGroup"     },
