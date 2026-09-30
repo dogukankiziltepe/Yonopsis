@@ -196,6 +196,21 @@ public enum BankaHareketiDurum
     Iptal = 2
 }
 
+public enum VirmanHesapTuru
+{
+    Kisi = 0,
+    Cari = 1,
+    Banka = 2,
+    Gider = 3,
+    Personel = 4
+}
+
+public enum TazminatUygulamaSekli
+{
+    Gunluk = 0,
+    Aylik = 1
+}
+
 public enum FaturaOdemeDurumu
 {
     Odenmedi = 0,
@@ -264,3 +279,22 @@ public enum DagitimSekli
     ManuelDagitim = 3
 }
 
+
+/// <summary>İcra takibine alınan borçlunun takip sürecindeki durumu.</summary>
+public enum TakipDurumu
+{
+    Takipte = 0,
+    IcrayaVerilecek = 1,
+    IcrayaVerildi = 2,   // yalnızca "İcraya Ver" işlemiyle atanır
+    Odendi = 3,
+    IptalEdildi = 4
+}
+
+/// <summary>İcra dosyasının durumu.</summary>
+public enum IcraDurumu
+{
+    Icrada = 0,
+    HacizAsamasinda = 1,
+    Kapandi = 2,
+    IptalEdildi = 3
+}

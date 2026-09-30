@@ -40,7 +40,11 @@ public class GetKisilerFinansalDurumQueryHandler : IRequestHandler<GetKisilerFin
             .Select(u => u.OwnerUserId!.Value).Distinct().ToListAsync(cancellationToken);
         var tenantIds = await _db.Units.Where(u => u.SiteId == siteId && u.TenantUserId != null)
             .Select(u => u.TenantUserId!.Value).Distinct().ToListAsync(cancellationToken);
-        var personIds = historyIds.Union(ownerIds).Union(tenantIds).Distinct().ToList();
+        // Virman satırı olan ama artık daireye bağlı olmayan kişiler (örn. eski malik) de listelensin
+        var virmanPersonIds = await _db.VirmanSatirlari
+            .Where(s => s.SiteId == siteId && s.HesapTuru == VirmanHesapTuru.Kisi && !s.Virman.IsDeleted)
+            .Select(s => s.HesapId).Distinct().ToListAsync(cancellationToken);
+        var personIds = historyIds.Union(ownerIds).Union(tenantIds).Union(virmanPersonIds).Distinct().ToList();
 
         if (personIds.Count == 0)
             return Result<PaginatedResult<KisiFinansalDurumSatiriDto>>.Success(
@@ -64,6 +68,12 @@ public class GetKisilerFinansalDurumQueryHandler : IRequestHandler<GetKisilerFin
             .Select(g => new { PersonId = g.Key, Toplam = g.Sum(x => x.Tutar) })
             .ToDictionaryAsync(x => x.PersonId, cancellationToken);
 
+        var virmanAgg = await _db.VirmanSatirlari
+            .Where(s => s.SiteId == siteId && s.HesapTuru == VirmanHesapTuru.Kisi && !s.Virman.IsDeleted && personIds.Contains(s.HesapId))
+            .GroupBy(s => s.HesapId)
+            .Select(g => new { PersonId = g.Key, Net = g.Sum(x => x.BorcTutari - x.AlacakTutari) })
+            .ToDictionaryAsync(x => x.PersonId, cancellationToken);
+
         var users = await _masterDb.Users
             .Where(u => personIds.Contains(u.Id))
             .Select(u => new { u.Id, u.FirstName, u.LastName })
@@ -77,7 +87,8 @@ public class GetKisilerFinansalDurumQueryHandler : IRequestHandler<GetKisilerFin
             var devir = devirAgg.GetValueOrDefault(personId)?.Toplam ?? 0m;
             var adSoyad = users.TryGetValue(personId, out var u) ? $"{u.FirstName} {u.LastName}" : "-";
 
-            var netto = (b?.Kalan ?? 0m) + devir - iade;
+            var virman = virmanAgg.GetValueOrDefault(personId)?.Net ?? 0m;
+            var netto = (b?.Kalan ?? 0m) + devir - iade + virman;
             var borc = Math.Max(0, netto);
             var alacak = Math.Max(0, -netto);
 

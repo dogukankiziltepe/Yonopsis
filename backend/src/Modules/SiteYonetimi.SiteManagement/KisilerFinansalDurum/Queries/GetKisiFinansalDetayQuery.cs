@@ -44,7 +44,15 @@ public class GetKisiFinansalDetayQueryHandler : IRequestHandler<GetKisiFinansalD
         var directUnitIds = await _db.Units
             .Where(u => u.SiteId == siteId && (u.OwnerUserId == personId || u.TenantUserId == personId))
             .Select(u => u.Id).ToListAsync(cancellationToken);
-        var unitIds = historyUnitIds.Union(directUnitIds).Distinct().ToList();
+        var virmanSatirlari = await _db.VirmanSatirlari
+            .Include(s => s.Virman)
+            .Include(s => s.GelirTanimi!).ThenInclude(g => g.GelirGrubu)
+            .Where(s => s.SiteId == siteId && s.HesapTuru == SiteYonetimi.Shared.Enums.VirmanHesapTuru.Kisi && s.HesapId == personId && !s.Virman.IsDeleted)
+            .ToListAsync(cancellationToken);
+
+        // Virman satırındaki daire, kişi artık o daireye bağlı olmasa da (örn. eski malik) listelenir
+        var virmanUnitIds = virmanSatirlari.Where(s => s.UnitId.HasValue).Select(s => s.UnitId!.Value);
+        var unitIds = historyUnitIds.Union(directUnitIds).Union(virmanUnitIds).Distinct().ToList();
 
         var units = await _db.Units
             .Where(u => u.SiteId == siteId && unitIds.Contains(u.Id))
@@ -79,6 +87,12 @@ public class GetKisiFinansalDetayQueryHandler : IRequestHandler<GetKisiFinansalD
         foreach (var d in devirler)
         {
             hareketler.Add(new Hareket(d.Id, d.UnitId, "Devir", "Devir", d.Tarih, null, d.Aciklama, d.Tutar, 0m, 0m));
+        }
+        foreach (var s in virmanSatirlari)
+        {
+            var grupAdi = s.GelirTanimi?.GelirGrubu?.Name ?? "Diğer Gelirler";
+            var aciklama = s.Aciklama ?? s.Virman.Aciklama ?? $"Virman {s.Virman.EvrakNo}";
+            hareketler.Add(new Hareket(s.Id, s.UnitId, grupAdi, "Virman", s.Virman.Tarih, null, aciklama, s.BorcTutari, 0m, s.AlacakTutari));
         }
 
         var daireler = new List<DaireFinansalDto>();

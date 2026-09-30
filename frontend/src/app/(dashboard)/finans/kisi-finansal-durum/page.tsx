@@ -16,6 +16,7 @@ const kaynakStil: Record<string, string> = {
   Borc: 'bg-green-500',
   Tahsilat: 'bg-green-300',
   Devir: 'bg-red-500',
+  Virman: 'bg-blue-500',
 }
 
 function DaireAccordion({ daire }: { daire: DaireFinansal }) {

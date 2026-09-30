@@ -327,6 +327,164 @@ export interface CreateIadeMakbuzuDto {
 }
 export type UpdateIadeMakbuzuDto = CreateIadeMakbuzuDto
 
+// ── Kasa Transfer Fişi ───────────────────────────────────────────────────────
+export interface KasaTransfer {
+  id: string
+  evrakNo: string
+  belgeNo?: string
+  islemTarihi: string
+  tarih: string
+  cikisKasaBankaId: string
+  cikisKasaBankaAdi?: string
+  girisKasaBankaId: string
+  girisKasaBankaAdi?: string
+  tutar: number
+  aciklama?: string
+  createdAt: string
+}
+export interface CreateKasaTransferDto {
+  tarih: string
+  belgeNo?: string
+  cikisKasaBankaId: string
+  girisKasaBankaId: string
+  tutar: number
+  aciklama?: string
+}
+export type UpdateKasaTransferDto = CreateKasaTransferDto
+
+// ── Hesaplar Arası Virman ────────────────────────────────────────────────────
+export enum VirmanHesapTuru { Kisi = 0, Cari = 1, Banka = 2, Gider = 3, Personel = 4 }
+export const VirmanHesapTuruLabel: Record<VirmanHesapTuru, string> = {
+  [VirmanHesapTuru.Kisi]: 'Kişi',
+  [VirmanHesapTuru.Cari]: 'Cari',
+  [VirmanHesapTuru.Banka]: 'Banka',
+  [VirmanHesapTuru.Gider]: 'Gider',
+  [VirmanHesapTuru.Personel]: 'Personel',
+}
+export enum TazminatUygulamaSekli { Gunluk = 0, Aylik = 1 }
+export const TazminatUygulamaSekliLabel: Record<TazminatUygulamaSekli, string> = {
+  [TazminatUygulamaSekli.Gunluk]: 'Günlük',
+  [TazminatUygulamaSekli.Aylik]: 'Aylık',
+}
+export interface VirmanListItem {
+  id: string
+  evrakNo: string
+  islemTarihi: string
+  tarih: string
+  satirSayisi: number
+  toplamBorc: number
+  toplamAlacak: number
+  bakiye: number
+}
+export interface VirmanSatiri {
+  id: string
+  hesapTuru: VirmanHesapTuru
+  hesapId: string
+  hesapAdi?: string
+  unitId?: string
+  unitDoorNumber?: string
+  gelirTanimiId?: string
+  gelirTanimiAdi?: string
+  aciklama?: string
+  borcTutari: number
+  alacakTutari: number
+}
+export interface VirmanDetay {
+  id: string
+  evrakNo: string
+  islemTarihi: string
+  tarih: string
+  belgeTarihi?: string
+  belgeNo?: string
+  aciklama?: string
+  satirlar: VirmanSatiri[]
+}
+export interface VirmanSatiriInput {
+  id?: string // doluysa mevcut satır güncellenir (detay ekranındaki tazminat/icra alanları korunur)
+  hesapTuru: VirmanHesapTuru
+  hesapId: string
+  unitId?: string
+  gelirTanimiId?: string
+  aciklama?: string
+  borcTutari: number
+  alacakTutari: number
+}
+export interface SaveVirmanDto {
+  tarih: string
+  belgeTarihi?: string
+  belgeNo?: string
+  aciklama?: string
+  satirlar: VirmanSatiriInput[]
+}
+
+// ── Virman Fişi Detayları (satır bazlı yönetim) ──────────────────────────────
+export interface VirmanSecim {
+  id: string
+  evrakNo: string
+  tarih: string
+  belgeNo?: string
+}
+export interface VirmanSatirListItem {
+  id: string
+  virmanId: string
+  evrakNo: string
+  tarih: string
+  belgeTarihi?: string
+  sonOdemeTarihi?: string
+  unitDoorNumber?: string
+  hesapTuru: VirmanHesapTuru
+  hesapAdi?: string
+  borcTutari: number
+  alacakTutari: number
+}
+export interface VirmanSatirDetay {
+  id: string
+  virmanId: string
+  virmanEvrakNo: string
+  virmanTarih: string
+  virmanBelgeTarihi?: string
+  virmanBelgeNo?: string
+  virmanAciklama?: string
+  borcDonemi?: string
+  hesapTuru: VirmanHesapTuru
+  hesapId: string
+  hesapAdi?: string
+  unitId?: string
+  gelirTanimiId?: string
+  gecikmeTazminatiUygula: boolean
+  tazminatBaslamaTarihi?: string
+  sonOdemeTarihi?: string
+  tazminatUygulamaSekli?: TazminatUygulamaSekli
+  aylikTazminatYuzdesi?: number
+  tazminatHesapTarihi?: string
+  aciklama?: string
+  borcTutari: number
+  alacakTutari: number
+  icraTakibinde: boolean
+  icrayaVerilmeTarihi?: string
+  icraDosyaNo?: string
+}
+export interface SaveVirmanSatirDto {
+  virmanId: string
+  borcDonemi?: string
+  hesapTuru: VirmanHesapTuru
+  hesapId: string
+  unitId?: string
+  gelirTanimiId?: string
+  gecikmeTazminatiUygula: boolean
+  tazminatBaslamaTarihi?: string
+  sonOdemeTarihi?: string
+  tazminatUygulamaSekli?: TazminatUygulamaSekli
+  aylikTazminatYuzdesi?: number
+  tazminatHesapTarihi?: string
+  aciklama?: string
+  borcTutari: number
+  alacakTutari: number
+  icraTakibinde: boolean
+  icrayaVerilmeTarihi?: string
+  icraDosyaNo?: string
+}
+
 // ── Kişilere Göre Finansal Durum ─────────────────────────────────────────────
 export interface KisiFinansalDurumSatiri {
   personUserId: string
