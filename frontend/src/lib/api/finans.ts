@@ -13,6 +13,9 @@ import type {
   DevirBakiye, CreateDevirBakiyeDto, UpdateDevirBakiyeDto,
   IadeMakbuzu, CreateIadeMakbuzuDto, UpdateIadeMakbuzuDto,
   KisiFinansalDurumSatiri, KisiFinansalDetay,
+  KasaTransfer, CreateKasaTransferDto, UpdateKasaTransferDto,
+  VirmanListItem, VirmanDetay, SaveVirmanDto,
+  VirmanSecim, VirmanSatirListItem, VirmanSatirDetay, SaveVirmanSatirDto,
   BankaHareketiImportPreview, BankaHareketiImportConfirmRequest, BankaHareketiImportSonuc,
 } from '@/types/finans'
 
@@ -148,6 +151,47 @@ export const iadeMakbuzlariApi = {
     siteApi.put(`/api/iade-makbuzlari/${id}`, data),
   delete: (id: string) =>
     siteApi.delete(`/api/iade-makbuzlari/${id}`),
+}
+
+export const kasaTransferleriApi = {
+  getAll: (page = 1, pageSize = 20, search?: string) =>
+    siteApi.get<PaginatedResult<KasaTransfer>>('/api/kasa-transferleri', { params: { page, pageSize, search } }),
+  getById: (id: string) =>
+    siteApi.get<KasaTransfer>(`/api/kasa-transferleri/${id}`),
+  create: (data: CreateKasaTransferDto) =>
+    siteApi.post<{ id: string }>('/api/kasa-transferleri', data),
+  update: (id: string, data: UpdateKasaTransferDto) =>
+    siteApi.put(`/api/kasa-transferleri/${id}`, data),
+  delete: (id: string) =>
+    siteApi.delete(`/api/kasa-transferleri/${id}`),
+}
+
+export const hesaplarArasiVirmanApi = {
+  getAll: (page = 1, pageSize = 20, search?: string) =>
+    siteApi.get<PaginatedResult<VirmanListItem>>('/api/hesaplar-arasi-virman', { params: { page, pageSize, search } }),
+  getById: (id: string) =>
+    siteApi.get<VirmanDetay>(`/api/hesaplar-arasi-virman/${id}`),
+  create: (data: SaveVirmanDto) =>
+    siteApi.post<{ id: string }>('/api/hesaplar-arasi-virman', data),
+  update: (id: string, data: SaveVirmanDto) =>
+    siteApi.put(`/api/hesaplar-arasi-virman/${id}`, data),
+  delete: (id: string) =>
+    siteApi.delete(`/api/hesaplar-arasi-virman/${id}`),
+}
+
+export const virmanFisDetaylariApi = {
+  getAll: (page = 1, pageSize = 20, search?: string) =>
+    siteApi.get<PaginatedResult<VirmanSatirListItem>>('/api/virman-fis-detaylari', { params: { page, pageSize, search } }),
+  getById: (id: string) =>
+    siteApi.get<VirmanSatirDetay>(`/api/virman-fis-detaylari/${id}`),
+  getFisler: () =>
+    siteApi.get<VirmanSecim[]>('/api/virman-fis-detaylari/fisler'),
+  create: (data: SaveVirmanSatirDto) =>
+    siteApi.post<{ id: string }>('/api/virman-fis-detaylari', data),
+  update: (id: string, data: SaveVirmanSatirDto) =>
+    siteApi.put(`/api/virman-fis-detaylari/${id}`, data),
+  delete: (id: string) =>
+    siteApi.delete(`/api/virman-fis-detaylari/${id}`),
 }
 
 export const kisilerFinansalDurumApi = {

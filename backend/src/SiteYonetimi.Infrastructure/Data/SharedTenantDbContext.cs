@@ -43,6 +43,16 @@ public class SharedTenantDbContext : DbContext
     public DbSet<GelirTahsilatMakbuzu> GelirTahsilatMakbuzlari => Set<GelirTahsilatMakbuzu>();
     public DbSet<DevirBakiye> DevirBakiyeleri => Set<DevirBakiye>();
     public DbSet<IadeMakbuzu> IadeMakbuzlari => Set<IadeMakbuzu>();
+    public DbSet<KasaTransfer> KasaTransferleri => Set<KasaTransfer>();
+    public DbSet<HesaplarArasiVirman> HesaplarArasiVirmanlar => Set<HesaplarArasiVirman>();
+    public DbSet<VirmanSatiri> VirmanSatirlari => Set<VirmanSatiri>();
+
+    // İcra Takibi
+    public DbSet<Avukat> Avukatlar => Set<Avukat>();
+    public DbSet<IcraTakip> IcraTakipleri => Set<IcraTakip>();
+    public DbSet<IcraTakipEvrak> IcraTakipEvraklari => Set<IcraTakipEvrak>();
+    public DbSet<IcraDosyasi> IcraDosyalari => Set<IcraDosyasi>();
+    public DbSet<IcraDosyasiEvrak> IcraDosyasiEvraklari => Set<IcraDosyasiEvrak>();
 
     // Güvenlik modülü
     public DbSet<ZiyaretciGirisCikis> ZiyaretciGirisCikislar => Set<ZiyaretciGirisCikis>();
@@ -545,6 +555,113 @@ public class SharedTenantDbContext : DbContext
             e.HasIndex(x => new { x.SiteId, x.EvrakNo }).IsUnique().HasFilter("[IsDeleted] = 0");
             e.HasIndex(x => new { x.SiteId, x.UnitId });
             e.HasIndex(x => new { x.SiteId, x.BorcluUserId });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<HesaplarArasiVirman>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.EvrakNo).HasMaxLength(30).IsRequired();
+            e.Property(x => x.BelgeNo).HasMaxLength(50);
+            e.Property(x => x.Aciklama).HasMaxLength(1000);
+            e.HasMany(x => x.Satirlar).WithOne(x => x.Virman).HasForeignKey(x => x.VirmanId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(x => new { x.SiteId, x.EvrakNo }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.Tarih });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<VirmanSatiri>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.HesapTuru).HasConversion<int>();
+            e.Property(x => x.HesapAdiSnapshot).HasMaxLength(200);
+            e.Property(x => x.BorcDonemi).HasMaxLength(7);
+            e.Property(x => x.Aciklama).HasMaxLength(1000);
+            e.Property(x => x.BorcTutari).HasPrecision(18, 2);
+            e.Property(x => x.AlacakTutari).HasPrecision(18, 2);
+            e.Property(x => x.TazminatUygulamaSekli).HasConversion<int>();
+            e.Property(x => x.AylikTazminatYuzdesi).HasPrecision(5, 2);
+            e.Property(x => x.IcraDosyaNo).HasMaxLength(100);
+            e.HasOne(x => x.Unit).WithMany().HasForeignKey(x => x.UnitId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.GelirTanimi).WithMany().HasForeignKey(x => x.GelirTanimiId).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
+            e.HasIndex(x => new { x.SiteId, x.HesapTuru, x.HesapId });
+            e.HasIndex(x => x.VirmanId);
+        });
+
+        modelBuilder.Entity<Avukat>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.AdSoyad).HasMaxLength(200).IsRequired();
+            e.Property(x => x.BuroAdi).HasMaxLength(200);
+            e.Property(x => x.Telefon).HasMaxLength(30);
+            e.Property(x => x.Eposta).HasMaxLength(200);
+            e.Property(x => x.Adres).HasMaxLength(500);
+            e.HasIndex(x => x.SiteId);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<IcraTakip>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.BorcluAdiSnapshot).HasMaxLength(200);
+            e.Property(x => x.BaslangicTutari).HasPrecision(18, 2);
+            e.Property(x => x.Durum).HasConversion<int>();
+            e.Property(x => x.Aciklama).HasMaxLength(1000);
+            e.HasOne(x => x.Unit).WithMany().HasForeignKey(x => x.UnitId).OnDelete(DeleteBehavior.Restrict);
+            e.HasMany(x => x.Evraklar).WithOne(x => x.Takip).HasForeignKey(x => x.TakipId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(x => new { x.SiteId, x.Durum });
+            e.HasIndex(x => new { x.SiteId, x.BorcluUserId, x.UnitId });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<IcraTakipEvrak>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasOne(x => x.BorcMakbuzu).WithMany().HasForeignKey(x => x.BorcMakbuzuId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.BorcMakbuzuId);
+        });
+
+        modelBuilder.Entity<IcraDosyasi>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.DosyaNo).HasMaxLength(100).IsRequired();
+            e.Property(x => x.Durum).HasConversion<int>();
+            e.Property(x => x.BorcluAdiSnapshot).HasMaxLength(200);
+            e.Property(x => x.DosyaTutari).HasPrecision(18, 2);
+            e.Property(x => x.Aciklama).HasMaxLength(1000);
+            e.HasOne(x => x.Takip).WithMany().HasForeignKey(x => x.TakipId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Unit).WithMany().HasForeignKey(x => x.UnitId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Avukat).WithMany().HasForeignKey(x => x.AvukatId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+            e.HasMany(x => x.Evraklar).WithOne(x => x.Dosya).HasForeignKey(x => x.DosyaId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(x => new { x.SiteId, x.DosyaNo }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.IcraTarihi });
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<IcraDosyasiEvrak>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasOne(x => x.BorcMakbuzu).WithMany().HasForeignKey(x => x.BorcMakbuzuId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.BorcMakbuzuId);
+        });
+
+        modelBuilder.Entity<KasaTransfer>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SiteId).IsRequired();
+            e.Property(x => x.EvrakNo).HasMaxLength(30).IsRequired();
+            e.Property(x => x.BelgeNo).HasMaxLength(50);
+            e.Property(x => x.Tutar).HasPrecision(18, 2).IsRequired();
+            e.Property(x => x.Aciklama).HasMaxLength(500);
+            e.HasOne(x => x.CikisKasaBanka).WithMany().HasForeignKey(x => x.CikisKasaBankaId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.GirisKasaBanka).WithMany().HasForeignKey(x => x.GirisKasaBankaId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.SiteId, x.EvrakNo }).IsUnique().HasFilter("[IsDeleted] = 0");
+            e.HasIndex(x => new { x.SiteId, x.Tarih });
             e.HasQueryFilter(x => !x.IsDeleted);
         });
 

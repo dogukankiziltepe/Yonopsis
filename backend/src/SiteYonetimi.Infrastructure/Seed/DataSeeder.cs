@@ -235,6 +235,16 @@ public static class DataSeeder
             new { Name = "BorclandirmaVeTahsilatGroup", Label = "Charging & Collection", Route = "#",                                 Icon = (string?)"credit-card",    Order = 3  },
             new { Name = "GiderGroup",            Label = "Expense",                    Route = "#",                                 Icon = (string?)"trending-down",  Order = 4  },
             new { Name = "GelirGroup",            Label = "Income",                     Route = "#",                                 Icon = (string?)"trending-up",    Order = 5  },
+            new { Name = "KasaTransfer",          Label = "Cash Transfer Voucher",      Route = "/finans/kasa-transfer",             Icon = (string?)"arrow-left-right", Order = 6  },
+            new { Name = "HesaplarArasiVirman",   Label = "Inter-Account Transfer",     Route = "/finans/virman",                    Icon = (string?)"arrow-left-right", Order = 7  },
+            new { Name = "VirmanFisDetaylari",    Label = "Transfer Voucher Details",   Route = "/finans/virman-fis-detaylari",      Icon = (string?)"file",           Order = 8  },
+            new { Name = "IcraTakibiGroup",       Label = "Legal Follow-up",            Route = "#",                                 Icon = (string?)"gavel",          Order = 9  },
+            // --- IcraTakibiGroup ---
+            new { Name = "TakibeGonder",          Label = "Send to Follow-up",          Route = "/finans/icra/takibe-gonder",        Icon = (string?)"user-check",     Order = 1  },
+            new { Name = "TakipListesi",          Label = "Follow-up List",             Route = "/finans/icra/takip-listesi",        Icon = (string?)"clipboard-list", Order = 2  },
+            new { Name = "IcraListesi",           Label = "Enforcement List",           Route = "/finans/icra/icra-listesi",         Icon = (string?)"gavel",          Order = 3  },
+            new { Name = "IcraRaporu",            Label = "Enforcement Report",         Route = "/finans/icra/icra-raporu",          Icon = (string?)"bar-chart",      Order = 4  },
+            new { Name = "Avukatlar",             Label = "Lawyers",                    Route = "/finans/icra/avukatlar",            Icon = (string?)"users",          Order = 5  },
             // --- BorclandirmaVeTahsilatGroup ---
             new { Name = "BorcMakbuzu",           Label = "Debt Receipt",               Route = "/finans/borc-makbuzu",              Icon = (string?)"file",           Order = 1  },
             new { Name = "TahsilatMakbuzu",       Label = "Collection Receipt",         Route = "/finans/tahsilat-makbuzu",          Icon = (string?)"receipt",        Order = 2  },
@@ -410,8 +420,11 @@ public static class DataSeeder
         // Eski Aidat sistemi kaldırıldı — daha önce deploy edilmiş sitelerde kalan Page kayıtlarını temizle
         await CleanupObsoleteAidatPagesAsync(db);
 
-        // Finans sekmesi yeniden yapılandırıldı — kaldırılan 11 sayfanın kalıntılarını temizle
+        // Finans sekmesi yeniden yapılandırıldı — kaldırılan sayfaların kalıntılarını temizle
         await CleanupObsoleteFinansPagesAsync(db);
+
+        // Faz 2'de kaldırılıp sonradan gerçek özellik olarak geri gelen sayfaları yeniden aç
+        await RestoreFinansPagesAsync(db);
 
         // Parent–child relationship assignment
         await AssignPageParentsAsync(db);
@@ -460,10 +473,8 @@ public static class DataSeeder
     {
         var obsoleteNames = new[]
         {
-            "HesaplarArasiVirman", "VirmanFisDetaylari", "KasaTransfer",
             "CariHesapAcilisFisi", "KasaAcilisFisi", "PersonelAcilisFisi",
             "IsletmeProjesi", "TekrarlananEvraklar",
-            "IcraListesi", "TakibeGonder", "TakipListesi",
         };
         var pages = await db.Pages.IgnoreQueryFilters()
             .Where(p => obsoleteNames.Contains(p.Name) && !p.IsDeleted)
@@ -474,6 +485,59 @@ public static class DataSeeder
             p.UpdatedAt = DateTime.UtcNow;
         }
         if (pages.Count > 0) await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Insert döngüsü mevcut (silinmiş dahil) kayıtları atladığı için, daha önce soft-delete
+    /// edilmiş ama tekrar kullanılan sayfaları geri açar ve route/sırasını günceller (idempotent).
+    /// </summary>
+    private static async Task RestoreFinansPagesAsync(MasterDbContext db)
+    {
+        var restore = new Dictionary<string, (string Route, int Order)>
+        {
+            { "KasaTransfer", ("/finans/kasa-transfer", 6) },
+            { "HesaplarArasiVirman", ("/finans/virman", 7) },
+            { "VirmanFisDetaylari", ("/finans/virman-fis-detaylari", 8) },
+            // İcra Takibi grubunun altında geri gelenler
+            { "TakibeGonder", ("/finans/icra/takibe-gonder", 1) },
+            { "TakipListesi", ("/finans/icra/takip-listesi", 2) },
+            { "IcraListesi", ("/finans/icra/icra-listesi", 3) },
+        };
+        var names = restore.Keys.ToList();
+        var pages = await db.Pages.IgnoreQueryFilters()
+            .Where(p => names.Contains(p.Name) && (p.IsDeleted || !p.IsActive))
+            .ToListAsync();
+        foreach (var p in pages)
+        {
+            var (route, order) = restore[p.Name];
+            p.IsDeleted = false;
+            p.IsActive = true;
+            p.Route = route;
+            p.OrderIndex = order;
+            p.UpdatedAt = DateTime.UtcNow;
+        }
+        if (pages.Count > 0) await db.SaveChangesAsync();
+
+        // Insert döngüsü mevcut kayıtların sırasını güncellemediği için Finans'ın doğrudan
+        // çocuklarının menü sırası burada senkronlanır (eski kurulumlarda Order=31 vb. kalıyordu).
+        var finansOrder = new Dictionary<string, int>
+        {
+            { "KisiFinansalDurum", 1 }, { "BankaHareketleri", 2 },
+            { "BorclandirmaVeTahsilatGroup", 3 }, { "GiderGroup", 4 }, { "GelirGroup", 5 },
+            { "KasaTransfer", 6 }, { "HesaplarArasiVirman", 7 }, { "VirmanFisDetaylari", 8 },
+            { "IcraTakibiGroup", 9 },
+        };
+        var orderNames = finansOrder.Keys.ToList();
+        var toReorder = await db.Pages.IgnoreQueryFilters()
+            .Where(p => orderNames.Contains(p.Name))
+            .ToListAsync();
+        var reordered = false;
+        foreach (var p in toReorder.Where(p => p.OrderIndex != finansOrder[p.Name]))
+        {
+            p.OrderIndex = finansOrder[p.Name];
+            reordered = true;
+        }
+        if (reordered) await db.SaveChangesAsync();
     }
 
     /// <summary>
@@ -501,6 +565,16 @@ public static class DataSeeder
             { "BorclandirmaVeTahsilatGroup",  "FinansGroup"     },
             { "GiderGroup",                   "FinansGroup"     },
             { "GelirGroup",                   "FinansGroup"     },
+            { "KasaTransfer",                 "FinansGroup"     },
+            { "HesaplarArasiVirman",          "FinansGroup"     },
+            { "VirmanFisDetaylari",           "FinansGroup"     },
+            { "IcraTakibiGroup",              "FinansGroup"     },
+            // IcraTakibiGroup çocukları
+            { "TakibeGonder",                 "IcraTakibiGroup" },
+            { "TakipListesi",                 "IcraTakibiGroup" },
+            { "IcraListesi",                  "IcraTakibiGroup" },
+            { "IcraRaporu",                   "IcraTakibiGroup" },
+            { "Avukatlar",                    "IcraTakibiGroup" },
             // BorclandirmaVeTahsilatGroup çocukları
             { "BorcMakbuzu",                  "BorclandirmaVeTahsilatGroup" },
             { "TahsilatMakbuzu",              "BorclandirmaVeTahsilatGroup" },
